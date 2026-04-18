@@ -1,3 +1,4 @@
+<script>
 (function () {
   'use strict';
 
@@ -878,3 +879,4 @@
   obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 
 })();
+</script>
