@@ -1,4 +1,4 @@
-/* Neofluxx Kanban – UI v2.3
+/* Neofluxx Kanban – UI v2.3.0
  * - Botão lateral fixo na barra esquerda
  * - Kanban ocupa o painel central (como telas nativas do Chatwoot)
  * - Conversas abertas → coluna CONVERSAS por padrão
