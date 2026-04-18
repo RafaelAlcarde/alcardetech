@@ -1,4 +1,3 @@
-<script>
 (function () {
   'use strict';
 
@@ -23,9 +22,7 @@
   const style = document.createElement('style');
   style.id = 'nfx-tb-style';
   style.textContent = `
-    #nfx-fab{position:fixed;bottom:28px;right:28px;z-index:99998;width:52px;height:52px;border-radius:50%;background:#25d366;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.4);transition:transform .2s,box-shadow .2s}
-    #nfx-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(37,211,102,.55)}
-    #nfx-fab svg{width:24px;height:24px;fill:#fff}
+    /* botÃ£o flutuante removido â€” abertura via menu Neofluxx */
     #nfx-overlay{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);align-items:center;justify-content:center}
     #nfx-overlay.open{display:flex}
     #nfx-modal{width:960px;max-width:96vw;height:88vh;border-radius:14px;overflow:hidden;display:grid;grid-template-rows:52px 1fr;grid-template-columns:200px 1fr 280px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;animation:nfxIn .2s ease}
@@ -226,12 +223,7 @@
     return data;
   }
 
-  const fab = document.createElement('button');
-  fab.id = 'nfx-fab';
-  fab.title = 'Template Builder';
-  fab.innerHTML = `<svg viewBox="0 0 24 24"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/></svg>`;
-  fab.onclick = openBuilder;
-  document.body.appendChild(fab);
+  // botÃ£o flutuante removido â€” abertura via window.nfx_template_builder_open()
 
   const overlay = document.createElement('div');
   overlay.id = 'nfx-overlay';
@@ -249,12 +241,12 @@
         <span style="font-size:13px;font-weight:600;color:var(--tx)">Template Builder</span>
         <span style="font-size:10px;color:var(--tx3)">/ WhatsApp Business</span>
         <div class="nfx-sp"></div>
-        <div class="nfx-pill"><div class="nfx-dot"></div><span id="nfx-stxt">aguardando configuração</span></div>
+        <div class="nfx-pill"><div class="nfx-dot"></div><span id="nfx-stxt">aguardando configuraÃ§Ã£o</span></div>
         <button class="nfx-tbtn" onclick="nfxOpenCfg()">
           <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
           Conf. n8n
         </button>
-        <button id="nfx-xbtn" onclick="nfxClose()">✕</button>
+        <button id="nfx-xbtn" onclick="nfxClose()">âœ•</button>
       </div>
 
       <div id="nfx-sidebar">
@@ -267,23 +259,23 @@
         <div class="nfx-ni" id="nfx-nav-l" onclick="nfxView('list')">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Meus templates
-          <span class="nfx-nb" id="nfx-lb">—</span>
+          <span class="nfx-nb" id="nfx-lb">â€”</span>
         </div>
       </div>
 
       <div id="nfx-main">
         <div id="nfx-cv" style="display:flex;flex-direction:column;gap:14px">
-          <div><div class="nfx-title">Novo template</div><div class="nfx-sub">Preencha e envie para aprovação da Meta</div></div>
+          <div><div class="nfx-title">Novo template</div><div class="nfx-sub">Preencha e envie para aprovaÃ§Ã£o da Meta</div></div>
 
           <div class="nfx-sec">
-            <div class="nfx-sh"><div class="nfx-sn">1</div><div class="nfx-st">Identificação</div></div>
+            <div class="nfx-sh"><div class="nfx-sn">1</div><div class="nfx-st">IdentificaÃ§Ã£o</div></div>
             <div class="nfx-sb">
               <div class="nfx-g2">
                 <div class="nfx-f" style="grid-column:span 2">
                   <label>Nome do template <span class="nfx-req">*</span></label>
                   <input class="nfx-inp" id="nfx-name" autocomplete="off" placeholder="ex: boas_vindas_cliente" oninput="nfxNameChg(this)"/>
-                  <div class="nfx-hint">Apenas letras minúsculas, números e underscores ( _ )</div>
-                  <div class="nfx-field-err" id="nfx-name-err">⚠ Use apenas letras minúsculas, números e underscores. Espaços e caracteres especiais não são permitidos.</div>
+                  <div class="nfx-hint">Apenas letras minÃºsculas, nÃºmeros e underscores ( _ )</div>
+                  <div class="nfx-field-err" id="nfx-name-err">âš  Use apenas letras minÃºsculas, nÃºmeros e underscores. EspaÃ§os e caracteres especiais nÃ£o sÃ£o permitidos.</div>
                 </div>
                 <div class="nfx-f">
                   <label>Categoria <span class="nfx-req">*</span></label>
@@ -295,42 +287,42 @@
                 </div>
                 <div class="nfx-f">
                   <label>Idioma</label>
-                  <select class="nfx-sel" id="nfx-lang"><option value="pt_BR">🇧🇷 Português (BR)</option></select>
+                  <select class="nfx-sel" id="nfx-lang"><option value="pt_BR">ðŸ‡§ðŸ‡· PortuguÃªs (BR)</option></select>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="nfx-sec">
-            <div class="nfx-sh"><div class="nfx-sn">2</div><div class="nfx-st">Tipo de variável</div></div>
+            <div class="nfx-sh"><div class="nfx-sn">2</div><div class="nfx-st">Tipo de variÃ¡vel</div></div>
             <div class="nfx-sb">
               <div class="nfx-vartype-box" style="margin-top:0">
-                <span class="nfx-vartype-label">Variáveis no template:</span>
+                <span class="nfx-vartype-label">VariÃ¡veis no template:</span>
                 <div class="nfx-vartype-opts">
-                  <div class="nfx-vto active" id="nfx-vto-none" onclick="nfxSetVarType('none')"><div class="nfx-vto-dot"></div>Sem variável</div>
-                  <div class="nfx-vto" id="nfx-vto-number" onclick="nfxSetVarType('number')"><div class="nfx-vto-dot"></div>Número</div>
+                  <div class="nfx-vto active" id="nfx-vto-none" onclick="nfxSetVarType('none')"><div class="nfx-vto-dot"></div>Sem variÃ¡vel</div>
+                  <div class="nfx-vto" id="nfx-vto-number" onclick="nfxSetVarType('number')"><div class="nfx-vto-dot"></div>NÃºmero</div>
                 </div>
               </div>
-              <div class="nfx-hint" style="margin-top:8px">Use <code>{{1}}</code>, <code>{{2}}</code>... no corpo da mensagem para inserir variáveis</div>
+              <div class="nfx-hint" style="margin-top:8px">Use <code>{{1}}</code>, <code>{{2}}</code>... no corpo da mensagem para inserir variÃ¡veis</div>
             </div>
           </div>
 
           <div class="nfx-sec">
-            <div class="nfx-sh"><div class="nfx-sn">3</div><div class="nfx-st">Cabeçalho <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional)</span></div></div>
+            <div class="nfx-sh"><div class="nfx-sn">3</div><div class="nfx-st">CabeÃ§alho <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional)</span></div></div>
             <div class="nfx-sb">
               <div class="nfx-ttabs">
                 <div class="nfx-tt active" onclick="nfxHdr('none',this)">Nenhum</div>
                 <div class="nfx-tt" onclick="nfxHdr('text',this)">Texto</div>
-                <div class="nfx-tt" onclick="nfxHdr('image',this)">🖼 Imagem</div>
-                <div class="nfx-tt" onclick="nfxHdr('video',this)">▶ Vídeo</div>
-                <div class="nfx-tt" onclick="nfxHdr('document',this)">📄 Documento</div>
+                <div class="nfx-tt" onclick="nfxHdr('image',this)">ðŸ–¼ Imagem</div>
+                <div class="nfx-tt" onclick="nfxHdr('video',this)">â–¶ VÃ­deo</div>
+                <div class="nfx-tt" onclick="nfxHdr('document',this)">ðŸ“„ Documento</div>
               </div>
               <div id="nfx-htxt" style="display:none;margin-top:10px">
-                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxPrev()"/>
+                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeÃ§alho (mÃ¡x. 60 caracteres)" maxlength="60" oninput="nfxPrev()"/>
               </div>
               <div id="nfx-hmedia" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
                 <div class="nfx-uz" onclick="document.getElementById('nfx-file-input').click()" style="cursor:pointer">
-                  <div style="font-size:16px;margin-bottom:2px">↑</div>
+                  <div style="font-size:16px;margin-bottom:2px">â†‘</div>
                   <div style="font-size:11px;color:var(--tx2)">Clique para selecionar arquivo</div>
                   <div style="font-size:10px;color:var(--tx3);margin-top:1px">JPG, PNG, MP4, PDF</div>
                 </div>
@@ -338,7 +330,7 @@
                 <div id="nfx-file-info" style="display:none;align-items:center;gap:8px;padding:6px 10px;background:var(--adim);border:1px solid var(--agl);border-radius:7px;font-size:11px;color:var(--ac)">
                   <span id="nfx-file-name"></span>
                   <span id="nfx-file-status" style="margin-left:4px"></span>
-                  <button onclick="nfxClearFile()" style="margin-left:auto;background:none;border:none;color:var(--ac);cursor:pointer;font-size:14px;padding:0;line-height:1">×</button>
+                  <button onclick="nfxClearFile()" style="margin-left:auto;background:none;border:none;color:var(--ac);cursor:pointer;font-size:14px;padding:0;line-height:1">Ã—</button>
                 </div>
               </div>
             </div>
@@ -349,30 +341,30 @@
             <div class="nfx-sb">
               <div class="nfx-f">
                 <label>Texto</label>
-                <textarea class="nfx-ta" id="nfx-body" placeholder="Olá {{1}}, seu pedido foi confirmado!" oninput="nfxBodyChg(this)"></textarea>
+                <textarea class="nfx-ta" id="nfx-body" placeholder="OlÃ¡ {{1}}, seu pedido foi confirmado!" oninput="nfxBodyChg(this)"></textarea>
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                  <div class="nfx-hint">Use <code>{{1}}</code> <code>{{2}}</code> para variáveis</div>
+                  <div class="nfx-hint">Use <code>{{1}}</code> <code>{{2}}</code> para variÃ¡veis</div>
                   <div class="nfx-cc" id="nfx-bc">0/1024</div>
                 </div>
                 <div class="nfx-hint" style="margin-top:2px">Para negrito: <code>*texto*</code></div>
                 <div class="nfx-vs" id="nfx-vs"></div>
-                <div class="nfx-warn" id="nfx-var-warn">⚠ Use apenas números: <code>{{1}}</code>, <code>{{2}}</code>... Formato com texto como <code>{{nome}}</code> é rejeitado pela Meta.</div>
-                <div class="nfx-field-err" id="nfx-var-dup-err">⚠ Variável duplicada — cada variável deve aparecer apenas uma vez no texto.</div>
-                <div class="nfx-field-err" id="nfx-var-pos-err">⚠ Variável não pode estar no início ou no final do texto. Adicione texto antes e depois.</div>
+                <div class="nfx-warn" id="nfx-var-warn">âš  Use apenas nÃºmeros: <code>{{1}}</code>, <code>{{2}}</code>... Formato com texto como <code>{{nome}}</code> Ã© rejeitado pela Meta.</div>
+                <div class="nfx-field-err" id="nfx-var-dup-err">âš  VariÃ¡vel duplicada â€” cada variÃ¡vel deve aparecer apenas uma vez no texto.</div>
+                <div class="nfx-field-err" id="nfx-var-pos-err">âš  VariÃ¡vel nÃ£o pode estar no inÃ­cio ou no final do texto. Adicione texto antes e depois.</div>
               </div>
             </div>
           </div>
 
           <div class="nfx-sec">
-            <div class="nfx-sh"><div class="nfx-sn">5</div><div class="nfx-st">Rodapé <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional)</span></div></div>
+            <div class="nfx-sh"><div class="nfx-sn">5</div><div class="nfx-st">RodapÃ© <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional)</span></div></div>
             <div class="nfx-sb">
               <input class="nfx-inp" id="nfx-foot" placeholder="ex: Responda PARAR para cancelar" maxlength="60" oninput="nfxPrev()"/>
-              <div class="nfx-hint" style="margin-top:4px">Máx. 60 caracteres</div>
+              <div class="nfx-hint" style="margin-top:4px">MÃ¡x. 60 caracteres</div>
             </div>
           </div>
 
           <div class="nfx-sec">
-            <div class="nfx-sh"><div class="nfx-sn">6</div><div class="nfx-st">Botões <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional — máx. 10)</span></div></div>
+            <div class="nfx-sh"><div class="nfx-sn">6</div><div class="nfx-st">BotÃµes <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional â€” mÃ¡x. 10)</span></div></div>
             <div class="nfx-sb">
               <div class="nfx-bl" id="nfx-bl"></div>
               <div class="nfx-abr">
@@ -382,7 +374,7 @@
             </div>
           </div>
 
-          <div class="nfx-note"><span class="nfx-ni-icon">⚠</span>Templates passam por aprovação da Meta e podem levar até 24h. Após aprovação ficam disponíveis automaticamente.</div>
+          <div class="nfx-note"><span class="nfx-ni-icon">âš </span>Templates passam por aprovaÃ§Ã£o da Meta e podem levar atÃ© 24h. ApÃ³s aprovaÃ§Ã£o ficam disponÃ­veis automaticamente.</div>
 
           <div class="nfx-ff">
             <button class="nfx-bs" onclick="nfxClear()">Limpar</button>
@@ -413,7 +405,7 @@
         <div id="nfx-pbody">
           <div class="nfx-phone">
             <div class="nfx-pbar">
-              <div><div class="nfx-pbar-title">Prévia do Modelo</div><div class="nfx-pbar-sub">WhatsApp Business</div></div>
+              <div><div class="nfx-pbar-title">PrÃ©via do Modelo</div><div class="nfx-pbar-sub">WhatsApp Business</div></div>
             </div>
             <div class="nfx-pchat">
               <div class="nfx-bub">
@@ -439,8 +431,8 @@
     <div id="nfx-cfg-ov">
       <div id="nfx-cfg-m" class="${tc()}">
         <div class="nfx-ch">
-          <span>⚙ Configuração n8n</span>
-          <button class="nfx-ib" onclick="nfxCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">✕</button>
+          <span>âš™ ConfiguraÃ§Ã£o n8n</span>
+          <button class="nfx-ib" onclick="nfxCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">âœ•</button>
         </div>
         <div class="nfx-cb">
           <div><label>Webhook do n8n <span class="nfx-req">*</span></label><input type="text" id="nfx-wh" placeholder="https://SEU-N8N/webhook/template-builder"/><div class="nfx-hint" style="margin-top:4px">Credenciais da Meta ficam no n8n. O script envia apenas os dados do builder.</div></div>
@@ -448,7 +440,7 @@
           <div id="nfx-tr" class="nfx-tr"></div>
         </div>
         <div class="nfx-cf">
-          <button class="nfx-bs" onclick="nfxTest()">Testar conexão</button>
+          <button class="nfx-bs" onclick="nfxTest()">Testar conexÃ£o</button>
           <button class="nfx-bp" onclick="nfxSaveCfg()">Salvar</button>
         </div>
       </div>
@@ -457,6 +449,9 @@
   }
 
   window.nfxClose = closeBuilder;
+
+  // ExpÃµe abertura para o menu Neofluxx
+  window.nfx_template_builder_open = openBuilder;
 
   window.nfxOpenCfg = function() {
     const c = getConfig();
@@ -491,10 +486,10 @@
     try {
       saveConfig({ webhookUrl, tenantKey, apiKey });
       const d = await n8nRequest('test_connection', {});
-      r.className='nfx-tr ok'; r.textContent=`✓ ${d.message || 'Webhook conectado'}`;
+      r.className='nfx-tr ok'; r.textContent=`âœ“ ${d.message || 'Webhook conectado'}`;
       const s = document.getElementById('nfx-stxt');
       if (s) s.textContent = 'Sincronizado';
-    } catch(e) { r.className='nfx-tr err'; r.textContent=`✗ Erro: ${e.message}`; }
+    } catch(e) { r.className='nfx-tr err'; r.textContent=`âœ— Erro: ${e.message}`; }
   };
 
   window.nfxView = function(v) {
@@ -514,7 +509,7 @@
     });
   };
 
-  // Ajuste 6a: validação do nome em tempo real
+  // Ajuste 6a: validaÃ§Ã£o do nome em tempo real
   window.nfxNameChg = function(el) {
     const val = el.value;
     const valid = /^[a-z0-9_]*$/.test(val);
@@ -543,7 +538,7 @@
       reader.readAsDataURL(file);
     } else {
       const ph2 = document.getElementById('nfx-ph2');
-      if (ph2) { ph2.style.display='block'; ph2.innerHTML=`<div class="nfx-whm"><div class="nfx-whm-ph">📎 ${esc(file.name)}</div></div>`; }
+      if (ph2) { ph2.style.display='block'; ph2.innerHTML=`<div class="nfx-whm"><div class="nfx-whm-ph">ðŸ“Ž ${esc(file.name)}</div></div>`; }
     }
     updatePreview();
   };
@@ -590,18 +585,18 @@
       el.selectionStart = el.selectionEnd = cursor + (next+'}}').length;
     }
 
-    // Validação variável inválida (texto em vez de número)
+    // ValidaÃ§Ã£o variÃ¡vel invÃ¡lida (texto em vez de nÃºmero)
     const invalid = el.value.match(/\{\{[^0-9}\s][^}]*\}\}/g);
     const warn = document.getElementById('nfx-var-warn');
     if (warn) warn.style.display = invalid ? 'flex' : 'none';
 
-    // Validação variável duplicada
+    // ValidaÃ§Ã£o variÃ¡vel duplicada
     const allVars = el.value.match(/\{\{\d+\}\}/g) || [];
     const dupVars = allVars.filter((v,i) => allVars.indexOf(v) !== i);
     const dupErr = document.getElementById('nfx-var-dup-err');
     if (dupErr) dupErr.style.display = dupVars.length > 0 ? 'block' : 'none';
 
-    // Validação variável no início ou fim
+    // ValidaÃ§Ã£o variÃ¡vel no inÃ­cio ou fim
     const posErr = document.getElementById('nfx-var-pos-err');
     if (posErr) {
       const trimmed = el.value.trim();
@@ -621,9 +616,9 @@
   };
 
   window.nfxAddBtn = function(type) {
-    if (buttons.length>=10) { alert('Máximo de 10 botões.'); return; }
-    const def = { QUICK_REPLY:'Resposta rápida', URL:'Acessar site' };
-    const label = prompt('Texto do botão:', def[type]||'Botão');
+    if (buttons.length>=10) { alert('MÃ¡ximo de 10 botÃµes.'); return; }
+    const def = { QUICK_REPLY:'Resposta rÃ¡pida', URL:'Acessar site' };
+    const label = prompt('Texto do botÃ£o:', def[type]||'BotÃ£o');
     if (!label) return;
     const b = { type, label };
     if (type==='URL') b.url = prompt('URL:', 'https://')||'';
@@ -633,7 +628,7 @@
   window.nfxRmBtn = function(i) { buttons.splice(i,1); renderBtns(); updatePreview(); };
 
   window.nfxClear = function() {
-    if (!confirm('Limpar o formulário?')) return;
+    if (!confirm('Limpar o formulÃ¡rio?')) return;
     ['nfx-name','nfx-body','nfx-foot','nfx-hval'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.style.borderColor=''; } });
     buttons=[]; varExamples={}; varType='none';
     renderBtns();
@@ -645,23 +640,23 @@
 
   window.nfxSubmit = async function() {
     const cfg = getConfig();
-    if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Conf. n8n).'); return; }
+    if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (âš™ Conf. n8n).'); return; }
     const name = (document.getElementById('nfx-name').value||'').trim().replace(/\s/g,'_').toLowerCase();
     const body = (document.getElementById('nfx-body').value||'').trim();
     if (!name) { alert('Informe o nome do template.'); return; }
-    if (!/^[a-z0-9_]+$/.test(name)) { alert('O nome do template deve conter apenas letras minúsculas, números e underscores.'); return; }
-    if (!body) { alert('O corpo da mensagem é obrigatório.'); return; }
+    if (!/^[a-z0-9_]+$/.test(name)) { alert('O nome do template deve conter apenas letras minÃºsculas, nÃºmeros e underscores.'); return; }
+    if (!body) { alert('O corpo da mensagem Ã© obrigatÃ³rio.'); return; }
     const invalid = body.match(/\{\{[^0-9}\s][^}]*\}\}/g);
-    if (invalid) { alert('Corrija as variáveis inválidas antes de enviar.\nUse apenas {{1}}, {{2}}...'); return; }
+    if (invalid) { alert('Corrija as variÃ¡veis invÃ¡lidas antes de enviar.\nUse apenas {{1}}, {{2}}...'); return; }
     const allVars = body.match(/\{\{\d+\}\}/g) || [];
     const dupVars = allVars.filter((v,i) => allVars.indexOf(v) !== i);
-    if (dupVars.length > 0) { alert(`Variável duplicada: ${[...new Set(dupVars)].join(', ')}. Cada variável deve aparecer apenas uma vez.`); return; }
+    if (dupVars.length > 0) { alert(`VariÃ¡vel duplicada: ${[...new Set(dupVars)].join(', ')}. Cada variÃ¡vel deve aparecer apenas uma vez.`); return; }
     if (/^\{\{\d+\}\}/.test(body) || /\{\{\d+\}\}$/.test(body)) {
-      alert('Variável não pode estar no início ou no final do texto. Adicione texto antes e depois da variável.'); return;
+      alert('VariÃ¡vel nÃ£o pode estar no inÃ­cio ou no final do texto. Adicione texto antes e depois da variÃ¡vel.'); return;
     }
     const btnLabels = buttons.map(b => b.label.trim().toLowerCase());
     const dupBtns = btnLabels.filter((l,i) => btnLabels.indexOf(l) !== i);
-    if (dupBtns.length > 0) { alert('Botões não podem ter o mesmo texto. Altere o nome de cada botão.'); return; }
+    if (dupBtns.length > 0) { alert('BotÃµes nÃ£o podem ter o mesmo texto. Altere o nome de cada botÃ£o.'); return; }
 
     const btn = document.getElementById('nfx-submit-btn');
     btn.disabled = true;
@@ -680,16 +675,16 @@
 
       let result;
       if (['image','video','document'].includes(headerType) && window._nfxSelectedFile) {
-        btn.innerHTML = `<span class="nfx-spin"></span> Enviando mídia...`;
+        btn.innerHTML = `<span class="nfx-spin"></span> Enviando mÃ­dia...`;
         result = await n8nRequest('create_template', payload, window._nfxSelectedFile);
       } else {
         result = await n8nRequest('create_template', payload);
       }
 
-      alert(`✓ Template "${name}" enviado!\nID: ${result.template_id || result.id || '-'}\nStatus: ${result.status || 'PENDING'}`);
+      alert(`âœ“ Template "${name}" enviado!\nID: ${result.template_id || result.id || '-'}\nStatus: ${result.status || 'PENDING'}`);
       window.nfxClear();
     } catch(e) {
-      alert(`✗ Erro ao enviar: ${e.message}`);
+      alert(`âœ— Erro ao enviar: ${e.message}`);
     } finally {
       btn.disabled = false;
       btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Enviar para Meta`;
@@ -721,9 +716,9 @@
     const tl = { QUICK_REPLY:'personalizado', URL:'link' };
     list.innerHTML = buttons.map((b,i)=>`
       <div class="nfx-br">
-        <span class="nfx-brl">${esc(b.label)}${b.url?' → '+esc(b.url):''}</span>
+        <span class="nfx-brl">${esc(b.label)}${b.url?' â†’ '+esc(b.url):''}</span>
         <span class="nfx-brt ${b.type==='QUICK_REPLY'?'nfx-btq':'nfx-btc'}">${tl[b.type]||b.type}</span>
-        <button class="nfx-bdel" onclick="nfxRmBtn(${i})">×</button>
+        <button class="nfx-bdel" onclick="nfxRmBtn(${i})">Ã—</button>
       </div>`).join('');
   }
 
@@ -774,7 +769,7 @@
       } else if (['image','video','document'].includes(headerType)) {
         ph2.style.display='block';
         if (!ph2.querySelector('img,.nfx-whm')) {
-          const ico={image:'🖼',video:'▶',document:'📄'};
+          const ico={image:'ðŸ–¼',video:'â–¶',document:'ðŸ“„'};
           ph2.innerHTML=`<div class="nfx-whm"><div class="nfx-whm-ph">${ico[headerType]}</div></div>`;
         }
       } else {
@@ -785,7 +780,7 @@
     renderPreviewBody();
     if (pf) { pf.style.display=foot?'block':'none'; pf.textContent=foot; }
     if (pbtns) {
-      const ico={URL:'🔗 ',QUICK_REPLY:''};
+      const ico={URL:'ðŸ”— ',QUICK_REPLY:''};
       pbtns.innerHTML=buttons.map(b=>`<button class="nfx-wb">${ico[b.type]||''}${esc(b.label)}</button>`).join('');
       const bub = document.querySelector('.nfx-bub');
       if (bub) bub.classList.toggle('nfx-has-btns', buttons.length > 0);
@@ -801,12 +796,12 @@
           const inp=row.querySelector('input');
           if (k&&inp) prev[k]=inp.value;
         });
-        // Ajuste 2 e 3: autocomplete off, tamanho automático, sem valor pré-preenchido
+        // Ajuste 2 e 3: autocomplete off, tamanho automÃ¡tico, sem valor prÃ©-preenchido
         vlist.innerHTML=vars.map(v=>{
           const curVal=prev[v]!==undefined?prev[v]:(varExamples[v]||'');
           return `<div class="nfx-ve" data-key="${v}">
             <span class="nfx-vk">${v}</span>
-            <input type="text" autocomplete="off" placeholder="Ex: João" value="${esc(curVal)}" oninput="nfxExInput('${v}',this.value)" size="${Math.max(10, curVal.length+2)}"/>
+            <input type="text" autocomplete="off" placeholder="Ex: JoÃ£o" value="${esc(curVal)}" oninput="nfxExInput('${v}',this.value)" size="${Math.max(10, curVal.length+2)}"/>
           </div>`;
         }).join('');
         // Sincroniza varExamples com valores reais dos campos (evita autocomplete silencioso)
@@ -855,12 +850,12 @@
     const sm={APPROVED:'Aprovado',PENDING:'Pendente',REJECTED:'Rejeitado',PAUSED:'Pausado'};
     const sc={APPROVED:'AP',PENDING:'PE',REJECTED:'RE',PAUSED:'PA'};
     const bc=(t.components||[]).find(c=>c.type==='BODY');
-    const prev=bc?esc(bc.text).substring(0,80)+(bc.text.length>80?'...':''):'—';
-    const reason=t.rejected_reason&&t.rejected_reason!=='NONE'?`<div class="nfx-rr">✗ Motivo: ${esc(t.rejected_reason)}</div>`:'';
+    const prev=bc?esc(bc.text).substring(0,80)+(bc.text.length>80?'...':''):'â€”';
+    const reason=t.rejected_reason&&t.rejected_reason!=='NONE'?`<div class="nfx-rr">âœ— Motivo: ${esc(t.rejected_reason)}</div>`:'';
     return `<div class="nfx-tc">
       <div class="nfx-ti">
         <div class="nfx-tn">${esc(t.name)}</div>
-        <div class="nfx-tm">${esc(t.category)} • ${esc(t.language)}</div>
+        <div class="nfx-tm">${esc(t.category)} â€¢ ${esc(t.language)}</div>
         <div class="nfx-tm" style="margin-top:3px;font-size:10px">${prev}</div>
         ${reason}
       </div>
@@ -879,4 +874,3 @@
   obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 
 })();
-</script>
