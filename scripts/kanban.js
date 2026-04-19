@@ -8,7 +8,7 @@
  * - NOVO: Busca prévias de mensagens via API oficial do Chatwoot
  */
 (function () {
-  console.log('🎉 KANBAN v4.3 - AUTO-REFRESH! 🎉');
+  console.log(' KANBAN v4.3 - AUTO-REFRESH! ');
   
   if (window.__neo_kanban_v23) return;
   window.__neo_kanban_v23 = true;
