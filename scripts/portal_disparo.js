@@ -781,7 +781,7 @@
             template_name: state.template.name,
             template_id: state.template.id,
             url_image: state.imgUrl || null,
-            dt_disparo: `${data}T${hora}:00`,
+            dt_disparo: `${data}T${hora}:00-03:00`,
           }
         })
       });
@@ -848,7 +848,7 @@
           <th>Campanha</th><th>Público</th><th>Template</th><th>Agendado para</th><th>Status</th>
         </tr></thead>
         <tbody>${rows.map(r => {
-          const dt = r.dt_disparo ? new Date(r.dt_disparo.replace('+00:00','').replace('Z','')).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
+          const dt = r.dt_disparo ? new Date(r.dt_disparo).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
           const bc = badgeClass[r.status] || 'nfxd-badge-ag';
           return `<tr>
             <td style="font-weight:500">${esc(r.nome || '—')}</td>
