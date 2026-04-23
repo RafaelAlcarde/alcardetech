@@ -781,7 +781,7 @@
             template_name: state.template.name,
             template_id: state.template.id,
             url_image: state.imgUrl || null,
-            dt_disparo: `${data}T${hora}:00-03:00`,
+            dt_disparo: `${data}T${hora}:00`,
           }
         })
       });
