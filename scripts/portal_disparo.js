@@ -125,16 +125,9 @@
     .nfxd-preview-row{display:flex;gap:6px;margin-bottom:4px;align-items:flex-start}
     .nfxd-preview-label{font-size:10px;color:var(--tx3);min-width:64px;padding-top:1px}
     .nfxd-preview-val{font-size:11px;color:var(--tx);font-weight:500}
-    .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
-    .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd)}
-    .nfxd-hist-table td{padding:9px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .nfxd-hist-table th:nth-child(1),.nfxd-hist-table td:nth-child(1){width:22%}
-    .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:16%}
-    .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:28%}
-    .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:20%}
-    .nfxd-hist-table th:nth-child(5),.nfxd-hist-table td:nth-child(5){width:14%}
-    .nfxd-hist-table tr:last-child td{border-bottom:none}
-    .nfxd-hist-table tr:hover td{background:var(--sf2)}
+    .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px}
+    .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd)}
+    .nfxd-hist-table td{padding:9px 8px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle}
     .nfxd-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
     .nfxd-badge-ag{background:var(--warn-bg);color:var(--amb);border:1px solid var(--warn-bd)}
     .nfxd-badge-pr{background:rgba(25,118,210,.1);color:var(--bl);border:1px solid rgba(25,118,210,.3)}
@@ -185,6 +178,27 @@
     .nfxd-img-thumb:hover .nfxd-img-fname,.nfxd-img-thumb.sel .nfxd-img-fname{opacity:1}
     .nfxd-img-or{font-size:11px;color:var(--tx3);text-align:center;margin:10px 0 6px;display:flex;align-items:center;gap:8px}
     .nfxd-img-or::before,.nfxd-img-or::after{content:'';flex:1;height:1px;background:var(--bd)}
+    .nfxd-cb-wrap{display:flex;align-items:center;justify-content:center}
+    .nfxd-cb-inp{width:14px;height:14px;cursor:pointer;accent-color:var(--ac)}
+    .nfxd-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.25);border-radius:8px;margin-bottom:10px}
+    .nfxd-del-bar.visible{display:flex}
+    .nfxd-del-info{font-size:12px;color:var(--red);flex:1}
+    .nfxd-del-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;background:var(--red);border:none;color:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+    .nfxd-del-btn:hover{opacity:.85}
+    .nfxd-del-cancel{display:inline-flex;align-items:center;padding:5px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+    .nfxd-del-cancel:hover{background:var(--sf2)}
+    .nfxd-hist-table th:first-child,.nfxd-hist-table td:first-child{width:32px;text-align:center;padding:6px 4px}
+    .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:20%}
+    .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:15%}
+    .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:26%}
+    .nfxd-hist-table th:nth-child(5),.nfxd-hist-table td:nth-child(5){width:19%}
+    .nfxd-hist-table th:nth-child(6),.nfxd-hist-table td:nth-child(6){width:13%}
+    .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+    .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd)}
+    .nfxd-hist-table td{padding:9px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .nfxd-hist-table tr:last-child td{border-bottom:none}
+    .nfxd-hist-table tr:hover td{background:var(--sf2)}
+    .nfxd-hist-table tr.sel-row td{background:rgba(229,57,53,.05)}
   `;
   document.head.appendChild(style);
 
@@ -852,14 +866,24 @@
 
     const badgeClass = { agendada: 'nfxd-badge-ag', processando: 'nfxd-badge-pr', executada: 'nfxd-badge-ok', erro: 'nfxd-badge-er' };
     container.innerHTML = `
+      <div class="nfxd-del-bar" id="nfxd-del-bar">
+        <span class="nfxd-del-info" id="nfxd-del-info">0 selecionadas</span>
+        <button class="nfxd-del-cancel" onclick="nfxdCancelSel()">Cancelar</button>
+        <button class="nfxd-del-btn" onclick="nfxdDeleteSelecionadas()">
+          <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Excluir selecionadas
+        </button>
+      </div>
       <table class="nfxd-hist-table">
         <thead><tr>
+          <th><input type="checkbox" class="nfxd-cb-inp" id="nfxd-cb-all" onclick="nfxdToggleAll(this)"/></th>
           <th>Campanha</th><th>Público</th><th>Template</th><th>Agendado para</th><th>Status</th>
         </tr></thead>
         <tbody>${rows.map(r => {
           const dt = r.dt_disparo ? new Date(r.dt_disparo).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
           const bc = badgeClass[r.status] || 'nfxd-badge-ag';
-          return `<tr>
+          return `<tr id="nfxd-row-${r.id}">
+            <td class="nfxd-cb-wrap"><input type="checkbox" class="nfxd-cb-inp nfxd-row-cb" data-id="${r.id}" onclick="nfxdToggleRow(this)"/></td>
             <td style="font-weight:500">${esc(r.nome || '—')}</td>
             <td style="color:var(--tx2)">${esc(r.tipo_label || r.tipo || '—')}</td>
             <td style="color:var(--tx3);font-size:11px;font-family:monospace">${esc(r.template_name || '—')}</td>
@@ -869,6 +893,76 @@
         }).join('')}</tbody>
       </table>`;
   }
+
+  window.nfxdToggleAll = function(cb) {
+    document.querySelectorAll('.nfxd-row-cb').forEach(c => {
+      c.checked = cb.checked;
+      const row = document.getElementById('nfxd-row-' + c.dataset.id);
+      if (row) row.classList.toggle('sel-row', cb.checked);
+    });
+    nfxdUpdateDelBar();
+  };
+
+  window.nfxdToggleRow = function(cb) {
+    const row = document.getElementById('nfxd-row-' + cb.dataset.id);
+    if (row) row.classList.toggle('sel-row', cb.checked);
+    const all = document.querySelectorAll('.nfxd-row-cb');
+    const checked = document.querySelectorAll('.nfxd-row-cb:checked');
+    const cbAll = document.getElementById('nfxd-cb-all');
+    if (cbAll) cbAll.checked = all.length === checked.length;
+    nfxdUpdateDelBar();
+  };
+
+  function nfxdUpdateDelBar() {
+    const checked = document.querySelectorAll('.nfxd-row-cb:checked');
+    const bar = document.getElementById('nfxd-del-bar');
+    const info = document.getElementById('nfxd-del-info');
+    if (!bar) return;
+    if (checked.length > 0) {
+      bar.classList.add('visible');
+      info.textContent = `${checked.length} campanha(s) selecionada(s)`;
+    } else {
+      bar.classList.remove('visible');
+    }
+  }
+
+  window.nfxdCancelSel = function() {
+    document.querySelectorAll('.nfxd-row-cb').forEach(c => { c.checked = false; });
+    const cbAll = document.getElementById('nfxd-cb-all');
+    if (cbAll) cbAll.checked = false;
+    document.querySelectorAll('.sel-row').forEach(r => r.classList.remove('sel-row'));
+    nfxdUpdateDelBar();
+  };
+
+  window.nfxdDeleteSelecionadas = async function() {
+    const checked = document.querySelectorAll('.nfxd-row-cb:checked');
+    if (!checked.length) return;
+    const ids = Array.from(checked).map(c => parseInt(c.dataset.id));
+    if (!confirm(`Excluir ${ids.length} campanha(s)? Esta ação não pode ser desfeita.`)) return;
+
+    const cfg = getConfig();
+    const btn = document.querySelector('.nfxd-del-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="nfxd-spin"></span> Excluindo...'; }
+
+    try {
+      const res = await fetch(cfg.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_campanha',
+          tenant_key: CONFIG.tenantKey,
+          payload: { ids }
+        })
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || result.error) throw new Error(result.error || result.message || `HTTP ${res.status}`);
+      state.campanhas = state.campanhas.filter(c => !ids.includes(c.id));
+      renderHistorico();
+    } catch (e) {
+      alert(`✗ Erro ao excluir: ${e.message}`);
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Excluir selecionadas'; }
+    }
+  };
 
   // ─── RESET ──────────────────────────────────────────────────────────────────
   window.nfxdReset = function() {
