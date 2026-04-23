@@ -178,8 +178,8 @@
     .nfxd-img-thumb:hover .nfxd-img-fname,.nfxd-img-thumb.sel .nfxd-img-fname{opacity:1}
     .nfxd-img-or{font-size:11px;color:var(--tx3);text-align:center;margin:10px 0 6px;display:flex;align-items:center;gap:8px}
     .nfxd-img-or::before,.nfxd-img-or::after{content:'';flex:1;height:1px;background:var(--bd)}
-    .nfxd-cb-wrap{display:flex;align-items:center;justify-content:center}
-    .nfxd-cb-inp{width:14px;height:14px;cursor:pointer;accent-color:var(--ac)}
+    .nfxd-cb-wrap{display:flex;align-items:center;justify-content:center;height:100%}
+    .nfxd-cb-inp{width:14px;height:14px;cursor:pointer;accent-color:var(--ac);display:block}
     .nfxd-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.25);border-radius:8px;margin-bottom:10px}
     .nfxd-del-bar.visible{display:flex}
     .nfxd-del-info{font-size:12px;color:var(--red);flex:1}
@@ -187,7 +187,7 @@
     .nfxd-del-btn:hover{opacity:.85}
     .nfxd-del-cancel{display:inline-flex;align-items:center;padding:5px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
     .nfxd-del-cancel:hover{background:var(--sf2)}
-    .nfxd-hist-table th:first-child,.nfxd-hist-table td:first-child{width:32px;text-align:center;padding:6px 4px}
+    .nfxd-hist-table th:first-child,.nfxd-hist-table td:first-child{width:36px;text-align:center;padding:0 8px;vertical-align:middle}
     .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:20%}
     .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:15%}
     .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:26%}
@@ -938,7 +938,8 @@
     const checked = document.querySelectorAll('.nfxd-row-cb:checked');
     if (!checked.length) return;
     const ids = Array.from(checked).map(c => parseInt(c.dataset.id));
-    if (!confirm(`Excluir ${ids.length} campanha(s)? Esta ação não pode ser desfeita.`)) return;
+    alert('IDs que serão enviados: ' + JSON.stringify(ids));
+    return; // Remove essa linha depois do teste
 
     const cfg = getConfig();
     const btn = document.querySelector('.nfxd-del-btn');
