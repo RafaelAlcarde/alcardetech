@@ -125,9 +125,16 @@
     .nfxd-preview-row{display:flex;gap:6px;margin-bottom:4px;align-items:flex-start}
     .nfxd-preview-label{font-size:10px;color:var(--tx3);min-width:64px;padding-top:1px}
     .nfxd-preview-val{font-size:11px;color:var(--tx);font-weight:500}
-    .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px}
-    .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd)}
-    .nfxd-hist-table td{padding:9px 8px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle}
+    .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+    .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd)}
+    .nfxd-hist-table td{padding:9px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .nfxd-hist-table th:nth-child(1),.nfxd-hist-table td:nth-child(1){width:22%}
+    .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:16%}
+    .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:28%}
+    .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:20%}
+    .nfxd-hist-table th:nth-child(5),.nfxd-hist-table td:nth-child(5){width:14%}
+    .nfxd-hist-table tr:last-child td{border-bottom:none}
+    .nfxd-hist-table tr:hover td{background:var(--sf2)}
     .nfxd-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
     .nfxd-badge-ag{background:var(--warn-bg);color:var(--amb);border:1px solid var(--warn-bd)}
     .nfxd-badge-pr{background:rgba(25,118,210,.1);color:var(--bl);border:1px solid rgba(25,118,210,.3)}
@@ -419,6 +426,8 @@
     document.getElementById('nfxd-view-historico').style.display = v === 'historico' ? 'block' : 'none';
     document.getElementById('nfxd-preview').style.display = v === 'nova' ? 'flex' : 'none';
     document.getElementById('nfxd-preview').style.flexDirection = 'column';
+    const modal = document.getElementById('nfxd-modal');
+    modal.style.gridTemplateColumns = v === 'historico' ? '200px 1fr' : '200px 1fr 300px';
     document.getElementById('nfxd-nav-nova').className = 'nfxd-ni' + (v === 'nova' ? ' active' : '');
     document.getElementById('nfxd-nav-historico').className = 'nfxd-ni' + (v === 'historico' ? ' active' : '');
     if (v === 'historico') loadCampanhas();
