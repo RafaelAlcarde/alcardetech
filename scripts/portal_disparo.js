@@ -938,8 +938,7 @@
     const checked = document.querySelectorAll('.nfxd-row-cb:checked');
     if (!checked.length) return;
     const ids = Array.from(checked).map(c => parseInt(c.dataset.id));
-    alert('IDs que serão enviados: ' + JSON.stringify(ids));
-    return; // Remove essa linha depois do teste
+    if (!confirm(`Excluir ${ids.length} campanha(s)? Esta ação não pode ser desfeita.`)) return;
 
     const cfg = getConfig();
     const btn = document.querySelector('.nfxd-del-btn');
