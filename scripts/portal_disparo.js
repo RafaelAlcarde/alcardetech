@@ -175,7 +175,6 @@
     .nfxd-img-thumb:hover .nfxd-img-fname,.nfxd-img-thumb.sel .nfxd-img-fname{opacity:1}
     .nfxd-img-or{font-size:11px;color:var(--tx3);text-align:center;margin:10px 0 6px;display:flex;align-items:center;gap:8px}
     .nfxd-img-or::before,.nfxd-img-or::after{content:'';flex:1;height:1px;background:var(--bd)}
-    .nfxd-cb-wrap{display:flex;align-items:center;justify-content:center;height:100%}
     .nfxd-cb-inp{width:14px;height:14px;cursor:pointer;accent-color:var(--ac);display:block}
     .nfxd-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.25);border-radius:8px;margin-bottom:10px}
     .nfxd-del-bar.visible{display:flex}
