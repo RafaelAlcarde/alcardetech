@@ -880,7 +880,7 @@
           const dt = r.dt_disparo ? new Date(r.dt_disparo).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
           const bc = badgeClass[r.status] || 'nfxd-badge-ag';
           return `<tr id="nfxd-row-${r.id}">
-            <td class="nfxd-cb-wrap"><input type="checkbox" class="nfxd-cb-inp nfxd-row-cb" data-id="${r.id}" onclick="nfxdToggleRow(this)"/></td>
+            <td style="text-align:center;vertical-align:middle"><input type="checkbox" class="nfxd-cb-inp nfxd-row-cb" data-id="${r.id}" onclick="nfxdToggleRow(this)"/></td>
             <td style="font-weight:500">${esc(r.nome || '—')}</td>
             <td style="color:var(--tx2)">${esc(r.tipo_label || r.tipo || '—')}</td>
             <td style="color:var(--tx3);font-size:11px;font-family:monospace">${esc(r.template_name || '—')}</td>
