@@ -3,7 +3,6 @@
 # Neofluxx — Script de Rebranding
 # Aplicar após cada atualização do Chatwoot
 # ============================================================
-
 GITHUB="https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main"
 
 echo "=== Neofluxx Rebranding ==="
@@ -11,6 +10,7 @@ echo "=== Neofluxx Rebranding ==="
 # 1. Edita vueapp.html.erb
 echo ">>> Aplicando INSTALLATION_NAME..."
 sed -i "s/window.globalConfig = <%= raw @global_config.to_json %>/window.globalConfig = <%= raw @global_config.merge('INSTALLATION_NAME' => 'Alcardetech').to_json %>/" /app/app/views/layouts/vueapp.html.erb
+sed -i 's/<%= @global_config\[.INSTALLATION_NAME.\] %>/Alcardetech/' /app/app/views/layouts/vueapp.html.erb
 echo "OK"
 
 # 2. Baixa logos
