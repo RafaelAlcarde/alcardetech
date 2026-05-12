@@ -130,7 +130,22 @@
     .nfx-vto-dot{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;transition:all .15s;flex-shrink:0}
     .nfx-vto.active .nfx-vto-dot{background:var(--ac);border-color:var(--ac)}
     .nfx-lv{display:none;flex-direction:column;gap:10px}
-    .nfx-tc{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px}
+    .nfx-tc{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;transition:border .15s}
+    .nfx-tc.selected{border-color:var(--ac);background:var(--adim)}
+    .nfx-tc-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--ac);flex-shrink:0;margin-top:2px}
+    .nfx-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,.07);border:1px solid rgba(229,57,53,.25);border-radius:8px}
+    .nfx-del-bar.visible{display:flex}
+    .nfx-del-info{font-size:12px;color:var(--red);font-weight:500;flex:1}
+    .nfx-del-cancel{padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer}
+    .nfx-del-cancel:hover{background:var(--sf2);color:var(--tx)}
+    .nfx-del-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:11px;font-weight:600;cursor:pointer}
+    .nfx-del-btn:hover:not(:disabled){opacity:.85}
+    .nfx-del-btn:disabled{opacity:.6;cursor:not-allowed}
+    #nfx-del-ov{display:none;position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);align-items:center;justify-content:center}
+    #nfx-del-ov.open{display:flex}
+    #nfx-del-m{width:380px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    #nfx-del-m.light{background:#fff;color:#1a1a2e;--bd:#e2e5ea;--sf2:#f0f2f5;--tx:#1a1a2e;--tx2:#5a6170;--red:#e53935}
+    #nfx-del-m.dark{background:#17171b;color:#f0f0f5;--bd:#2a2a35;--sf2:#1e1e24;--tx:#f0f0f5;--tx2:#9090a8;--red:#ff5e5e}
     .nfx-ti{flex:1}
     .nfx-tn{font-size:13px;font-weight:600;color:var(--tx)}
     .nfx-tm{font-size:11px;color:var(--tx2);margin-top:2px}
@@ -393,6 +408,14 @@
               Atualizar
             </button>
           </div>
+          <div class="nfx-del-bar" id="nfx-del-bar">
+            <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
+            <button class="nfx-del-cancel" onclick="nfxCancelSel()">Cancelar</button>
+            <button class="nfx-del-btn" onclick="nfxConfirmDelete()">
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Excluir selecionados
+            </button>
+          </div>
           <div id="nfx-tlist"><div class="nfx-ld">Clique em "Atualizar" para carregar</div></div>
         </div>
       </div>
@@ -442,6 +465,30 @@
         <div class="nfx-cf">
           <button class="nfx-bs" onclick="nfxTest()">Testar conexão</button>
           <button class="nfx-bp" onclick="nfxSaveCfg()">Salvar</button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal confirmação delete -->
+    <div id="nfx-del-ov">
+      <div id="nfx-del-m" class="${tc()}">
+        <div style="padding:20px 20px 8px;display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(229,57,53,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--tx)">Excluir templates</div>
+            <div style="font-size:11px;color:var(--tx2);margin-top:2px" id="nfx-del-m-sub">Confirme a exclusão</div>
+          </div>
+        </div>
+        <div style="padding:8px 20px 16px;font-size:12px;color:var(--tx2);line-height:1.6">
+          Esta ação é <strong style="color:var(--red)">permanente e irreversível</strong>. Os templates serão removidos da sua conta WhatsApp Business e não poderão ser recuperados.
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end">
+          <button class="nfx-bs" onclick="nfxCancelDelete()">Cancelar</button>
+          <button class="nfx-del-btn" id="nfx-del-confirm-btn" onclick="nfxExecuteDelete()">
+            <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Confirmar exclusão
+          </button>
         </div>
       </div>
     </div>
@@ -496,6 +543,8 @@
     document.getElementById('nfx-cv').style.display  = v==='create'?'flex':'none';
     document.getElementById('nfx-lv').style.display  = v==='list'?'flex':'none';
     document.getElementById('nfx-preview').style.display = v==='create'?'flex':'none';
+    const main = document.getElementById('nfx-main');
+    if (main) main.style.gridColumn = v==='list' ? '2 / -1' : '';
     document.getElementById('nfx-nav-c').className = 'nfx-ni'+(v==='create'?' active':'');
     document.getElementById('nfx-nav-l').className = 'nfx-ni'+(v==='list'?' active':'');
     if (v==='list') nfxLoad();
@@ -697,6 +746,7 @@
     const btn = document.getElementById('nfx-refresh-btn');
     if (!cfg.webhookUrl || !cfg.tenantKey) { container.innerHTML='<div class="nfx-ld">Configure o webhook do n8n primeiro.</div>'; return; }
     container.innerHTML='<div class="nfx-ld">Carregando templates...</div>';
+    nfxCancelSel();
     if (btn) { btn.disabled=true; btn.innerHTML='<span class="nfx-spin" style="border-top-color:var(--tx2)"></span> Atualizando...'; }
     try {
       const d = await n8nRequest('list_templates', {});
@@ -846,13 +896,80 @@
     return comps;
   }
 
+  let _selectedTemplates = [];
+
+  window.nfxToggleSelect = function(name, cb) {
+    const card = document.getElementById('nfx-card-'+name);
+    if (cb.checked) {
+      if (!_selectedTemplates.includes(name)) _selectedTemplates.push(name);
+      if (card) card.classList.add('selected');
+    } else {
+      _selectedTemplates = _selectedTemplates.filter(n => n !== name);
+      if (card) card.classList.remove('selected');
+    }
+    const bar = document.getElementById('nfx-del-bar');
+    const info = document.getElementById('nfx-del-info');
+    if (bar) bar.classList.toggle('visible', _selectedTemplates.length > 0);
+    if (info) info.textContent = `${_selectedTemplates.length} selecionado(s)`;
+  };
+
+  window.nfxCancelSel = function() {
+    _selectedTemplates = [];
+    document.querySelectorAll('.nfx-tc-cb').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.nfx-tc').forEach(c => c.classList.remove('selected'));
+    const bar = document.getElementById('nfx-del-bar');
+    if (bar) bar.classList.remove('visible');
+  };
+
+  window.nfxConfirmDelete = function() {
+    if (!_selectedTemplates.length) return;
+    const sub = document.getElementById('nfx-del-m-sub');
+    if (sub) sub.textContent = `${_selectedTemplates.length} template(s) serão excluídos`;
+    const ov = document.getElementById('nfx-del-ov');
+    const m  = document.getElementById('nfx-del-m');
+    if (ov) ov.classList.add('open');
+    if (m)  { m.classList.remove('dark','light'); m.classList.add(tc()); }
+  };
+
+  window.nfxCancelDelete = function() {
+    document.getElementById('nfx-del-ov').classList.remove('open');
+  };
+
+  window.nfxExecuteDelete = async function() {
+    const cfg = getConfig();
+    const btn = document.getElementById('nfx-del-confirm-btn');
+    if (btn) { btn.disabled=true; btn.innerHTML='<span class="nfx-spin" style="border-top-color:#fff"></span> Excluindo...'; }
+    try {
+      const res = await fetch(cfg.webhookUrl, {
+        method: 'POST',
+        headers: buildN8NHeaders({ 'Content-Type':'application/json' }),
+        body: JSON.stringify({
+          action: 'delete_template',
+          tenant_key: cfg.tenantKey,
+          payload: { names: [..._selectedTemplates] }
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+      document.getElementById('nfx-del-ov').classList.remove('open');
+      nfxCancelSel();
+      nfxLoad();
+    } catch(e) {
+      alert(`✗ Erro ao excluir: ${e.message}`);
+    } finally {
+      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg> Confirmar exclusão'; }
+    }
+  };
+
   function tplCard(t) {
     const sm={APPROVED:'Aprovado',PENDING:'Pendente',REJECTED:'Rejeitado',PAUSED:'Pausado'};
     const sc={APPROVED:'AP',PENDING:'PE',REJECTED:'RE',PAUSED:'PA'};
     const bc=(t.components||[]).find(c=>c.type==='BODY');
     const prev=bc?esc(bc.text).substring(0,80)+(bc.text.length>80?'...':''):'—';
     const reason=t.rejected_reason&&t.rejected_reason!=='NONE'?`<div class="nfx-rr">✗ Motivo: ${esc(t.rejected_reason)}</div>`:'';
-    return `<div class="nfx-tc">
+    const safeName = esc(t.name).replace(/'/g,"\\'");
+    return `<div class="nfx-tc" id="nfx-card-${esc(t.name)}">
+      <input type="checkbox" class="nfx-tc-cb" onclick="nfxToggleSelect('${safeName}',this)"/>
       <div class="nfx-ti">
         <div class="nfx-tn">${esc(t.name)}</div>
         <div class="nfx-tm">${esc(t.category)} • ${esc(t.language)}</div>
