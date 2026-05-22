@@ -180,13 +180,14 @@
       #nfx-root { user-select: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       #nfx-divider { height: 1px; background: #e2e5ea; margin: 4px 8px; }
       #nfx-btn {
-        display: flex; align-items: center; gap: 10px;
-        padding: 8px 12px; border-radius: 8px; cursor: pointer;
+        display: flex; align-items: center; gap: 6px;
+        padding: 7px 8px; border-radius: 8px; cursor: pointer;
         background: #E6FDF4; border: 0.5px solid #00DD7D;
         transition: background 0.15s; margin: 0 4px;
+        min-width: 0; overflow: hidden; white-space: nowrap;
       }
       #nfx-btn:hover { background: #ccf9e8; }
-      #nfx-btn .nfx-label { font-size: 14px; color: #008F52; font-weight: 500; flex: 1; }
+      #nfx-btn .nfx-label { font-size: 13px; color: #008F52; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       #nfx-chevron { transition: transform 0.2s; margin-left: auto; }
       #nfx-chevron.open { transform: rotate(180deg); }
       #nfx-submenu { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
@@ -227,11 +228,13 @@
       <div id="nfx-submenu"></div>
     `;
 
+    // Verifica se há pelo menos uma feature permitida para esse cliente
+    const visibleFeatures = FEATURES.filter(function(f) { return f.type !== 'auto' && isAllowed(f.id); });
+    if (visibleFeatures.length === 0) return;
+
     // Monta apenas features visíveis no menu (script e modal) e permitidas
     const submenu = root.querySelector('#nfx-submenu');
-    FEATURES.filter(function(f) { return f.type !== 'auto'; }).forEach(function(feature) {
-      // Ajuste 2: só renderiza se tiver permissão — não aparece se não tiver acesso
-      if (!isAllowed(feature.id)) return;
+    visibleFeatures.forEach(function(feature) {
 
       const item = document.createElement('div');
       item.className = 'nfx-item';
