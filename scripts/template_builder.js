@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 (function () {
   'use strict';
 
@@ -1986,4 +1985,3 @@
   obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 
 })();
->>>>>>> 521274442fbfbfba063c815edb5d11acc657e035
