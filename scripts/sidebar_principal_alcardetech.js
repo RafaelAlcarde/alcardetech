@@ -38,7 +38,7 @@
 
     try {
       const res = await fetch(
-        SUPABASE_URL + '/rest/v1/tenants_permissoes?tenant_key=eq.' + tenantKey + '&select=template_builder,kpis,disparo_campanha,kanban,portal_disparo&limit=1',
+        SUPABASE_URL + '/rest/v1/tenants_permissoes?tenant_key=eq.' + tenantKey + '&select=template_builder,kpis,disparo_campanha,kanban,portal_disparo,anexar_imagens,etiquetar_contatos&limit=1',
         {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -97,7 +97,7 @@
 
   // Executa automaticamente todas as features do tipo 'auto'
   async function runAutoFeatures() {
-    const autoFeatures = FEATURES.filter(function(f) { return f.type === 'auto'; });
+    const autoFeatures = FEATURES.filter(function(f) { return f.type === 'auto' && isAllowed(f.id); });
     for (var i = 0; i < autoFeatures.length; i++) {
       await loadAndRun(autoFeatures[i]);
     }
