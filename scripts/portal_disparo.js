@@ -184,11 +184,12 @@
     .nfxd-del-cancel{display:inline-flex;align-items:center;padding:5px 10px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
     .nfxd-del-cancel:hover{background:var(--sf2)}
     .nfxd-hist-table th:first-child,.nfxd-hist-table td:first-child{width:36px;text-align:center;padding:0 8px;vertical-align:middle}
-    .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:20%}
-    .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:15%}
-    .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:26%}
-    .nfxd-hist-table th:nth-child(5),.nfxd-hist-table td:nth-child(5){width:19%}
-    .nfxd-hist-table th:nth-child(6),.nfxd-hist-table td:nth-child(6){width:13%}
+    .nfxd-hist-table th:nth-child(2),.nfxd-hist-table td:nth-child(2){width:18%}
+    .nfxd-hist-table th:nth-child(3),.nfxd-hist-table td:nth-child(3){width:13%}
+    .nfxd-hist-table th:nth-child(4),.nfxd-hist-table td:nth-child(4){width:20%}
+    .nfxd-hist-table th:nth-child(5),.nfxd-hist-table td:nth-child(5){width:16%}
+    .nfxd-hist-table th:nth-child(6),.nfxd-hist-table td:nth-child(6){width:16%}
+    .nfxd-hist-table th:nth-child(7),.nfxd-hist-table td:nth-child(7){width:12%}
     .nfxd-hist-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
     .nfxd-hist-table th{font-size:10px;color:var(--tx3);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd)}
     .nfxd-hist-table td{padding:9px 10px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -409,12 +410,11 @@
           <button onclick="nfxdCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">✕</button>
         </div>
         <div class="nfxd-cb">
-          <div class="nfxd-cfg-section">n8n</div>
           <div>
             <label>Webhook URL <span style="color:#25d366">*</span></label>
-            <input type="text" id="nfxd-cfg-wh" placeholder="https://SEU-N8N/webhook/disparo-whatsapp"/>
+            <input type="text" id="nfxd-cfg-wh" placeholder="https://seu-webhook/disparo-whatsapp"/>
             <div style="font-size:10px;color:var(--tx3);margin-top:4px;line-height:1.5">
-              Endpoint único para todas as ações — templates, campanhas e histórico. As credenciais ficam seguras no n8n.
+              Endpoint único para todas as ações — templates, campanhas e histórico. As credenciais ficam seguras em banco de dados.
             </div>
           </div>
           <div id="nfxd-cfg-tr" class="nfxd-tr"></div>
@@ -873,7 +873,7 @@
       <table class="nfxd-hist-table">
         <thead><tr>
           <th style="text-align:center;vertical-align:middle;padding:6px 8px"><input type="checkbox" class="nfxd-cb-inp" id="nfxd-cb-all" onclick="nfxdToggleAll(this)" style="display:block;margin:0 auto"/></th>
-          <th>Campanha</th><th>Público</th><th>Template</th><th>Agendado para</th><th>Status</th>
+          <th>Campanha</th><th>Público</th><th>Template</th><th>Criado em</th><th>Agendado para</th><th>Status</th>
         </tr></thead>
         <tbody>${rows.map(r => {
           const dt = r.dt_disparo ? new Date(r.dt_disparo).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -883,6 +883,7 @@
             <td style="font-weight:500">${esc(r.nome || '—')}</td>
             <td style="color:var(--tx2)">${esc(r.tipo_label || r.tipo || '—')}</td>
             <td style="color:var(--tx3);font-size:11px;font-family:monospace">${esc(r.template_name || '—')}</td>
+            <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—'}</td>
             <td style="color:var(--tx2);font-size:11px;white-space:nowrap">${dt}</td>
             <td><span class="nfxd-badge ${bc}">${esc(r.status || '—')}</span></td>
           </tr>`;
