@@ -4,7 +4,7 @@
   const STORAGE_KEY = 'neofluxx_waba_config';
 
   const N8N_CONFIG = {
-    webhookUrl: 'https://SEU-N8N/webhook/template-builder',
+    webhookUrl: 'https://seu-webhook/template-builder',
     get tenantKey() {
       const match = window.location.pathname.match(/accounts\/(\d+)/);
       return match ? `account-${match[1]}` : 'default';
@@ -215,8 +215,8 @@
 
   async function n8nRequest(action, payload, file) {
     const cfg = getConfig();
-    if (!cfg.webhookUrl) throw new Error('Configure a URL do webhook do n8n.');
-    if (!cfg.tenantKey) throw new Error('Configure a chave da empresa / tenant no n8n.');
+    if (!cfg.webhookUrl) throw new Error('Configure a URL do webhook.');
+    if (!cfg.tenantKey) throw new Error('Configure a chave da empresa.');
     if (file) {
       const form = new FormData();
       form.append('action', action);
@@ -259,7 +259,7 @@
         <div class="nfx-pill"><div class="nfx-dot"></div><span id="nfx-stxt">aguardando configuração</span></div>
         <button class="nfx-tbtn" onclick="nfxOpenCfg()">
           <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          Conf. n8n
+          Configurar
         </button>
         <button id="nfx-xbtn" onclick="nfxClose()">✕</button>
       </div>
@@ -454,12 +454,11 @@
     <div id="nfx-cfg-ov">
       <div id="nfx-cfg-m" class="${tc()}">
         <div class="nfx-ch">
-          <span>⚙ Configuração n8n</span>
+          <span>⚙ Configuração</span>
           <button class="nfx-ib" onclick="nfxCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">✕</button>
         </div>
         <div class="nfx-cb">
-          <div><label>Webhook do n8n <span class="nfx-req">*</span></label><input type="text" id="nfx-wh" placeholder="https://SEU-N8N/webhook/template-builder"/><div class="nfx-hint" style="margin-top:4px">Credenciais da Meta ficam no n8n. O script envia apenas os dados do builder.</div></div>
-          <div><label>API key (opcional)</label><input type="password" id="nfx-apik" placeholder="Opcional para proteger o webhook"/></div>
+          <div><label>URL do Webhook <span class="nfx-req">*</span></label><input type="text" id="nfx-wh" placeholder="https://seu-webhook/template-builder"/><div class="nfx-hint" style="margin-top:4px">Credenciais da Meta ficam no servidor. O script envia apenas os dados do builder.</div></div>
           <div id="nfx-tr" class="nfx-tr"></div>
         </div>
         <div class="nfx-cf">
@@ -503,7 +502,6 @@
   window.nfxOpenCfg = function() {
     const c = getConfig();
     document.getElementById('nfx-wh').value     = c.webhookUrl||'';
-    document.getElementById('nfx-apik').value   = c.apiKey||'';
     document.getElementById('nfx-tr').className = 'nfx-tr';
     document.getElementById('nfx-cfg-ov').classList.add('open');
   };
@@ -514,10 +512,9 @@
 
   window.nfxSaveCfg = function() {
     const webhookUrl = document.getElementById('nfx-wh').value.trim();
-    const apiKey     = document.getElementById('nfx-apik').value.trim();
     const tenantKey  = N8N_CONFIG.tenantKey;
-    if (!webhookUrl) { alert('Preencha o webhook do n8n.'); return; }
-    saveConfig({ webhookUrl, tenantKey, apiKey });
+    if (!webhookUrl) { alert('Preencha o webhook.'); return; }
+    saveConfig({ webhookUrl, tenantKey });
     const s = document.getElementById('nfx-stxt');
     if (s) s.textContent = 'Sincronizado';
     window.nfxCloseCfg();
@@ -525,13 +522,12 @@
 
   window.nfxTest = async function() {
     const webhookUrl = document.getElementById('nfx-wh').value.trim();
-    const apiKey     = document.getElementById('nfx-apik').value.trim();
     const tenantKey  = N8N_CONFIG.tenantKey;
     const r = document.getElementById('nfx-tr');
-    if (!webhookUrl) { r.className='nfx-tr err'; r.textContent='Preencha o webhook do n8n.'; return; }
+    if (!webhookUrl) { r.className='nfx-tr err'; r.textContent='Preencha o webhook.'; return; }
     r.className='nfx-tr'; r.textContent='Testando...'; r.style.display='block';
     try {
-      saveConfig({ webhookUrl, tenantKey, apiKey });
+      saveConfig({ webhookUrl, tenantKey });
       const d = await n8nRequest('test_connection', {});
       r.className='nfx-tr ok'; r.textContent=`✓ ${d.message || 'Webhook conectado'}`;
       const s = document.getElementById('nfx-stxt');
@@ -689,7 +685,7 @@
 
   window.nfxSubmit = async function() {
     const cfg = getConfig();
-    if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Conf. n8n).'); return; }
+    if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Configurar).'); return; }
     const name = (document.getElementById('nfx-name').value||'').trim().replace(/\s/g,'_').toLowerCase();
     const body = (document.getElementById('nfx-body').value||'').trim();
     if (!name) { alert('Informe o nome do template.'); return; }
