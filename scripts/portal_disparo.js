@@ -527,6 +527,16 @@
 
   // ─── PÚBLICO ────────────────────────────────────────────────────────────────
   window.nfxdSelPub = function(label, key) {
+    if (state.wabas.length > 1 && !state.tenantId) {
+      nfxdMostrarWabas();
+      const sec = document.getElementById('nfxd-sec-waba');
+      if (sec) {
+        sec.style.border = '1.5px solid var(--red)';
+        sec.style.borderRadius = '10px';
+        setTimeout(() => { sec.style.border = '1px solid var(--bd)'; }, 2000);
+      }
+      return;
+    }
     state.publico = { label, key };
     state.template = null;
     state.step = 2;
