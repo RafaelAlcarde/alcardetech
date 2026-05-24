@@ -196,6 +196,12 @@
     .nfxd-hist-table tr:last-child td{border-bottom:none}
     .nfxd-hist-table tr:hover td{background:var(--sf2)}
     .nfxd-hist-table tr.sel-row td{background:rgba(229,57,53,.05)}
+    .nfxd-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 4px;margin-top:8px}
+    .nfxd-page-info{font-size:11px;color:var(--tx3)}
+    .nfxd-page-btns{display:flex;gap:6px}
+    .nfxd-page-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+    .nfxd-page-btn:hover:not(:disabled){background:var(--sf2);color:var(--tx)}
+    .nfxd-page-btn:disabled{opacity:.4;cursor:not-allowed}
     .nfxd-waba-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
     .nfxd-waba-card{flex:1;min-width:120px;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;background:var(--sf);display:flex;align-items:center;gap:8px}
     .nfxd-waba-card:hover{border-color:var(--bd2);background:var(--sf2)}
@@ -220,6 +226,7 @@
     templates: [],
     loadingTemplates: false,
     loadingCampanhas: false,
+    histPage: 0,
   };
 
   // ─── OVERLAY ────────────────────────────────────────────────────────────────
@@ -978,6 +985,11 @@
       return;
     }
 
+    const PAGE = 10;
+    const totalPages = Math.ceil(rows.length / PAGE);
+    if (state.histPage >= totalPages) state.histPage = totalPages - 1;
+    const pageRows = rows.slice(state.histPage * PAGE, (state.histPage + 1) * PAGE);
+
     const badgeClass = { agendada: 'nfxd-badge-ag', processando: 'nfxd-badge-pr', executada: 'nfxd-badge-ok', erro: 'nfxd-badge-er' };
     container.innerHTML = `
       <div class="nfxd-del-bar" id="nfxd-del-bar">
@@ -993,7 +1005,7 @@
           <th style="text-align:center;vertical-align:middle;padding:6px 8px"><input type="checkbox" class="nfxd-cb-inp" id="nfxd-cb-all" onclick="nfxdToggleAll(this)" style="display:block;margin:0 auto"/></th>
           <th>Campanha</th><th>Público</th><th>Template</th><th>Criado em</th><th>Agendado para</th><th>Status</th>
         </tr></thead>
-        <tbody>${rows.map(r => {
+        <tbody>${pageRows.map(r => {
           const dt = r.dt_disparo ? new Date(r.dt_disparo).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' }) : '—';
           const bc = badgeClass[r.status] || 'nfxd-badge-ag';
           return `<tr id="nfxd-row-${r.id}">
@@ -1006,7 +1018,21 @@
             <td><span class="nfxd-badge ${bc}">${esc(r.status || '—')}</span></td>
           </tr>`;
         }).join('')}</tbody>
-      </table>`;
+      </table>
+      ${totalPages > 1 ? `
+      <div class="nfxd-pagination">
+        <span class="nfxd-page-info">Página ${state.histPage + 1} de ${totalPages} &bull; ${total} campanhas</span>
+        <div class="nfxd-page-btns">
+          <button class="nfxd-page-btn" onclick="nfxdHistPage(${state.histPage - 1})" ${state.histPage === 0 ? 'disabled' : ''}>← Anterior</button>
+          <button class="nfxd-page-btn" onclick="nfxdHistPage(${state.histPage + 1})" ${state.histPage >= totalPages - 1 ? 'disabled' : ''}>Próximo →</button>
+        </div>
+      </div>` : ''}`;
+  }
+
+  window.nfxdHistPage = function(page) {
+    state.histPage = page;
+    renderHistorico();
+  };
   }
 
   window.nfxdToggleAll = function(cb) {
