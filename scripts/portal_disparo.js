@@ -1033,7 +1033,6 @@
     state.histPage = page;
     renderHistorico();
   };
-  }
 
   window.nfxdToggleAll = function(cb) {
     document.querySelectorAll('.nfxd-row-cb').forEach(c => {
