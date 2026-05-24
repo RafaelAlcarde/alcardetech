@@ -527,13 +527,25 @@
 
   // ─── PÚBLICO ────────────────────────────────────────────────────────────────
   window.nfxdSelPub = function(label, key) {
-    if (state.wabas.length > 1 && !state.tenantId) {
+    if (!state.tenantId) {
       nfxdMostrarWabas();
       const sec = document.getElementById('nfxd-sec-waba');
       if (sec) {
+        sec.style.display = 'block';
         sec.style.border = '1.5px solid var(--red)';
         sec.style.borderRadius = '10px';
-        setTimeout(() => { sec.style.border = '1px solid var(--bd)'; }, 2000);
+        let aviso = document.getElementById('nfxd-waba-aviso');
+        if (!aviso) {
+          aviso = document.createElement('div');
+          aviso.id = 'nfxd-waba-aviso';
+          aviso.style.cssText = 'font-size:11px;color:var(--red);margin-top:6px;padding:0 4px';
+          sec.appendChild(aviso);
+        }
+        aviso.textContent = '⚠ Selecione uma WABA para continuar';
+        setTimeout(() => {
+          sec.style.border = '1px solid var(--bd)';
+          if (aviso) aviso.textContent = '';
+        }, 2500);
       }
       return;
     }
