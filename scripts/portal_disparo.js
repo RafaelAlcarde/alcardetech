@@ -230,7 +230,17 @@
   overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 
   function openModal() { applyTheme(); overlay.classList.add('open'); nfxdLoadWabas(); }
-  function closeModal() { overlay.classList.remove('open'); }
+  function closeModal() {
+    overlay.classList.remove('open');
+    state.tenantId = null;
+    state.wabaNome = null;
+    state.wabas = [];
+    const sec = document.getElementById('nfxd-sec-waba');
+    if (sec) sec.style.display = 'none';
+    const bar = document.getElementById('nfxd-waba-sel-bar');
+    if (bar) bar.style.display = 'none';
+    nfxdReset();
+  }
 
   function applyTheme() {
     const m = document.getElementById('nfxd-modal');
