@@ -288,6 +288,24 @@
     } catch(e) {}
   };
 
+  function nfxLockForm(lock) {
+    const form = document.getElementById('nfx-cv');
+    if (!form) return;
+    // Bloqueia tudo exceto o seletor de waba e a barra de selecionado
+    const toBlock = form.querySelectorAll('.nfx-sec:not(#nfx-sec-waba), #nfx-waba-sel-bar, .nfx-sidebar, #nfx-nav-c, #nfx-nav-l');
+    toBlock.forEach(el => {
+      el.style.pointerEvents = lock ? 'none' : '';
+      el.style.opacity = lock ? '0.35' : '';
+      el.style.userSelect = lock ? 'none' : '';
+    });
+    // Sidebar também
+    const sidebar = document.getElementById('nfx-sidebar');
+    if (sidebar) {
+      sidebar.style.pointerEvents = lock ? 'none' : '';
+      sidebar.style.opacity = lock ? '0.35' : '';
+    }
+  }
+
   window.nfxMostrarWabas = function() {
     const sec = document.getElementById('nfx-sec-waba');
     const bar = document.getElementById('nfx-waba-sel-bar');
@@ -295,6 +313,7 @@
     if (!sec || !grid) return;
     sec.style.display = 'block';
     if (bar) bar.style.display = 'none';
+    nfxLockForm(true);
     grid.innerHTML = wabas.map(w => `
       <div class="nfx-waba-card${tenantId === w.id ? ' sel' : ''}" onclick="nfxSelWaba(${w.id},'${esc(w.waba_nome)}')">
         <div class="nfx-waba-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg></div>
@@ -311,6 +330,7 @@
     if (sec) sec.style.display = 'none';
     if (bar && wabas.length > 1) bar.style.display = 'flex';
     if (txt) txt.textContent = `WABA: ${nome}`;
+    nfxLockForm(false);
   };
 
   function buildHTML() {
