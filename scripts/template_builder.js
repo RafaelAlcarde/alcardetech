@@ -177,6 +177,13 @@
     #nfx-main::-webkit-scrollbar-track,#nfx-pbody::-webkit-scrollbar-track{background:transparent}
     #nfx-main::-webkit-scrollbar-thumb,#nfx-pbody::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
     .nfx-field-err{font-size:10px;color:var(--red);margin-top:3px;display:none}
+    .nfx-waba-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+    .nfx-waba-card{flex:1;min-width:120px;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;background:var(--sf);display:flex;align-items:center;gap:8px}
+    .nfx-waba-card:hover{border-color:var(--bd2);background:var(--sf2)}
+    .nfx-waba-card.sel{border:1.5px solid var(--ac);background:var(--adim)}
+    .nfx-waba-icon{width:30px;height:30px;border-radius:8px;background:var(--adim);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nfx-waba-label{font-size:12px;font-weight:600;color:var(--tx)}
+    .nfx-waba-sel-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--adim);border:1px solid var(--agl);border-radius:7px;font-size:11px;color:var(--ac);margin-bottom:4px}
   `;
   document.head.appendChild(style);
 
@@ -185,6 +192,9 @@
   let varType     = 'text';
   let varExamples = {};
   let config      = Object.assign({}, N8N_CONFIG, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
+  let tenantId    = null;
+  let wabaNome    = null;
+  let wabas       = [];
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function tc()   { return isDark() ? 'dark' : 'light'; }
@@ -221,6 +231,7 @@
       const form = new FormData();
       form.append('action', action);
       form.append('tenant_key', cfg.tenantKey);
+      if (tenantId) form.append('tenant_id', tenantId);
       form.append('payload', JSON.stringify(payload || {}));
       form.append('file', file, file.name || 'upload.bin');
       const res = await fetch(cfg.webhookUrl, { method:'POST', headers:buildN8NHeaders(), body:form });
@@ -231,7 +242,7 @@
     const res = await fetch(cfg.webhookUrl, {
       method: 'POST',
       headers: buildN8NHeaders({ 'Content-Type':'application/json' }),
-      body: JSON.stringify({ action, tenant_key: cfg.tenantKey, payload: payload || {} })
+      body: JSON.stringify({ action, tenant_key: cfg.tenantKey, tenant_id: tenantId, payload: payload || {} })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) throw new Error(data.error || data.message || `HTTP ${res.status}`);
@@ -246,8 +257,61 @@
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeBuilder(); });
 
-  function openBuilder() { applyTheme(); overlay.classList.add('open'); updatePreview(); }
-  function closeBuilder() { overlay.classList.remove('open'); }
+  function openBuilder() { applyTheme(); overlay.classList.add('open'); nfxLoadWabas(); updatePreview(); }
+  function closeBuilder() {
+    overlay.classList.remove('open');
+    tenantId = null;
+    wabaNome = null;
+    wabas = [];
+    const sec = document.getElementById('nfx-sec-waba');
+    if (sec) sec.style.display = 'none';
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    if (bar) bar.style.display = 'none';
+  }
+
+  window.nfxLoadWabas = async function() {
+    const cfg = getConfig();
+    if (!cfg.webhookUrl) return;
+    try {
+      const res = await fetch(cfg.webhookUrl, {
+        method: 'POST',
+        headers: buildN8NHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ action: 'list_wabas', tenant_key: cfg.tenantKey, payload: {} })
+      });
+      const data = await res.json().catch(() => ({}));
+      wabas = data.wabas || [];
+      if (wabas.length === 1) {
+        nfxSelWaba(wabas[0].id, wabas[0].waba_nome);
+      } else if (wabas.length > 1) {
+        nfxMostrarWabas();
+      }
+    } catch(e) {}
+  };
+
+  window.nfxMostrarWabas = function() {
+    const sec = document.getElementById('nfx-sec-waba');
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    const grid = document.getElementById('nfx-waba-grid');
+    if (!sec || !grid) return;
+    sec.style.display = 'block';
+    if (bar) bar.style.display = 'none';
+    grid.innerHTML = wabas.map(w => `
+      <div class="nfx-waba-card${tenantId === w.id ? ' sel' : ''}" onclick="nfxSelWaba(${w.id},'${esc(w.waba_nome)}')">
+        <div class="nfx-waba-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg></div>
+        <div class="nfx-waba-label">${esc(w.waba_nome)}</div>
+      </div>`).join('');
+  };
+
+  window.nfxSelWaba = function(id, nome) {
+    tenantId = id;
+    wabaNome = nome;
+    const sec = document.getElementById('nfx-sec-waba');
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    const txt = document.getElementById('nfx-waba-sel-txt');
+    if (sec) sec.style.display = 'none';
+    if (bar && wabas.length > 1) bar.style.display = 'flex';
+    if (txt) txt.textContent = `WABA: ${nome}`;
+  };
 
   function buildHTML() {
     return `
@@ -281,6 +345,19 @@
       <div id="nfx-main">
         <div id="nfx-cv" style="display:flex;flex-direction:column;gap:14px">
           <div><div class="nfx-title">Novo template</div><div class="nfx-sub">Preencha e envie para aprovação da Meta</div></div>
+
+          <div class="nfx-sec" id="nfx-sec-waba" style="display:none">
+            <div class="nfx-sh"><div class="nfx-sn">W</div><div class="nfx-st">Selecione a WABA</div></div>
+            <div class="nfx-sb">
+              <div class="nfx-waba-grid" id="nfx-waba-grid"></div>
+            </div>
+          </div>
+
+          <div id="nfx-waba-sel-bar" style="display:none" class="nfx-waba-sel-bar">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg>
+            <span id="nfx-waba-sel-txt">—</span>
+            <span style="margin-left:auto;cursor:pointer;color:var(--tx3);font-size:10px" onclick="nfxMostrarWabas()">trocar</span>
+          </div>
 
           <div class="nfx-sec">
             <div class="nfx-sh"><div class="nfx-sn">1</div><div class="nfx-st">Identificação</div></div>
@@ -686,6 +763,25 @@
   window.nfxSubmit = async function() {
     const cfg = getConfig();
     if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Configurar).'); return; }
+    if (!tenantId) {
+      nfxMostrarWabas();
+      const sec = document.getElementById('nfx-sec-waba');
+      if (sec) {
+        sec.style.display = 'block';
+        sec.style.border = '1.5px solid var(--red)';
+        sec.style.borderRadius = '10px';
+        let aviso = document.getElementById('nfx-waba-aviso');
+        if (!aviso) {
+          aviso = document.createElement('div');
+          aviso.id = 'nfx-waba-aviso';
+          aviso.style.cssText = 'font-size:11px;color:var(--red);margin-top:6px;padding:0 4px';
+          sec.appendChild(aviso);
+        }
+        aviso.textContent = '⚠ Selecione uma WABA para continuar';
+        setTimeout(() => { sec.style.border = '1px solid var(--bd)'; if (aviso) aviso.textContent = ''; }, 2500);
+      }
+      return;
+    }
     const name = (document.getElementById('nfx-name').value||'').trim().replace(/\s/g,'_').toLowerCase();
     const body = (document.getElementById('nfx-body').value||'').trim();
     if (!name) { alert('Informe o nome do template.'); return; }
