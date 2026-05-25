@@ -1060,6 +1060,7 @@
         body: JSON.stringify({
           action: 'delete_template',
           tenant_key: cfg.tenantKey,
+          tenant_id: tenantId,
           payload: { names: [..._selectedTemplates] }
         })
       });
