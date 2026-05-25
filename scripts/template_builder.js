@@ -267,6 +267,8 @@
     if (sec) sec.style.display = 'none';
     const bar = document.getElementById('nfx-waba-sel-bar');
     if (bar) bar.style.display = 'none';
+    nfxLockForm(false);
+    setTimeout(() => { if (window.nfxView) nfxView('create'); }, 50);
   }
 
   window.nfxLoadWabas = async function() {
