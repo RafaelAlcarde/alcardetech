@@ -6,15 +6,16 @@
   // type: 'script' — aparece no menu, executa ao clicar
   // type: 'modal'  — aparece no menu, abre iframe ao clicar
   // type: 'auto'   — não aparece no menu, executa ao carregar
+  // adminOnly: true — só aparece para administradores
   // ============================================================
   const FEATURES = [
-    { id: 'portal_disparo',    label: 'Portal Disparo',    type: 'script', url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/portal_disparo.js' },
-    { id: 'template_builder',  label: 'Template Builder',  type: 'script', url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_builder.js' },
-    { id: 'kanban',            label: 'Kanban',            type: 'script', url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kanban.js' },
-    { id: 'kpis',              label: 'KPIs',              type: 'script', url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kpis.js' },
-    { id: 'disparo_campanha',  label: 'Disparo Campanha',  type: 'modal',  url: 'https://webhooks.neofluxx.com/form/65ae30a5-3e39-4e55-b932-44c038d009ea' },
-    { id: 'etiquetar_contatos',label: 'Etiquetar Contatos',type: 'auto',   url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/etiquetar_contatos.js' },
-    { id: 'anexar_imagens',    label: 'Anexar Imagens',    type: 'auto',   url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_anexar_imagens.js' },
+    { id: 'portal_disparo',    label: 'Portal Disparo',    type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/portal_disparo.js' },
+    { id: 'template_builder',  label: 'Template Builder',  type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_builder.js' },
+    { id: 'kanban',            label: 'Kanban',            type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kanban.js' },
+    { id: 'kpis',              label: 'KPIs',              type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kpis.js' },
+    { id: 'disparo_campanha',  label: 'Disparo Campanha',  type: 'modal',  adminOnly: false, url: 'https://webhooks.neofluxx.com/form/65ae30a5-3e39-4e55-b932-44c038d009ea' },
+    { id: 'etiquetar_contatos',label: 'Etiquetar Contatos',type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/etiquetar_contatos.js' },
+    { id: 'anexar_imagens',    label: 'Anexar Imagens',    type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_anexar_imagens.js' },
   ];
 
   // ============================================================
@@ -23,10 +24,25 @@
   const SUPABASE_URL  = 'https://stsstxdxmlwniezzmbxe.supabase.co';
   const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
 
-  // Pega o account_id da URL do Chatfluxx
+  // Pega o account_id da URL
   function getAccountId() {
     const m = location.pathname.match(/accounts\/(\d+)/);
     return m ? m[1] : null;
+  }
+
+  // Pega o role do usuário logado via Vue store
+  function getUserRole() {
+    try {
+      const app   = document.querySelector('#app')?.__vue_app__;
+      const store = app?.config?.globalProperties?.$store;
+      const user  = store?.state?.auth?.currentUser;
+      const accountId = getAccountId();
+      if (!user || !accountId) return 'agent';
+      const account = user.accounts.find(function(a) { return a.id === parseInt(accountId); });
+      return account?.role || 'agent';
+    } catch (e) {
+      return 'agent'; // fallback seguro
+    }
   }
 
   // Busca permissões do tenant no Supabase
@@ -59,10 +75,16 @@
   let permissions = {};
   let permissionsLoaded = false;
 
-  function isAllowed(featureId) {
+  function isAllowed(feature) {
+    // Se não carregou o Supabase, bloqueia tudo
     if (!permissionsLoaded) return false;
-    if (!(featureId in permissions)) return true;
-    return permissions[featureId] === true;
+
+    // Verifica adminOnly — se for adminOnly e o usuário não for admin, bloqueia
+    if (feature.adminOnly && getUserRole() !== 'administrator') return false;
+
+    // Verifica permissão no Supabase
+    if (!(feature.id in permissions)) return true;
+    return permissions[feature.id] === true;
   }
 
   async function init() {
@@ -97,7 +119,7 @@
 
   // Executa automaticamente todas as features do tipo 'auto'
   async function runAutoFeatures() {
-    const autoFeatures = FEATURES.filter(function(f) { return f.type === 'auto' && isAllowed(f.id); });
+    const autoFeatures = FEATURES.filter(function(f) { return f.type === 'auto' && isAllowed(f); });
     for (var i = 0; i < autoFeatures.length; i++) {
       await loadAndRun(autoFeatures[i]);
     }
@@ -228,13 +250,12 @@
     `;
 
     // Verifica se há pelo menos uma feature permitida para esse cliente
-    const visibleFeatures = FEATURES.filter(function(f) { return f.type !== 'auto' && isAllowed(f.id); });
+    const visibleFeatures = FEATURES.filter(function(f) { return f.type !== 'auto' && isAllowed(f); });
     if (visibleFeatures.length === 0) return;
 
-    // Monta apenas features visíveis no menu (script e modal) e permitidas
+    // Monta o submenu
     const submenu = root.querySelector('#nfx-submenu');
     visibleFeatures.forEach(function(feature) {
-
       const item = document.createElement('div');
       item.className = 'nfx-item';
       item.innerHTML = `
