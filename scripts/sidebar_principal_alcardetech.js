@@ -13,7 +13,7 @@
     { id: 'template_builder',  label: 'Template Builder',  type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_builder.js' },
     { id: 'kanban',            label: 'Kanban',            type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kanban.js' },
     { id: 'kpis',              label: 'KPIs',              type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kpis.js' },
-    { id: 'disparo_campanha',  label: 'Disparo Campanha',  type: 'modal',  adminOnly: false, url: 'https://webhooks.neofluxx.com/form/65ae30a5-3e39-4e55-b932-44c038d009ea' },
+    { id: 'disparo_campanha',  label: 'Disparo Campanha',  type: 'modal',  adminOnly: true, url: 'https://webhooks.neofluxx.com/form/65ae30a5-3e39-4e55-b932-44c038d009ea' },
     { id: 'etiquetar_contatos',label: 'Etiquetar Contatos',type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/etiquetar_contatos.js' },
     { id: 'anexar_imagens',    label: 'Anexar Imagens',    type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_anexar_imagens.js' },
   ];
