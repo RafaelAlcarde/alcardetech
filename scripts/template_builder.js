@@ -177,6 +177,13 @@
     #nfx-main::-webkit-scrollbar-track,#nfx-pbody::-webkit-scrollbar-track{background:transparent}
     #nfx-main::-webkit-scrollbar-thumb,#nfx-pbody::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
     .nfx-field-err{font-size:10px;color:var(--red);margin-top:3px;display:none}
+    .nfx-waba-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+    .nfx-waba-card{flex:1;min-width:120px;border:1px solid var(--bd);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .15s;background:var(--sf);display:flex;align-items:center;gap:8px}
+    .nfx-waba-card:hover{border-color:var(--bd2);background:var(--sf2)}
+    .nfx-waba-card.sel{border:1.5px solid var(--ac);background:var(--adim)}
+    .nfx-waba-icon{width:30px;height:30px;border-radius:8px;background:var(--adim);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .nfx-waba-label{font-size:12px;font-weight:600;color:var(--tx)}
+    .nfx-waba-sel-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--adim);border:1px solid var(--agl);border-radius:7px;font-size:11px;color:var(--ac);margin-bottom:4px}
   `;
   document.head.appendChild(style);
 
@@ -185,6 +192,9 @@
   let varType     = 'text';
   let varExamples = {};
   let config      = Object.assign({}, N8N_CONFIG, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
+  let tenantId    = null;
+  let wabaNome    = null;
+  let wabas       = [];
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function tc()   { return isDark() ? 'dark' : 'light'; }
@@ -221,6 +231,7 @@
       const form = new FormData();
       form.append('action', action);
       form.append('tenant_key', cfg.tenantKey);
+      if (tenantId) form.append('tenant_id', tenantId);
       form.append('payload', JSON.stringify(payload || {}));
       form.append('file', file, file.name || 'upload.bin');
       const res = await fetch(cfg.webhookUrl, { method:'POST', headers:buildN8NHeaders(), body:form });
@@ -231,7 +242,7 @@
     const res = await fetch(cfg.webhookUrl, {
       method: 'POST',
       headers: buildN8NHeaders({ 'Content-Type':'application/json' }),
-      body: JSON.stringify({ action, tenant_key: cfg.tenantKey, payload: payload || {} })
+      body: JSON.stringify({ action, tenant_key: cfg.tenantKey, tenant_id: tenantId, payload: payload || {} })
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.error) throw new Error(data.error || data.message || `HTTP ${res.status}`);
@@ -246,8 +257,19 @@
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e => { if (e.target === overlay) closeBuilder(); });
 
-  function openBuilder() { applyTheme(); overlay.classList.add('open'); updatePreview(); }
-  function closeBuilder() { overlay.classList.remove('open'); }
+  function openBuilder() { applyTheme(); overlay.classList.add('open'); nfxLoadWabas(); updatePreview(); }
+  function closeBuilder() {
+    overlay.classList.remove('open');
+    tenantId = null;
+    wabaNome = null;
+    wabas = [];
+    const sec = document.getElementById('nfx-sec-waba');
+    if (sec) sec.style.display = 'none';
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    if (bar) bar.style.display = 'none';
+    nfxLockForm(false);
+    setTimeout(() => { if (window.nfxView) nfxView('create'); }, 50);
+  }
 
   function buildHTML() {
     return `
@@ -281,6 +303,19 @@
       <div id="nfx-main">
         <div id="nfx-cv" style="display:flex;flex-direction:column;gap:14px">
           <div><div class="nfx-title">Novo template</div><div class="nfx-sub">Preencha e envie para aprovação da Meta</div></div>
+
+          <div class="nfx-sec" id="nfx-sec-waba" style="display:none">
+            <div class="nfx-sh"><div class="nfx-sn">W</div><div class="nfx-st">Selecione a WABA</div></div>
+            <div class="nfx-sb">
+              <div class="nfx-waba-grid" id="nfx-waba-grid"></div>
+            </div>
+          </div>
+
+          <div id="nfx-waba-sel-bar" style="display:none" class="nfx-waba-sel-bar">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg>
+            <span id="nfx-waba-sel-txt">—</span>
+            <span style="margin-left:auto;cursor:pointer;color:var(--tx3);font-size:10px" onclick="nfxMostrarWabas()">trocar</span>
+          </div>
 
           <div class="nfx-sec">
             <div class="nfx-sh"><div class="nfx-sn">1</div><div class="nfx-st">Identificação</div></div>
@@ -494,6 +529,68 @@
     `;
   }
 
+  window.nfxLoadWabas = async function() {
+    const cfg = getConfig();
+    if (!cfg.webhookUrl) return;
+    try {
+      const res = await fetch(cfg.webhookUrl, {
+        method: 'POST',
+        headers: buildN8NHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ action: 'list_wabas', tenant_key: cfg.tenantKey, payload: {} })
+      });
+      const data = await res.json().catch(() => ({}));
+      wabas = data.wabas || [];
+      if (wabas.length === 1) {
+        nfxSelWaba(wabas[0].id, wabas[0].waba_nome);
+      } else if (wabas.length > 1) {
+        nfxMostrarWabas();
+      }
+    } catch(e) {}
+  };
+
+  function nfxLockForm(lock) {
+    const form = document.getElementById('nfx-cv');
+    if (!form) return;
+    const toBlock = form.querySelectorAll('.nfx-sec:not(#nfx-sec-waba), #nfx-waba-sel-bar, .nfx-sidebar, #nfx-nav-c, #nfx-nav-l');
+    toBlock.forEach(el => {
+      el.style.pointerEvents = lock ? 'none' : '';
+      el.style.opacity = lock ? '0.35' : '';
+      el.style.userSelect = lock ? 'none' : '';
+    });
+    const sidebar = document.getElementById('nfx-sidebar');
+    if (sidebar) {
+      sidebar.style.pointerEvents = lock ? 'none' : '';
+      sidebar.style.opacity = lock ? '0.35' : '';
+    }
+  }
+
+  window.nfxMostrarWabas = function() {
+    const sec = document.getElementById('nfx-sec-waba');
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    const grid = document.getElementById('nfx-waba-grid');
+    if (!sec || !grid) return;
+    sec.style.display = 'block';
+    if (bar) bar.style.display = 'none';
+    nfxLockForm(true);
+    grid.innerHTML = wabas.map(w => `
+      <div class="nfx-waba-card${tenantId === w.id ? ' sel' : ''}" onclick="nfxSelWaba(${w.id},'${esc(w.waba_nome)}')">
+        <div class="nfx-waba-icon"><svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg></div>
+        <div class="nfx-waba-label">${esc(w.waba_nome)}</div>
+      </div>`).join('');
+  };
+
+  window.nfxSelWaba = function(id, nome) {
+    tenantId = id;
+    wabaNome = nome;
+    const sec = document.getElementById('nfx-sec-waba');
+    const bar = document.getElementById('nfx-waba-sel-bar');
+    const txt = document.getElementById('nfx-waba-sel-txt');
+    if (sec) sec.style.display = 'none';
+    if (bar && wabas.length > 1) bar.style.display = 'flex';
+    if (txt) txt.textContent = `WABA: ${nome}`;
+    nfxLockForm(false);
+  };
+
   window.nfxClose = closeBuilder;
 
   // Expõe abertura para o menu Neofluxx
@@ -672,8 +769,7 @@
 
   window.nfxRmBtn = function(i) { buttons.splice(i,1); renderBtns(); updatePreview(); };
 
-  window.nfxClear = function() {
-    if (!confirm('Limpar o formulário?')) return;
+  function nfxDoClear() {
     ['nfx-name','nfx-body','nfx-foot','nfx-hval'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.style.borderColor=''; } });
     buttons=[]; varExamples={}; varType='none';
     renderBtns();
@@ -681,11 +777,70 @@
     window.nfxHdr('none', document.querySelector('.nfx-tt'));
     ['nfx-var-warn','nfx-var-pos-err','nfx-name-err'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
     updatePreview();
+  }
+
+  function nfxShowModal({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel, type }) {
+    const existing = document.getElementById('nfx-custom-modal-ov');
+    if (existing) existing.remove();
+    const tc_ = () => document.getElementById('nfx-modal')?.classList.contains('dark') ? 'dark' : 'light';
+    const iconMap = {
+      success: '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#25d366" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      confirm: '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="var(--amb)" stroke-width="2.5"><path d="M12 9v4M12 17h.01" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10"/></svg>',
+      error:   '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="var(--red)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+    const bgMap = { success: 'rgba(37,211,102,.1)', confirm: 'rgba(245,166,35,.1)', error: 'rgba(229,57,53,.1)' };
+    const ov = document.createElement('div');
+    ov.id = 'nfx-custom-modal-ov';
+    ov.style.cssText = 'display:flex;position:fixed;inset:0;z-index:200000;background:rgba(0,0,0,.65);align-items:center;justify-content:center';
+    ov.innerHTML = `
+      <div class="${tc_()}" style="width:380px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--sf,#fff);color:var(--tx,#1a1a2e);--bd:#e2e5ea;--sf:#fff;--sf2:#f0f2f5;--tx:#1a1a2e;--tx2:#5a6170;--ac:#25d366;--adim:rgba(37,211,102,.1);--agl:rgba(37,211,102,.3);--red:#e53935;--amb:#f5a623;">
+        <div style="padding:20px 20px 8px;display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;background:${bgMap[type||'success']};display:flex;align-items:center;justify-content:center;flex-shrink:0">${iconMap[type||'success']}</div>
+          <div style="font-size:14px;font-weight:600">${title}</div>
+        </div>
+        <div style="padding:4px 20px 16px;font-size:12px;color:var(--tx2,#5a6170);line-height:1.6">${message}</div>
+        <div style="padding:12px 20px;border-top:1px solid var(--bd,#e2e5ea);display:flex;gap:8px;justify-content:flex-end">
+          ${cancelLabel ? `<button id="nfx-cm-cancel" style="padding:7px 14px;border-radius:7px;border:1px solid var(--bd,#e2e5ea);background:transparent;color:var(--tx2,#5a6170);font-size:12px;cursor:pointer;font-family:inherit">${cancelLabel}</button>` : ''}
+          <button id="nfx-cm-confirm" style="padding:7px 16px;border-radius:7px;border:none;background:var(--ac,#25d366);color:#000;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">${confirmLabel||'OK'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.getElementById('nfx-cm-confirm').onclick = () => { ov.remove(); onConfirm && onConfirm(); };
+    const cancelBtn = document.getElementById('nfx-cm-cancel');
+    if (cancelBtn) cancelBtn.onclick = () => { ov.remove(); onCancel && onCancel(); };
+  }
+
+  window.nfxClear = function() {
+    nfxShowModal({
+      title: 'Limpar formulário',
+      message: 'Deseja limpar todos os campos? Os dados preenchidos serão perdidos.',
+      confirmLabel: 'Sim, limpar',
+      cancelLabel: 'Não',
+      type: 'confirm',
+      onConfirm: nfxDoClear
+    });
   };
 
   window.nfxSubmit = async function() {
     const cfg = getConfig();
     if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Configurar).'); return; }
+    if (!tenantId) {
+      nfxMostrarWabas();
+      const sec = document.getElementById('nfx-sec-waba');
+      if (sec) {
+        sec.style.border = '1.5px solid var(--red)';
+        let aviso = document.getElementById('nfx-waba-aviso');
+        if (!aviso) {
+          aviso = document.createElement('div');
+          aviso.id = 'nfx-waba-aviso';
+          aviso.style.cssText = 'font-size:11px;color:var(--red);margin-top:6px;padding:0 4px';
+          sec.appendChild(aviso);
+        }
+        aviso.textContent = '⚠ Selecione uma WABA para continuar';
+        setTimeout(() => { sec.style.border = '1px solid var(--bd)'; if (aviso) aviso.textContent = ''; }, 2500);
+      }
+      return;
+    }
     const name = (document.getElementById('nfx-name').value||'').trim().replace(/\s/g,'_').toLowerCase();
     const body = (document.getElementById('nfx-body').value||'').trim();
     if (!name) { alert('Informe o nome do template.'); return; }
@@ -726,8 +881,24 @@
         result = await n8nRequest('create_template', payload);
       }
 
-      alert(`✓ Template "${name}" enviado!\nID: ${result.template_id || result.id || '-'}\nStatus: ${result.status || 'PENDING'}`);
-      window.nfxClear();
+      const tplId = result.template_id || result.id || '-';
+      const tplStatus = result.status || 'PENDING';
+      nfxShowModal({
+        title: 'Template enviado!',
+        message: `<strong>${name}</strong> foi enviado para aprovação da Meta.<br><br><span style="font-size:11px;color:var(--tx3,#9aa0ad)">ID: ${tplId} &nbsp;•&nbsp; Status: ${tplStatus}</span>`,
+        confirmLabel: 'OK',
+        type: 'success',
+        onConfirm: () => {
+          nfxShowModal({
+            title: 'Limpar formulário?',
+            message: 'Deseja limpar os campos para criar um novo template?',
+            confirmLabel: 'Sim, limpar',
+            cancelLabel: 'Não',
+            type: 'confirm',
+            onConfirm: nfxDoClear
+          });
+        }
+      });
     } catch(e) {
       alert(`✗ Erro ao enviar: ${e.message}`);
     } finally {
@@ -942,6 +1113,7 @@
         body: JSON.stringify({
           action: 'delete_template',
           tenant_key: cfg.tenantKey,
+          tenant_id: tenantId,
           payload: { names: [..._selectedTemplates] }
         })
       });
