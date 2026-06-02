@@ -675,7 +675,7 @@
     </div>` : '';
     const tData = encodeURIComponent(JSON.stringify(t));
     return `<div class="nfxd-tpl-card${selected ? ' sel' : ''}" id="nfxd-tpl-${t.id}" onclick="nfxdSelTpl('${t.id}','${esc(t.name)}',decodeURIComponent('${tData}'))">
-      <div class="nfxd-tpl-name">${esc(t.name)}</div>
+      <div class="nfxd-tpl-name" title="${esc(t.name)}">${esc(t.name)}</div>
       <div class="nfxd-wpp-mock">${imgHtml}<div class="nfxd-wpp-text">${bodyText}</div>${btnHtml}</div>
     </div>`;
   }
