@@ -64,7 +64,13 @@
     .nfx-inp:focus,.nfx-sel:focus,.nfx-ta:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--adim)}
     .nfx-inp::placeholder,.nfx-ta::placeholder{color:var(--tx3)}
     .nfx-sel{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-    .nfx-ta{resize:vertical;min-height:80px;line-height:1.6;font-family:monospace;font-size:12px}
+    .nfx-ta{resize:vertical;min-height:80px;line-height:1.6;font-family:monospace;font-size:12px;border-radius:7px 7px 0 0!important}
+    .nfx-toolbar{display:flex;align-items:center;gap:2px;padding:4px 6px;background:var(--sf3);border:1px solid var(--bd);border-top:none;border-radius:0 0 7px 7px}
+    .nfx-tb-btn{background:transparent;border:none;border-radius:5px;padding:3px 7px;font-size:12px;cursor:pointer;color:var(--tx2);transition:all .15s;line-height:1.4}
+    .nfx-tb-btn:hover{background:var(--sf2);color:var(--tx)}
+    .nfx-tb-sep{width:1px;height:14px;background:var(--bd2);margin:0 3px}
+    .nfx-tb-var{font-size:10px;font-family:monospace;color:var(--ac)!important;border:1px solid var(--agl)!important;background:var(--adim)!important;padding:2px 7px}
+    .nfx-tb-var:hover{opacity:.8}
     .nfx-cc{font-size:10px;color:var(--tx3);text-align:right}
     .nfx-cc.wa rn{color:var(--amb)}.nfx-cc.over{color:var(--red)}
     .nfx-ttabs{display:flex;gap:5px;flex-wrap:wrap}
@@ -391,12 +397,22 @@
             <div class="nfx-sb">
               <div class="nfx-f">
                 <label>Texto</label>
-                <textarea class="nfx-ta" id="nfx-body" placeholder="Olá {{1}}, seu pedido foi confirmado!" oninput="nfxBodyChg(this)"></textarea>
+                <div style="position:relative">
+                    <textarea class="nfx-ta" id="nfx-body" placeholder="Olá {{1}}, seu pedido foi confirmado!" oninput="nfxBodyChg(this)"></textarea>
+                    <div class="nfx-toolbar">
+                      <button class="nfx-tb-btn" title="Emoji" onclick="nfxTbEmoji(event)" type="button">😊</button>
+                      <button class="nfx-tb-btn" title="Negrito" onclick="nfxTbWrap('*')" type="button"><b>B</b></button>
+                      <button class="nfx-tb-btn" title="Itálico" onclick="nfxTbWrap('_')" type="button"><i>I</i></button>
+                      <div class="nfx-tb-sep"></div>
+                      <button class="nfx-tb-btn nfx-tb-var" title="Inserir variável" onclick="nfxTbVar()" type="button">+ {{var}}</button>
+                    </div>
+                    <div id="nfx-emoji-picker-wrap" style="display:none;position:absolute;bottom:36px;left:0;z-index:100001"></div>
+                  </div>
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <div class="nfx-hint">Use <code>{{1}}</code> <code>{{2}}</code> para variáveis</div>
                   <div class="nfx-cc" id="nfx-bc">0/1024</div>
                 </div>
-                <div class="nfx-hint" style="margin-top:2px">Para negrito: <code>*texto*</code></div>
+
                 <div class="nfx-vs" id="nfx-vs"></div>
                 <div class="nfx-warn" id="nfx-var-warn">⚠ Use apenas números: <code>{{1}}</code>, <code>{{2}}</code>... Formato com texto como <code>{{nome}}</code> é rejeitado pela Meta.</div>
                 <div class="nfx-field-err" id="nfx-var-dup-err">⚠ Variável duplicada — cada variável deve aparecer apenas uma vez no texto.</div>
@@ -589,6 +605,75 @@
     if (bar && wabas.length > 1) bar.style.display = 'flex';
     if (txt) txt.textContent = `WABA: ${nome}`;
     nfxLockForm(false);
+  };
+
+  // Carrega emoji-picker-element via CDN
+  if (!customElements.get('emoji-picker')) {
+    const s = document.createElement('script');
+    s.type = 'module';
+    s.src = 'https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js';
+    document.head.appendChild(s);
+  }
+
+  function nfxInsertAtCursor(text) {
+    const ta = document.getElementById('nfx-body');
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+    ta.selectionStart = ta.selectionEnd = s + text.length;
+    ta.focus();
+    nfxBodyChg(ta);
+  }
+
+  window.nfxTbWrap = function(char) {
+    const ta = document.getElementById('nfx-body');
+    if (!ta) return;
+    const s = ta.selectionStart, e = ta.selectionEnd;
+    const sel = ta.value.slice(s, e);
+    if (sel) {
+      const wrapped = char + sel + char;
+      ta.value = ta.value.slice(0, s) + wrapped + ta.value.slice(e);
+      ta.selectionStart = s;
+      ta.selectionEnd = s + wrapped.length;
+    } else {
+      const placeholder = char + 'texto' + char;
+      ta.value = ta.value.slice(0, s) + placeholder + ta.value.slice(e);
+      ta.selectionStart = s + 1;
+      ta.selectionEnd = s + placeholder.length - 1;
+    }
+    ta.focus();
+    nfxBodyChg(ta);
+  };
+
+  window.nfxTbVar = function() {
+    const ta = document.getElementById('nfx-body');
+    if (!ta) return;
+    const existing = [...new Set((ta.value.match(/\{\{(\d+)\}\}/g) || []))].map(v => parseInt(v.replace(/[{}]/g, '')));
+    let next = 1;
+    while (existing.includes(next)) next++;
+    nfxInsertAtCursor('{{' + next + '}}');
+  };
+
+  window.nfxTbEmoji = function(event) {
+    event.stopPropagation();
+    const wrap = document.getElementById('nfx-emoji-picker-wrap');
+    if (!wrap) return;
+    if (wrap.style.display !== 'none') { wrap.style.display = 'none'; return; }
+    if (!wrap.querySelector('emoji-picker')) {
+      const picker = document.createElement('emoji-picker');
+      picker.style.cssText = '--border-radius:10px;--shadow:0 4px 20px rgba(0,0,0,.2);width:300px;height:340px';
+      picker.addEventListener('emoji-click', e => {
+        nfxInsertAtCursor(e.detail.unicode);
+        wrap.style.display = 'none';
+      });
+      wrap.appendChild(picker);
+    }
+    wrap.style.display = 'block';
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!wrap.contains(e.target)) { wrap.style.display = 'none'; document.removeEventListener('click', handler); }
+      });
+    }, 0);
   };
 
   window.nfxClose = closeBuilder;
