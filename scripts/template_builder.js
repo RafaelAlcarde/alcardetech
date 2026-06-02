@@ -406,7 +406,7 @@
                       <div class="nfx-tb-sep"></div>
                       <button class="nfx-tb-btn nfx-tb-var" title="Inserir variável" onclick="nfxTbVar()" type="button">+ {{var}}</button>
                     </div>
-                    <div id="nfx-emoji-picker-wrap" style="display:none;position:absolute;bottom:36px;left:0;z-index:100001"></div>
+                    <div id="nfx-emoji-picker-wrap" style="display:none;position:fixed;z-index:100001"></div>
                   </div>
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <div class="nfx-hint">Use <code>{{1}}</code> <code>{{2}}</code> para variáveis</div>
@@ -659,6 +659,13 @@
     const wrap = document.getElementById('nfx-emoji-picker-wrap');
     if (!wrap) return;
     if (wrap.style.display !== 'none') { wrap.style.display = 'none'; return; }
+    const btn = event.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const pickerH = 340, pickerW = 300;
+    const top = rect.top - pickerH - 6 > 0 ? rect.top - pickerH - 6 : rect.bottom + 6;
+    const left = Math.min(rect.left, window.innerWidth - pickerW - 8);
+    wrap.style.top = top + 'px';
+    wrap.style.left = left + 'px';
     if (!wrap.querySelector('emoji-picker')) {
       const picker = document.createElement('emoji-picker');
       picker.style.cssText = '--border-radius:10px;--shadow:0 4px 20px rgba(0,0,0,.2);width:300px;height:340px';
@@ -1050,7 +1057,7 @@
       if (val && val.trim()) return `<span class="nfx-vh">${esc(val)}</span>`;
       return `<span class="nfx-vh">${match}</span>`;
     });
-    result = result.replace(/\*(.+?)\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+    result = result.replace(/\*(.+?)\*/g,'<b>$1</b>').replace(/\_(.+?)\_/g,'<em>$1</em>').replace(/\n/g,'<br>');
     pb.innerHTML = result;
   }
 
