@@ -60,7 +60,7 @@
     .nfxd-ni svg{width:15px;height:15px;flex-shrink:0}
     .nfxd-nb{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:10px;background:var(--sf3);color:var(--tx3)}
     .nfxd-ni.active .nfxd-nb{background:var(--adim);color:var(--ac)}
-    #nfxd-main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg);min-width:0}
+    #nfxd-main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
     .nfxd-title{font-size:16px;font-weight:600;color:var(--tx)}
     .nfxd-sub{font-size:11px;color:var(--tx2);margin-top:2px}
     .nfxd-sec{background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
@@ -85,10 +85,10 @@
     .nfxd-pub-label{font-size:13px;font-weight:600;color:var(--tx)}
     .nfxd-pub-desc{font-size:10px;color:var(--tx3);margin-top:2px}
     .nfxd-tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .nfxd-tpl-card{border:1px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;background:var(--sf)}
+    .nfxd-tpl-card{border:1px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;background:var(--sf);min-width:0}
     .nfxd-tpl-card:hover{border-color:var(--bd2);background:var(--sf2)}
     .nfxd-tpl-card.sel{border:1.5px solid var(--ac);background:var(--adim)}
-    .nfxd-tpl-name{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+    .nfxd-tpl-name{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .nfxd-wpp-mock{background:#E9F7EF;border-radius:8px;padding:8px 10px}
     .nfxd-wpp-img{width:100%;height:64px;background:#E9F7EF;border-radius:5px;margin-bottom:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px dashed #A5D6A7}
     .nfxd-wpp-img img{width:100%;height:100%;object-fit:cover;border-radius:5px}
@@ -629,7 +629,7 @@
     let searchEl = document.getElementById('nfxd-tpl-search');
     if (!searchEl) {
       container.innerHTML = `
-        <div style="margin-bottom:10px;position:relative">
+        <div style="margin-bottom:10px;position:relative;min-width:0">
           <input class="nfxd-inp" id="nfxd-tpl-search" placeholder="Buscar template pelo nome..." oninput="nfxdSearchTpl(this.value)" style="padding-left:30px"/>
           <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
         </div>
