@@ -60,7 +60,7 @@
     .nfxd-ni svg{width:15px;height:15px;flex-shrink:0}
     .nfxd-nb{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:10px;background:var(--sf3);color:var(--tx3)}
     .nfxd-ni.active .nfxd-nb{background:var(--adim);color:var(--ac)}
-    #nfxd-main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+    #nfxd-main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px;background:var(--bg);min-width:0}
     .nfxd-title{font-size:16px;font-weight:600;color:var(--tx)}
     .nfxd-sub{font-size:11px;color:var(--tx2);margin-top:2px}
     .nfxd-sec{background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
