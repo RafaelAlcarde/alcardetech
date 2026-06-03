@@ -4,7 +4,7 @@
   const STORAGE_KEY = 'neofluxx_waba_config';
 
   const N8N_CONFIG = {
-    webhookUrl: 'https://webhooks.neofluxx.com/webhook/template-builder',
+    webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
     get tenantKey() {
       const match = window.location.pathname.match(/accounts\/(\d+)/);
       return match ? `account-${match[1]}` : 'default';
