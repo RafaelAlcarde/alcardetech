@@ -1,10 +1,8 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'neofluxx_disparo_config';
-
   const CONFIG = {
-    webhookUrl: 'SEU_N8N_WEBHOOK_URL',
+    webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/disparo-whatsapp-v2',
     get tenantKey() {
       const match = window.location.pathname.match(/accounts\/(\d+)/);
       return match ? `account-${match[1]}` : 'default';
@@ -25,13 +23,7 @@
   function tc() { return isDark() ? 'dark' : 'light'; }
   function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function getConfig() {
-    return Object.assign({}, CONFIG, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
-  }
-
-  function saveConfig(next) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next || {}));
-  }
+  function getConfig() { return CONFIG; }
 
   // ─── CSS ────────────────────────────────────────────────────────────────────
   const style = document.createElement('style');
@@ -150,22 +142,7 @@
     #nfxd-main::-webkit-scrollbar,#nfxd-pbody::-webkit-scrollbar{width:4px}
     #nfxd-main::-webkit-scrollbar-track,#nfxd-pbody::-webkit-scrollbar-track{background:transparent}
     #nfxd-main::-webkit-scrollbar-thumb,#nfxd-pbody::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
-    #nfxd-cfg-ov{display:none;position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
-    #nfxd-cfg-ov.open{display:flex}
-    #nfxd-cfg-m{width:480px;max-width:94vw;max-height:88vh;border-radius:12px;overflow:hidden;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-    #nfxd-cfg-m.light{background:#fff;color:#1a1a2e;--bd:#e2e5ea;--sf:#fff;--sf2:#f0f2f5;--tx:#1a1a2e;--tx2:#5a6170;--tx3:#9aa0ad;--ac:#25d366;--adim:rgba(37,211,102,.1);--agl:rgba(37,211,102,.3);--red:#e53935}
-    #nfxd-cfg-m.dark{background:#17171b;color:#f0f0f5;--bd:#2a2a35;--sf:#17171b;--sf2:#1e1e24;--tx:#f0f0f5;--tx2:#9090a8;--tx3:#55556a;--ac:#25d366;--adim:rgba(37,211,102,.12);--agl:rgba(37,211,102,.25);--red:#ff5e5e}
-    .nfxd-ch{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600}
-    .nfxd-cb{padding:16px;display:flex;flex-direction:column;gap:12px}
-    .nfxd-cf{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
-    .nfxd-cb label{font-size:11px;color:var(--tx2);font-weight:500;display:block;margin-bottom:4px}
-    .nfxd-cb input{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;color:var(--tx);font-size:12px;width:100%;box-sizing:border-box;font-family:inherit}
-    .nfxd-cb input:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--adim)}
-    .nfxd-tr{padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;display:none}
-    .nfxd-tr.ok{background:var(--adim);color:var(--ac);border:1px solid var(--agl);display:block}
-    .nfxd-tr.err{background:rgba(255,94,94,.1);color:var(--red);border:1px solid rgba(255,94,94,.3);display:block}
-    .nfxd-cfg-section{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;padding:8px 0 4px;border-top:1px solid var(--bd);margin-top:8px}
-    .nfxd-cfg-section:first-child{border-top:none;margin-top:0;padding-top:0}
+
     .nfxd-img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
     .nfxd-img-thumb{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;background:var(--sf2);position:relative}
     .nfxd-img-thumb:hover{border-color:var(--bd2)}
@@ -251,9 +228,7 @@
 
   function applyTheme() {
     const m = document.getElementById('nfxd-modal');
-    const c = document.getElementById('nfxd-cfg-m');
     if (m) { m.classList.remove('dark','light'); m.classList.add(tc()); }
-    if (c) { c.classList.remove('dark','light'); c.classList.add(tc()); }
   }
 
   // ─── HTML ────────────────────────────────────────────────────────────────────
@@ -266,11 +241,7 @@
         <span style="font-size:13px;font-weight:600;color:var(--tx)">Disparo WhatsApp</span>
         <span style="font-size:10px;color:var(--tx3)">/ Neofluxx</span>
         <div class="nfxd-sp"></div>
-        <div class="nfxd-pill"><div class="nfxd-dot"></div><span id="nfxd-stxt">aguardando configuração</span></div>
-        <button class="nfxd-tbtn" onclick="nfxdOpenCfg()">
-          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          Configurar
-        </button>
+        <div class="nfxd-pill"><div class="nfxd-dot"></div><span id="nfxd-stxt">Sincronizado</span></div>
         <button id="nfxd-xbtn" onclick="nfxdClose()">✕</button>
       </div>
 
@@ -443,35 +414,13 @@
 
     </div>
 
-    <div id="nfxd-cfg-ov">
-      <div id="nfxd-cfg-m" class="${tc()}">
-        <div class="nfxd-ch">
-          <span>⚙ Configuração</span>
-          <button onclick="nfxdCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">✕</button>
-        </div>
-        <div class="nfxd-cb">
-          <div>
-            <label>Webhook URL <span style="color:#25d366">*</span></label>
-            <input type="text" id="nfxd-cfg-wh" placeholder="https://seu-webhook/disparo-whatsapp"/>
-            <div style="font-size:10px;color:var(--tx3);margin-top:4px;line-height:1.5">
-              Endpoint único para todas as ações — templates, campanhas e histórico. As credenciais ficam seguras em banco de dados.
-            </div>
-          </div>
-          <div id="nfxd-cfg-tr" class="nfxd-tr"></div>
-        </div>
-        <div class="nfxd-cf">
-          <button class="nfxd-bs" onclick="nfxdTestCfg()">Testar conexão</button>
-          <button class="nfxd-bp" onclick="nfxdSaveCfg()">Salvar</button>
-        </div>
-      </div>
-    </div>
     `;
   }
 
   // ─── WABA ────────────────────────────────────────────────────────────────────
   window.nfxdLoadWabas = async function() {
     const cfg = getConfig();
-    if (!cfg.webhookUrl || cfg.webhookUrl === 'SEU_N8N_WEBHOOK_URL') {
+    if (!cfg.webhookUrl) {
       if (state.view === 'historico') loadCampanhas();
       return;
     }
@@ -589,7 +538,7 @@
   window.nfxdLoadTemplates = async function() {
     const cfg = getConfig();
     const container = document.getElementById('nfxd-tpl-container');
-    if (!cfg.webhookUrl || cfg.webhookUrl === 'SEU_N8N_WEBHOOK_URL') {
+    if (!cfg.webhookUrl) {
       container.innerHTML = '<div class="nfxd-ld">Configure o webhook do n8n primeiro (⚙ Configurar).</div>';
       return;
     }
@@ -719,7 +668,7 @@
   window.nfxdLoadImages = async function() {
     const cfg = getConfig();
     const container = document.getElementById('nfxd-img-grid-container');
-    if (!cfg.webhookUrl || cfg.webhookUrl === 'SEU_N8N_WEBHOOK_URL') {
+    if (!cfg.webhookUrl) {
       container.innerHTML = '<div style="font-size:11px;color:var(--amb);padding:8px 0">Configure o webhook do n8n primeiro (⚙ Configurar).</div>';
       return;
     }
@@ -892,7 +841,7 @@
   // ─── SUBMIT ─────────────────────────────────────────────────────────────────
   window.nfxdSubmit = async function() {
     const cfg = getConfig();
-    if (!cfg.webhookUrl || cfg.webhookUrl === 'SEU_N8N_WEBHOOK_URL') {
+    if (!cfg.webhookUrl) {
       alert('Configure o webhook do n8n primeiro (⚙ Configurar).'); return;
     }
     const nome = (document.getElementById('nfxd-nome')?.value || '').trim();
@@ -945,7 +894,7 @@
   window.loadCampanhas = async function() {
     const cfg = getConfig();
     const container = document.getElementById('nfxd-hist-container');
-    if (!cfg.webhookUrl || cfg.webhookUrl === 'SEU_N8N_WEBHOOK_URL') {
+    if (!cfg.webhookUrl) {
       container.innerHTML = '<div class="nfxd-ld">Configure o webhook do n8n primeiro.</div>'; return;
     }
     container.innerHTML = '<div class="nfxd-loading"><div class="nfxd-spin"></div>Carregando histórico...</div>';
@@ -1131,54 +1080,11 @@
     nfxdUpdatePreview();
   };
 
-  // ─── CONFIG ─────────────────────────────────────────────────────────────────
-  window.nfxdOpenCfg = function() {
-    const c = getConfig();
-    document.getElementById('nfxd-cfg-wh').value = c.webhookUrl !== 'SEU_N8N_WEBHOOK_URL' ? (c.webhookUrl || '') : '';
-    document.getElementById('nfxd-cfg-tr').className = 'nfxd-tr';
-    document.getElementById('nfxd-cfg-ov').classList.add('open');
-  };
-
-  window.nfxdCloseCfg = function() {
-    document.getElementById('nfxd-cfg-ov').classList.remove('open');
-  };
-
-  window.nfxdSaveCfg = function() {
-    const webhookUrl = document.getElementById('nfxd-cfg-wh').value.trim();
-    if (!webhookUrl) { alert('Preencha a URL do webhook do n8n.'); return; }
-    saveConfig({ webhookUrl });
-    document.getElementById('nfxd-stxt').textContent = 'Configurado';
-    window.nfxdCloseCfg();
-  };
-
-  window.nfxdTestCfg = async function() {
-    const webhookUrl = document.getElementById('nfxd-cfg-wh').value.trim();
-    const r = document.getElementById('nfxd-cfg-tr');
-    r.className = 'nfxd-tr'; r.textContent = 'Testando...'; r.style.display = 'block';
-    try {
-      const res = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test_connection', tenant_key: CONFIG.tenantKey, payload: {} })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      r.className = 'nfxd-tr ok'; r.textContent = `✓ ${data.message || 'Webhook conectado!'}`;
-    } catch (e) {
-      r.className = 'nfxd-tr err'; r.textContent = `✗ ${e.message}`;
-    }
-  };
-
   // ─── EXPOSE ─────────────────────────────────────────────────────────────────
   window.nfxdClose = closeModal;
   window.nfx_portal_disparo_open = openModal;
 
   // ─── INIT ───────────────────────────────────────────────────────────────────
-  const cfg = getConfig();
-  if (cfg.webhookUrl && cfg.webhookUrl !== 'SEU_N8N_WEBHOOK_URL') {
-    const s = document.getElementById('nfxd-stxt');
-    if (s) s.textContent = 'Configurado';
-  }
   const obs = new MutationObserver(applyTheme);
   obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
