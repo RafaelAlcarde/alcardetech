@@ -1,4 +1,3 @@
-<script>
 /**
  * CW SheetCampaign — v5.11
  * Importa contatos via CSV no modal de campanhas do WhatsApp
@@ -612,4 +611,3 @@
 
   log("v5.11 iniciado.");
 })();
-</script>
