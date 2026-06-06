@@ -1,11 +1,12 @@
+<script>
 /**
- * CW SheetCampaign — v5.10
+ * CW SheetCampaign — v5.11
  * Importa contatos via CSV no modal de campanhas do WhatsApp
  * e aplica uma etiqueta preservando as etiquetas existentes.
  */
 (function () {
-  if (window.__cwSheetCampaign_v510) return;
-  window.__cwSheetCampaign_v510 = true;
+  if (window.__cwSheetCampaign_v511) return;
+  window.__cwSheetCampaign_v511 = true;
 
   const ALLOWED_ACCOUNTS = [];
 
@@ -235,28 +236,6 @@
     return el2 ? (el2.closest("div") || el2) : null;
   }
 
-  function lockPublicoBlock(publicoBlock) {
-    if (!publicoBlock) return false;
-    const overlay = document.createElement("div");
-    overlay.id = "cw-publico-overlay";
-    overlay.title = "Clique em 'Etiquetar e Continuar' antes de selecionar o Público";
-    overlay.style.cssText = `
-      position:absolute;top:0;left:0;width:100%;height:100%;
-      z-index:999;cursor:not-allowed;background:rgba(255,255,255,0.55);
-      border-radius:8px;display:flex;align-items:center;justify-content:center;
-    `;
-    overlay.innerHTML = `<small style="color:#92400e;background:#fef3c7;padding:4px 8px;border-radius:6px;font-size:11px;text-align:center;">
-      ⚠️ Etiquete os contatos primeiro
-    </small>`;
-    publicoBlock.style.position = "relative";
-    publicoBlock.appendChild(overlay);
-    return true;
-  }
-
-  function unlockPublicoBlock() {
-    document.getElementById("cw-publico-overlay")?.remove();
-  }
-
   function buildWrap() {
     const wrap = document.createElement("div");
     wrap.id = "cw-sheet-wrap";
@@ -324,7 +303,7 @@
     return wrap;
   }
 
-  function bindWrapLogic(wrap, publicoBlock) {
+  function bindWrapLogic(wrap) {
     const labelInput    = wrap.querySelector("#cw-label-name");
     const fileInput     = wrap.querySelector("#cw-csv");
     const confirmBtn    = wrap.querySelector("#cw-confirm-btn");
@@ -346,14 +325,8 @@
     let cancelFlag = { value: false };
     let etiquetado = false;
 
-    const lockedByOverlay = lockPublicoBlock(publicoBlock);
-
     function updatePendingWarning() {
-      if (!lockedByOverlay && contactsToProcess.length > 0 && !etiquetado) {
-        pendingWarn.style.display = "block";
-      } else {
-        pendingWarn.style.display = "none";
-      }
+      pendingWarn.style.display = (contactsToProcess.length > 0 && !etiquetado) ? "block" : "none";
     }
 
     function checkForm() {
@@ -564,7 +537,6 @@
       }
 
       etiquetado = true;
-      unlockPublicoBlock();
       pendingWarn.style.display = "none";
       confirmBtn.textContent    = "✅ Etiquetagem Concluída";
       confirmBtn.style.opacity  = "1";
@@ -588,7 +560,7 @@
     }
     const publicoBlock = findPublicoBlock(modal);
     const wrap = buildWrap();
-    bindWrapLogic(wrap, publicoBlock);
+    bindWrapLogic(wrap);
     if (publicoBlock && publicoBlock.parentElement) {
       publicoBlock.parentElement.insertBefore(wrap, publicoBlock);
     } else {
@@ -638,5 +610,6 @@
     if (url !== lastUrl) { lastUrl = url; setTimeout(() => { injectTopButton(); }, 300); }
   }).observe(document, { subtree: true, childList: true });
 
-  log("v5.10 iniciado.");
+  log("v5.11 iniciado.");
 })();
+</script>
