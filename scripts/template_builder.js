@@ -350,7 +350,7 @@
                 <div class="nfx-tt" onclick="nfxHdr('document',this)">📄 Documento</div>
               </div>
               <div id="nfx-htxt" style="display:none;margin-top:10px">
-                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxPrev()"/>
+                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxHvalChg(this)"/>
               </div>
               <div id="nfx-hmedia" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
                 <div class="nfx-uz" onclick="document.getElementById('nfx-file-input').click()" style="cursor:pointer">
@@ -764,6 +764,18 @@
     }
 
     updateVarsStrip(el.value);
+    updatePreview();
+  };
+
+  window.nfxHvalChg = function(el) {
+    // Remove emojis silenciosamente — a Meta não aceita no cabeçalho
+    const cursor = el.selectionStart;
+    const clean = el.value.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200D|[\u{FE00}-\u{FE0F}]/gu, '');
+    if (clean !== el.value) {
+      const diff = el.value.length - clean.length;
+      el.value = clean;
+      el.selectionStart = el.selectionEnd = Math.max(0, cursor - diff);
+    }
     updatePreview();
   };
 
