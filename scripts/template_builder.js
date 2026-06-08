@@ -4,12 +4,11 @@
   const STORAGE_KEY = 'neofluxx_waba_config';
 
   const N8N_CONFIG = {
-    webhookUrl: 'https://seu-webhook/template-builder',
+    webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
     get tenantKey() {
       const match = window.location.pathname.match(/accounts\/(\d+)/);
       return match ? `account-${match[1]}` : 'default';
     },
-    apiKey: ''
   };
 
   function isDark() {
@@ -34,8 +33,6 @@
     .nfx-pill{display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;background:var(--adim);border:1px solid var(--agl);font-size:11px;color:var(--ac)}
     .nfx-dot{width:5px;height:5px;border-radius:50%;background:var(--ac);animation:nfxPulse 2s infinite}
     @keyframes nfxPulse{0%,100%{opacity:1}50%{opacity:.3}}
-    .nfx-tbtn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s}
-    .nfx-tbtn:hover{background:var(--sf2);color:var(--tx)}
     #nfx-xbtn{width:28px;height:28px;border-radius:50%;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
     #nfx-xbtn:hover{background:rgba(255,94,94,.15);color:var(--red);border-color:var(--red)}
     #nfx-sidebar{background:var(--sf);border-right:1px solid var(--bd);padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
@@ -163,20 +160,7 @@
     .nfx-ltb{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
     .nfx-ld{text-align:center;color:var(--tx3);font-size:12px;padding:24px}
     .nfx-rr{margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(255,94,94,.08);border:1px solid rgba(255,94,94,.2);font-size:10px;color:var(--red);line-height:1.5}
-    #nfx-cfg-ov{display:none;position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.6);align-items:center;justify-content:center}
-    #nfx-cfg-ov.open{display:flex}
-    #nfx-cfg-m{width:420px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-    #nfx-cfg-m.light{background:#fff;color:#1a1a2e;--bd:#e2e5ea;--sf:#fff;--sf2:#f0f2f5;--tx:#1a1a2e;--tx2:#5a6170;--tx3:#9aa0ad;--ac:#25d366;--adim:rgba(37,211,102,.1);--agl:rgba(37,211,102,.3);--red:#e53935}
-    #nfx-cfg-m.dark{background:#17171b;color:#f0f0f5;--bd:#2a2a35;--sf:#17171b;--sf2:#1e1e24;--tx:#f0f0f5;--tx2:#9090a8;--tx3:#55556a;--ac:#25d366;--adim:rgba(37,211,102,.12);--agl:rgba(37,211,102,.25);--red:#ff5e5e}
-    .nfx-ch{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600}
-    .nfx-cb{padding:16px;display:flex;flex-direction:column;gap:12px}
-    .nfx-cf{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end}
-    .nfx-cb label{font-size:11px;color:var(--tx2);font-weight:500;display:block;margin-bottom:4px}
-    .nfx-cb input{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:7px 10px;color:var(--tx);font-size:12px;width:100%;box-sizing:border-box;font-family:inherit}
-    .nfx-cb input:focus{outline:none;border-color:var(--ac);box-shadow:0 0 0 3px var(--adim)}
-    .nfx-tr{padding:6px 10px;border-radius:6px;font-size:11px;margin-top:4px;display:none}
-    .nfx-tr.ok{background:var(--adim);color:var(--ac);border:1px solid var(--agl);display:block}
-    .nfx-tr.err{background:rgba(255,94,94,.1);color:var(--red);border:1px solid rgba(255,94,94,.3);display:block}
+
     @keyframes nfxSpin{to{transform:rotate(360deg)}}
     .nfx-spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.25);border-top-color:#000;border-radius:50%;animation:nfxSpin .7s linear infinite}
     #nfx-main::-webkit-scrollbar,#nfx-pbody::-webkit-scrollbar{width:4px}
@@ -207,9 +191,7 @@
 
   function applyTheme() {
     const m = document.getElementById('nfx-modal');
-    const c = document.getElementById('nfx-cfg-m');
     if (m) { m.classList.remove('dark','light'); m.classList.add(tc()); }
-    if (c) { c.classList.remove('dark','light'); c.classList.add(tc()); }
   }
 
   function getConfig() {
@@ -223,10 +205,7 @@
   }
 
   function buildN8NHeaders(extra) {
-    const cfg = getConfig();
-    const headers = Object.assign({ Accept:'application/json' }, extra || {});
-    if (cfg.apiKey) headers['x-api-key'] = cfg.apiKey;
-    return headers;
+    return Object.assign({ Accept:'application/json' }, extra || {});
   }
 
   async function n8nRequest(action, payload, file) {
@@ -285,10 +264,7 @@
         <span style="font-size:10px;color:var(--tx3)">/ WhatsApp Business</span>
         <div class="nfx-sp"></div>
         <div class="nfx-pill"><div class="nfx-dot"></div><span id="nfx-stxt">aguardando configuração</span></div>
-        <button class="nfx-tbtn" onclick="nfxOpenCfg()">
-          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-          Configurar
-        </button>
+
         <button id="nfx-xbtn" onclick="nfxClose()">✕</button>
       </div>
 
@@ -374,7 +350,7 @@
                 <div class="nfx-tt" onclick="nfxHdr('document',this)">📄 Documento</div>
               </div>
               <div id="nfx-htxt" style="display:none;margin-top:10px">
-                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxHvalChg(this)"/>
+                <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxPrev()"/>
               </div>
               <div id="nfx-hmedia" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
                 <div class="nfx-uz" onclick="document.getElementById('nfx-file-input').click()" style="cursor:pointer">
@@ -498,23 +474,6 @@
             <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Preencha para visualizar no preview</div>
             <div id="nfx-vlist" style="display:flex;flex-direction:column;gap:6px"></div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="nfx-cfg-ov">
-      <div id="nfx-cfg-m" class="${tc()}">
-        <div class="nfx-ch">
-          <span>⚙ Configuração</span>
-          <button class="nfx-ib" onclick="nfxCloseCfg()" style="border:none;background:transparent;cursor:pointer;font-size:16px;color:var(--tx2)">✕</button>
-        </div>
-        <div class="nfx-cb">
-          <div><label>URL do Webhook <span class="nfx-req">*</span></label><input type="text" id="nfx-wh" placeholder="https://seu-webhook/template-builder"/><div class="nfx-hint" style="margin-top:4px">Credenciais da Meta ficam no servidor. O script envia apenas os dados do builder.</div></div>
-          <div id="nfx-tr" class="nfx-tr"></div>
-        </div>
-        <div class="nfx-cf">
-          <button class="nfx-bs" onclick="nfxTest()">Testar conexão</button>
-          <button class="nfx-bp" onclick="nfxSaveCfg()">Salvar</button>
         </div>
       </div>
     </div>
@@ -688,41 +647,7 @@
   // Expõe abertura para o menu Neofluxx
   window.nfx_template_builder_open = openBuilder;
 
-  window.nfxOpenCfg = function() {
-    const c = getConfig();
-    document.getElementById('nfx-wh').value     = c.webhookUrl||'';
-    document.getElementById('nfx-tr').className = 'nfx-tr';
-    document.getElementById('nfx-cfg-ov').classList.add('open');
-  };
 
-  window.nfxCloseCfg = function() {
-    document.getElementById('nfx-cfg-ov').classList.remove('open');
-  };
-
-  window.nfxSaveCfg = function() {
-    const webhookUrl = document.getElementById('nfx-wh').value.trim();
-    const tenantKey  = N8N_CONFIG.tenantKey;
-    if (!webhookUrl) { alert('Preencha o webhook.'); return; }
-    saveConfig({ webhookUrl, tenantKey });
-    const s = document.getElementById('nfx-stxt');
-    if (s) s.textContent = 'Sincronizado';
-    window.nfxCloseCfg();
-  };
-
-  window.nfxTest = async function() {
-    const webhookUrl = document.getElementById('nfx-wh').value.trim();
-    const tenantKey  = N8N_CONFIG.tenantKey;
-    const r = document.getElementById('nfx-tr');
-    if (!webhookUrl) { r.className='nfx-tr err'; r.textContent='Preencha o webhook.'; return; }
-    r.className='nfx-tr'; r.textContent='Testando...'; r.style.display='block';
-    try {
-      saveConfig({ webhookUrl, tenantKey });
-      const d = await n8nRequest('test_connection', {});
-      r.className='nfx-tr ok'; r.textContent=`✓ ${d.message || 'Webhook conectado'}`;
-      const s = document.getElementById('nfx-stxt');
-      if (s) s.textContent = 'Sincronizado';
-    } catch(e) { r.className='nfx-tr err'; r.textContent=`✗ Erro: ${e.message}`; }
-  };
 
   window.nfxView = function(v) {
     document.getElementById('nfx-cv').style.display  = v==='create'?'flex':'none';
@@ -842,18 +767,6 @@
     updatePreview();
   };
 
-  window.nfxHvalChg = function(el) {
-    // Remove emojis silenciosamente — a Meta não aceita no cabeçalho
-    const cursor = el.selectionStart;
-    const clean = el.value.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\uD800-\uDBFF][\uDC00-\uDFFF]|\u200D|[\u{FE00}-\u{FE0F}]/gu, '');
-    if (clean !== el.value) {
-      const diff = el.value.length - clean.length;
-      el.value = clean;
-      el.selectionStart = el.selectionEnd = Math.max(0, cursor - diff);
-    }
-    updatePreview();
-  };
-
   window.nfxPrev = updatePreview;
 
   window.nfxExInput = function(key, val) {
@@ -927,7 +840,6 @@
 
   window.nfxSubmit = async function() {
     const cfg = getConfig();
-    if (!cfg.webhookUrl || !cfg.tenantKey) { alert('Configure o webhook do n8n primeiro (⚙ Configurar).'); return; }
     if (!tenantId) {
       nfxMostrarWabas();
       const sec = document.getElementById('nfx-sec-waba');
@@ -1254,11 +1166,8 @@
   }
 
   // Init
-  (function(){ const s=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); if(s.tenantKey){ delete s.tenantKey; localStorage.setItem(STORAGE_KEY,JSON.stringify(s)); } })();
-  if (config.webhookUrl&&config.tenantKey) {
-    const s=document.getElementById('nfx-stxt');
-    if (s) s.textContent='Sincronizado';
-  }
+  const s=document.getElementById('nfx-stxt');
+  if (s) s.textContent='Sincronizado';
   const obs=new MutationObserver(applyTheme);
   obs.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
   obs.observe(document.body,{attributes:true,attributeFilter:['class']});
