@@ -552,9 +552,15 @@
         <label>Empresa <span class="opt-tag">(opcional)</span></label>
         <select id="col-company" onchange="renderPreview()"></select>
       </div>
-      <div class="map-field">
-        <label>Labels <span class="opt-tag">(opcional)</span></label>
-        <select id="col-labels" onchange="renderPreview()"></select>
+      <div class="map-field" style="grid-column: span 2;">
+        <label>Labels <span class="opt-tag">(opcional — coluna da planilha ou etiqueta fixa)</span></label>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <select id="col-labels" onchange="onLabelsColChange()" style="flex:1;"></select>
+          <span style="font-size: 12px; color: var(--text3); flex-shrink:0;">ou</span>
+          <input type="text" id="label-fixed" placeholder="Digite uma etiqueta..." maxlength="50"
+            oninput="onLabelFixedInput()"
+            style="flex:1; background:var(--surface2); border:0.5px solid var(--border2); border-radius:6px; color:var(--text); font-family:'DM Mono',monospace; font-size:13px; padding:8px 10px; outline:none; transition:border-color 0.15s;" />
+        </div>
         <div class="field-warning">
           <span class="field-warning-icon">⚠</span>
           <span>As etiquetas precisam estar criadas previamente na Neofluxx. Se uma etiqueta não existir na plataforma, o lote inteiro será rejeitado e nenhum contato será importado.</span>
@@ -652,6 +658,34 @@ function populateSelects() {
   });
 }
 
+function onLabelsColChange() {
+  const sel = document.getElementById('col-labels');
+  const inp = document.getElementById('label-fixed');
+  if (sel.value !== '') {
+    inp.value = '';
+    inp.disabled = true;
+    inp.style.opacity = '0.4';
+  } else {
+    inp.disabled = false;
+    inp.style.opacity = '1';
+  }
+  renderPreview();
+}
+
+function onLabelFixedInput() {
+  const inp = document.getElementById('label-fixed');
+  const sel = document.getElementById('col-labels');
+  if (inp.value.trim() !== '') {
+    sel.value = '';
+    sel.disabled = true;
+    sel.style.opacity = '0.4';
+  } else {
+    sel.disabled = false;
+    sel.style.opacity = '1';
+  }
+  renderPreview();
+}
+
 function getMapping() {
   const m = {};
   FIELDS.forEach(f => { m[f.id] = document.getElementById(f.id).value; });
@@ -675,6 +709,13 @@ function toTitleCase(str) {
   const isAllLower = upper === upper.toLowerCase();
   if (!isAllCaps && !isAllLower) return s; // já está em formato misto, não mexe
   return s.toLowerCase().replace(/(^|\s|-)(\S)/g, (_, sep, char) => sep + char.toUpperCase());
+}
+
+function getLabelValue(row, mapping) {
+  const fixedLabel = document.getElementById('label-fixed').value.trim();
+  if (fixedLabel) return fixedLabel.toLowerCase().replace(/\s+/g, '-');
+  if (mapping['col-labels'] !== '') return String(row[mapping['col-labels']] || '').trim();
+  return '';
 }
 
 function processValue(field, rawVal) {
@@ -720,9 +761,21 @@ const LIMIT_BATCH = 100;
 
 function buildCSV(cols, batch) {
   const bom = '\uFEFF';
-  let csv = cols.map(f => f.header).join(',') + '\n';
+  // Garante que labels entra no CSV mesmo sem coluna mapeada, se tiver label fixa
+  const fixedLabel = document.getElementById('label-fixed').value.trim();
+  let activeCols = [...cols];
+  const hasLabelsCol = activeCols.some(f => f.id === 'col-labels');
+  if (!hasLabelsCol && fixedLabel) {
+    activeCols.push({ id: 'col-labels', header: 'labels', label: 'Labels', required: false, isPhone: false, isRaw: true });
+  }
+
+  let csv = activeCols.map(f => f.header).join(',') + '\n';
   batch.forEach(r => {
-    const vals = cols.map(f => {
+    const vals = activeCols.map(f => {
+      if (f.id === 'col-labels') {
+        const val = getLabelValue(r, m_current);
+        return val;
+      }
       const raw = r[m_current[f.id]];
       const val = processValue(f, raw);
       if (f.isPhone || f.isRaw) return val;
@@ -788,6 +841,9 @@ function showToast(msg, type) {
 function resetTool() {
   rows = []; headers = [];
   document.getElementById('file-input').value = '';
+  document.getElementById('label-fixed').value = '';
+  document.getElementById('label-fixed').disabled = false;
+  document.getElementById('label-fixed').style.opacity = '1';
   document.getElementById('step-map').style.display = 'none';
   document.getElementById('step-upload').style.display = 'block';
   const t = document.getElementById('toast'); t.classList.remove('show');
