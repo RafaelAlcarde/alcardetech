@@ -481,15 +481,210 @@
     .map-grid { grid-template-columns: 1fr; }
     h1 { font-size: 22px; }
   }
+
+  /* V2 */
+  .stepper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .step-circle.active { background: var(--accent); color: #003d2b; }
+  .step-circle.inactive { background: var(--surface2); border: 0.5px solid var(--border2); color: var(--text3); }
+  .step-circle.done { background: var(--accent); color: #003d2b; }
+
+  .step-label { font-size: 13px; font-weight: 500; color: var(--text); transition: color 0.2s; }
+  .step-label.inactive { font-weight: 400; color: var(--text3); }
+
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
+
+  .label-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .label-option {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .label-option.selected { border-color: var(--accent); }
+  .label-option:focus-within { border-color: var(--accent); }
+
+  .label-option label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .label-option select,
+  .label-option input[type=text] {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .label-option select { 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+
+  .label-option select:focus,
+  .label-option input[type=text]:focus { border-color: var(--accent); }
+
+  .label-option.disabled { opacity: 0.4; pointer-events: none; }
+
+  .btn-create-label {
+    margin-top: 8px;
+    background: none;
+    border: 0.5px dashed var(--border2);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 6px 10px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s;
+  }
+
+  .btn-create-label:hover { background: var(--accent-dim); }
+
+  .step2-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-box .stat-num { font-size: 22px; font-weight: 500; color: var(--text); margin: 0; }
+  .stat-box .stat-num.green { color: var(--accent); }
+  .stat-box .stat-label { font-size: 11px; color: var(--text2); margin: 4px 0 0; }
+
+  .progress-wrap {
+    margin-top: 12px;
+    display: none;
+  }
+
+  .progress-track {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .result-box {
+    display: none;
+    background: rgba(0,196,140,0.07);
+    border: 0.5px solid rgba(0,196,140,0.3);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-box.error {
+    background: rgba(220,50,50,0.07);
+    border-color: rgba(220,50,50,0.25);
+  }
+
+  .errors-list {
+    display: none;
+    margin-top: 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text2);
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
 </style>
 </head>
 <body>
 <div class="container">
 
   <header>
-    <h1 style="color: var(--accent);">Conversor de contatos</h1>
-    <p class="subtitle">Converta sua planilha para o formato aceito pela Neofluxx.</p>
-    <p class="subtitle" style="margin-top:4px;">Opcionalmente, defina uma etiqueta para segmentar os contatos em campanhas.</p>
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 7L5.5 10.5L12 3.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">Neofluxx</span>
+    </div>
+    <h1>Conversor <span>de contatos</span></h1>
+    <p class="subtitle">Converta sua planilha para o formato aceito pela Neofluxx</p>
     <p class="subtitle" style="margin-top:4px;">Após a conversão, importe os contatos na plataforma.</p>
   </header>
 
@@ -545,31 +740,35 @@
         <label>Empresa <span class="opt-tag">(opcional)</span></label>
         <select id="col-company" onchange="renderPreview()"></select>
       </div>
-      <div class="map-field" style="grid-column: span 2;">
-        <label>Etiquetas <span class="opt-tag">(opcional — coluna da planilha ou etiqueta fixa)</span></label>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <select id="col-labels" onchange="onLabelsColChange()" style="flex:1;"></select>
-          <span style="font-size: 12px; color: var(--text3); flex-shrink:0;">ou</span>
-          <input type="text" id="label-fixed" placeholder="Digite uma etiqueta..." maxlength="50"
-            oninput="onLabelFixedInput()"
-            style="flex:1; background:var(--surface2); border:0.5px solid var(--border2); border-radius:6px; color:var(--text); font-family:'DM Mono',monospace; font-size:13px; padding:8px 10px; outline:none; transition:border-color 0.15s;" />
+            <div style="grid-column: span 2;">
+        <p class="section-label" style="margin-bottom: 10px;">Etiquetas <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--text3);">(opcional)</span></p>
+        <div class="label-options">
+          <div class="label-option" id="opt-planilha">
+            <label for="col-labels">📋 Da planilha</label>
+            <select id="col-labels" onchange="onLabelsColChange()"></select>
+          </div>
+          <div class="label-option" id="opt-neofluxx">
+            <label for="neofluxx-labels">☁ Da Neofluxx</label>
+            <select id="neofluxx-labels" onchange="onNeofluxxLabelChange()">
+              <option value="">Carregando...</option>
+            </select>
+            <button class="btn-create-label" id="btn-create-label" onclick="toggleCreateLabel()" style="display:none;">+ Criar nova etiqueta</button>
+            <input type="text" id="label-new" placeholder="Nome da nova etiqueta..." maxlength="50"
+              oninput="onNewLabelInput()" style="display:none; margin-top:8px;" />
+          </div>
         </div>
-        <div class="field-warning">
+        <div class="field-warning" id="label-warning" style="display:none;">
           <span class="field-warning-icon">⚠</span>
-          <span>As etiquetas precisam estar criadas previamente na Neofluxx. Se uma etiqueta não existir na plataforma, o lote inteiro será rejeitado e nenhum contato será importado.</span>
+          <span id="label-warning-text"></span>
         </div>
       </div>
-    </div>
+      </div>
 
     <p class="section-label">Preview</p>
     <div class="preview-box">
       <div class="preview-header">
         <span class="section-label" style="margin:0">Primeiras linhas</span>
         <span class="preview-count" id="preview-count">0 contatos</span>
-      </div>
-      <div id="duplicates-warning" style="display:none; padding: 10px 16px; border-bottom: 0.5px solid var(--border);" class="field-warning">
-        <span class="field-warning-icon">⚠</span>
-        <span id="duplicates-warning-text"></span>
       </div>
       <div class="preview-table-wrap">
         <table id="preview-table"></table>
@@ -582,16 +781,62 @@
       <input type="text" id="filename-input" placeholder="contatos_neofluxx" maxlength="60" />
       <span class="filename-ext">_01.csv</span>
     </div>
+    <div id="duplicates-warning" style="display:none; margin-bottom: 16px;" class="field-warning">
+      <span class="field-warning-icon">⚠</span>
+      <span id="duplicates-warning-text"></span>
+    </div>
     <div class="actions">
-      <button class="btn-primary" onclick="downloadCSV()">
-        ⬇ Baixar CSV para Neofluxx
+      <button class="btn-primary" onclick="goImport()" id="btn-import-direto">
+        ☁ Importar direto na Neofluxx
       </button>
-      <button class="btn-secondary" onclick="resetTool()">Nova planilha</button>
+      <button class="btn-primary" onclick="downloadCSV()" style="background: var(--surface); color: var(--text); border: 0.5px solid var(--border2);">
+        ⬇ Só baixar CSV
+      </button>
+      <button class="btn-secondary" onclick="resetTool()">↩</button>
     </div>
 
     <div class="toast" id="toast">
       <span>✓</span>
       <span id="toast-text"></span>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div id="step-import" style="display:none; animation: fadeUp 0.3s ease both;">
+    <div class="step2-card">
+      <p class="section-label" style="margin-bottom:12px;">Resumo da importação</p>
+      <div class="stat-grid">
+        <div class="stat-box"><p class="stat-num" id="s2-total">0</p><p class="stat-label">contatos</p></div>
+        <div class="stat-box"><p class="stat-num green" id="s2-label">—</p><p class="stat-label">etiqueta</p></div>
+        <div class="stat-box"><p class="stat-num" id="s2-dupes">0</p><p class="stat-label">duplicatas removidas</p></div>
+      </div>
+    </div>
+    <div class="step2-card" id="import-progress-card" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:13px; color:var(--text2);" id="import-status">Aguardando...</span>
+        <span style="font-size:13px; font-weight:500; color:var(--accent);" id="import-pct">0%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="import-bar"></div></div>
+      <div class="progress-stats">
+        <span id="s2-criados">✦ 0 novos</span>
+        <span id="s2-atualizados">↺ 0 atualizados</span>
+        <span id="s2-jatem">= 0 já tinham</span>
+        <span id="s2-erros" style="color:#ff6b6b;">✕ 0 erros</span>
+      </div>
+      <button onclick="cancelImport()" id="btn-cancel" style="margin-top:12px; background:none; border:0.5px solid var(--border2); border-radius:6px; color:var(--text2); font-size:12px; font-family:inherit; padding:6px 12px; cursor:pointer;">⏹ Cancelar</button>
+    </div>
+    <div class="result-box" id="import-result">
+      <p style="font-size:14px; font-weight:500; color:var(--accent); margin:0 0 12px;" id="result-title">✓ Importação concluída!</p>
+      <div class="stat-grid">
+        <div class="stat-box"><p class="stat-num" id="r-criados">0</p><p class="stat-label">novos criados</p></div>
+        <div class="stat-box"><p class="stat-num" id="r-atualizados">0</p><p class="stat-label">atualizados</p></div>
+        <div class="stat-box"><p class="stat-num" id="r-erros">0</p><p class="stat-label">erros</p></div>
+      </div>
+      <div class="errors-list" id="errors-list"></div>
+    </div>
+    <div class="actions" id="import-actions">
+      <button class="btn-primary" onclick="startImport()" id="btn-confirm-import">☁ Confirmar importação</button>
+      <button class="btn-secondary" onclick="backToStep1()">← Voltar</button>
     </div>
   </div>
 
@@ -606,7 +851,7 @@ const FIELDS = [
   { id: 'col-email',   header: 'email',         label: 'Email',    required: false, isPhone: false, pattern: /email|e-mail|mail/ },
   { id: 'col-city',    header: 'location',      label: 'Cidade',   required: false, isPhone: false, pattern: /cidade|city|cid/ },
   { id: 'col-company', header: 'company_name',  label: 'Empresa',  required: false, isPhone: false, pattern: /empresa|company|companhia|razao|razão/ },
-  { id: 'col-labels',  header: 'labels',        label: 'Etiquetas',   required: false, isPhone: false, isRaw: true, pattern: /label|tag|etiqueta/ },
+  { id: 'col-labels',  header: 'labels',        label: 'Labels',   required: false, isPhone: false, isRaw: true, pattern: /label|tag|etiqueta/ },
 ];
 
 function handleDrop(e) {
@@ -634,6 +879,9 @@ function handleFile(file) {
     renderPreview();
     document.getElementById('step-upload').style.display = 'none';
     document.getElementById('step-map').style.display = 'block';
+    document.getElementById('stepper').style.display = 'flex';
+    // Carregar etiquetas do Chatwoot se axios disponível
+    if (window.axios) loadNeofluxxLabels();
   };
   reader.readAsBinaryString(file);
 }
@@ -655,33 +903,7 @@ function populateSelects() {
   });
 }
 
-function onLabelsColChange() {
-  const sel = document.getElementById('col-labels');
-  const inp = document.getElementById('label-fixed');
-  if (sel.value !== '') {
-    inp.value = '';
-    inp.disabled = true;
-    inp.style.opacity = '0.4';
-  } else {
-    inp.disabled = false;
-    inp.style.opacity = '1';
-  }
-  renderPreview();
-}
-
-function onLabelFixedInput() {
-  const inp = document.getElementById('label-fixed');
-  const sel = document.getElementById('col-labels');
-  if (inp.value.trim() !== '') {
-    sel.value = '';
-    sel.disabled = true;
-    sel.style.opacity = '0.4';
-  } else {
-    sel.disabled = false;
-    sel.style.opacity = '1';
-  }
-  renderPreview();
-}
+// onLabelsColChange e onLabelFixedInput movidos para V2
 
 function getMapping() {
   const m = {};
@@ -690,9 +912,7 @@ function getMapping() {
 }
 
 function formatPhone(v) {
-  // Se tiver múltiplos números separados por ; ou , pega só o primeiro
-  const first = String(v).split(/[;,]/)[0].trim();
-  let s = first.replace(/\D/g, '');
+  let s = String(v).replace(/\D/g, '');
   if (!s) return '';
   if (!s.startsWith('55')) s = '55' + s;
   return '+' + s;
@@ -711,9 +931,9 @@ function toTitleCase(str) {
 }
 
 function getLabelValue(row, mapping) {
-  const fixedLabel = document.getElementById('label-fixed').value.trim();
-  if (fixedLabel) return fixedLabel.toLowerCase().replace(/\s+/g, '-');
-  if (mapping['col-labels'] !== '') return String(row[mapping['col-labels']] || '').trim();
+  const label = getActiveLabel();
+  if (label.type === 'column' && mapping['col-labels'] !== '') return String(row[mapping['col-labels']] || '').trim();
+  if (label.type === 'existing' || label.type === 'new') return label.value;
   return '';
 }
 
@@ -731,34 +951,9 @@ function renderPreview() {
   const m = getMapping();
   const cols = getActiveCols(m);
 
-  // Deduplicação
-  const mDedup = getMapping();
-  const seenPreview = new Set();
-  const dedupedRows = [];
-  rows.forEach(r => {
-    const phone = formatPhone(r[mDedup['col-phone']]);
-    if (phone && seenPreview.has(phone)) return;
-    if (phone) seenPreview.add(phone);
-    dedupedRows.push(r);
-  });
-  const dupCount = rows.length - dedupedRows.length;
-  const totalUnique = dedupedRows.length;
-
-  document.getElementById('preview-count').textContent = totalUnique.toLocaleString('pt-BR') + ' contatos';
-
-  const dupWarn = document.getElementById('duplicates-warning');
-  if (dupCount > 0) {
-    document.getElementById('duplicates-warning-text').textContent =
-      dupCount.toLocaleString('pt-BR') + ' contato' + (dupCount > 1 ? 's duplicados serão removidos.' : ' duplicado será removido.') +
-      ' O CSV será gerado com ' + totalUnique.toLocaleString('pt-BR') + ' contato' + (totalUnique > 1 ? 's.' : '.');
-    dupWarn.style.display = 'flex';
-  } else {
-    dupWarn.style.display = 'none';
-  }
-
   let html = '<tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
 
-  dedupedRows.slice(0, 5).forEach(r => {
+  rows.slice(0, 5).forEach(r => {
     html += '<tr>';
     cols.forEach(f => {
       const raw = r[m[f.id]];
@@ -769,25 +964,46 @@ function renderPreview() {
   });
 
   document.getElementById('preview-table').innerHTML = html;
+  // Deduplicação no preview
+  const m2 = getMapping();
+  const seenPreview = new Set();
+  let dupCount = 0;
+  rows.forEach(r => {
+    const phone = formatPhone(r[m2['col-phone']]);
+    if (phone && seenPreview.has(phone)) dupCount++;
+    else if (phone) seenPreview.add(phone);
+  });
+  const totalUnique = rows.length - dupCount;
+  document.getElementById('preview-count').textContent = totalUnique.toLocaleString('pt-BR') + ' contatos';
+
+  const dupWarn = document.getElementById('duplicates-warning');
+  if (dupCount > 0) {
+    document.getElementById('duplicates-warning-text').textContent =
+      dupCount.toLocaleString('pt-BR') + ' contato' + (dupCount > 1 ? 's duplicados foram removidos.' : ' duplicado foi removido.') +
+      ' O CSV será gerado com ' + totalUnique.toLocaleString('pt-BR') + ' contato' + (totalUnique > 1 ? 's.' : '.');
+    dupWarn.style.display = 'flex';
+  } else {
+    dupWarn.style.display = 'none';
+  }
+
   const more = document.getElementById('more-rows');
-  if (dedupedRows.length > 5) {
+  if (rows.length > 5) {
     more.style.display = 'block';
-    more.textContent = '+ ' + (dedupedRows.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
+    more.textContent = '+ ' + (rows.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
   } else {
     more.style.display = 'none';
   }
 }
 
 const LIMIT_MAX = 1000;
-const LIMIT_BATCH = 500;
+const LIMIT_BATCH = 100;
 
 function buildCSV(cols, batch) {
   const bom = '\uFEFF';
-  // Garante que labels entra no CSV mesmo sem coluna mapeada, se tiver label fixa
-  const fixedLabel = document.getElementById('label-fixed').value.trim();
+  const activeLabel = getActiveLabel();
   let activeCols = [...cols];
   const hasLabelsCol = activeCols.some(f => f.id === 'col-labels');
-  if (!hasLabelsCol && fixedLabel) {
+  if (!hasLabelsCol && activeLabel.value) {
     activeCols.push({ id: 'col-labels', header: 'labels', label: 'Etiquetas', required: false, isPhone: false, isRaw: true });
   }
 
@@ -876,12 +1092,347 @@ function showToast(msg, type) {
 function resetTool() {
   rows = []; headers = [];
   document.getElementById('file-input').value = '';
-  document.getElementById('label-fixed').value = '';
-  document.getElementById('label-fixed').disabled = false;
-  document.getElementById('label-fixed').style.opacity = '1';
   document.getElementById('step-map').style.display = 'none';
+  document.getElementById('step-import').style.display = 'none';
   document.getElementById('step-upload').style.display = 'block';
+  document.getElementById('stepper').style.display = 'none';
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('import-progress-card').style.display = 'none';
+  document.getElementById('btn-confirm-import').style.display = 'flex';
+  document.getElementById('import-actions').style.display = 'flex';
   const t = document.getElementById('toast'); t.classList.remove('show');
+  shouldCancel = false;
+}
+
+// ============================================================
+// V2 — Etiquetas da Neofluxx
+// ============================================================
+let chatwootLabels = [];
+let shouldCancel = false;
+let importRows = [];
+let labelTitle = '';
+
+function accountId() {
+  return parseInt((location.pathname.match(/accounts\/(\d+)/) || [])[1]) || null;
+}
+
+async function api(path, method='GET', body=null) {
+  const acc = accountId();
+  if (!acc) throw new Error('AccountId não detectado.');
+  const url = `/api/v1/accounts/${acc}/${path}`;
+  const resp = await window.axios({ url, method: method.toLowerCase(), data: body || undefined, withCredentials: true });
+  return resp.data ?? {};
+}
+
+async function loadNeofluxxLabels() {
+  const sel = document.getElementById('neofluxx-labels');
+  try {
+    const data = await api('labels', 'GET');
+    const list = data?.payload || data?.data || data || [];
+    chatwootLabels = Array.isArray(list) ? list : [];
+    sel.innerHTML = '<option value="">— selecione —</option>';
+    chatwootLabels.forEach(l => {
+      const title = l.title || l.name || '';
+      if (title) {
+        const opt = document.createElement('option');
+        opt.value = title;
+        opt.textContent = title;
+        sel.appendChild(opt);
+      }
+    });
+    document.getElementById('btn-create-label').style.display = 'block';
+  } catch(e) {
+    sel.innerHTML = '<option value="">Erro ao carregar</option>';
+    console.warn('[V2] Não foi possível carregar etiquetas:', e);
+  }
+}
+
+function onLabelsColChange() {
+  const sel = document.getElementById('col-labels');
+  const optN = document.getElementById('opt-neofluxx');
+  if (sel.value !== '') {
+    optN.classList.add('disabled');
+    document.getElementById('opt-planilha').classList.add('selected');
+    document.getElementById('opt-neofluxx').classList.remove('selected');
+  } else {
+    optN.classList.remove('disabled');
+    document.getElementById('opt-planilha').classList.remove('selected');
+  }
+  renderPreview();
+}
+
+function onNeofluxxLabelChange() {
+  const sel = document.getElementById('neofluxx-labels');
+  const optP = document.getElementById('opt-planilha');
+  const newInput = document.getElementById('label-new');
+  if (sel.value !== '') {
+    optP.classList.add('disabled');
+    document.getElementById('opt-neofluxx').classList.add('selected');
+    document.getElementById('opt-planilha').classList.remove('selected');
+    newInput.style.display = 'none';
+    newInput.value = '';
+  } else {
+    optP.classList.remove('disabled');
+    document.getElementById('opt-neofluxx').classList.remove('selected');
+  }
+  renderPreview();
+}
+
+function toggleCreateLabel() {
+  const input = document.getElementById('label-new');
+  const sel = document.getElementById('neofluxx-labels');
+  if (input.style.display === 'none') {
+    input.style.display = 'block';
+    sel.value = '';
+    sel.disabled = true;
+    sel.style.opacity = '0.4';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = '';
+    sel.disabled = false;
+    sel.style.opacity = '1';
+  }
+}
+
+function onNewLabelInput() {
+  const input = document.getElementById('label-new');
+  const optP = document.getElementById('opt-planilha');
+  if (input.value.trim() !== '') {
+    optP.classList.add('disabled');
+    document.getElementById('opt-neofluxx').classList.add('selected');
+  } else {
+    optP.classList.remove('disabled');
+    document.getElementById('opt-neofluxx').classList.remove('selected');
+  }
+  renderPreview();
+}
+
+function getActiveLabel() {
+  const colLabels = document.getElementById('col-labels').value;
+  const neofluxxLabel = document.getElementById('neofluxx-labels').value;
+  const newLabel = document.getElementById('label-new').value.trim();
+  if (colLabels !== '') return { type: 'column', value: colLabels };
+  if (newLabel) return { type: 'new', value: newLabel.toLowerCase().replace(/\s+/g, '-') };
+  if (neofluxxLabel) return { type: 'existing', value: neofluxxLabel };
+  return { type: 'none', value: '' };
+}
+
+// Stepper
+function goImport() {
+  const m = getMapping();
+  importRows = getActiveCols(m); // reusa mapeamento atual
+
+  // Calcula duplicatas
+  const seenCheck = new Set();
+  const dedupCheck = [];
+  rows.forEach(r => {
+    const phone = formatPhone(r[m['col-phone']]);
+    if (phone && seenCheck.has(phone)) return;
+    if (phone) seenCheck.add(phone);
+    dedupCheck.push(r);
+  });
+
+  const dupes = rows.length - dedupCheck.length;
+  const label = getActiveLabel();
+  labelTitle = label.value;
+
+  document.getElementById('s2-total').textContent = dedupCheck.length.toLocaleString('pt-BR');
+  document.getElementById('s2-label').textContent = labelTitle || '—';
+  document.getElementById('s2-dupes').textContent = dupes.toLocaleString('pt-BR');
+
+  document.getElementById('step-map').style.display = 'none';
+  document.getElementById('step-import').style.display = 'block';
+  document.getElementById('stepper').style.display = 'flex';
+  document.getElementById('sc2').className = 'step-circle active';
+  document.getElementById('sl2').className = 'step-label';
+  document.getElementById('sc1').className = 'step-circle done';
+}
+
+function backToStep1() {
+  document.getElementById('step-import').style.display = 'none';
+  document.getElementById('step-map').style.display = 'block';
+  document.getElementById('sc2').className = 'step-circle inactive';
+  document.getElementById('sl2').className = 'step-label inactive';
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('import-progress-card').style.display = 'none';
+  document.getElementById('btn-confirm-import').style.display = 'flex';
+  document.getElementById('import-actions').style.display = 'flex';
+}
+
+function cancelImport() { shouldCancel = true; }
+
+const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+async function ensureLabel(title) {
+  const data = await api('labels', 'GET');
+  const list = data?.payload || data?.data || data || [];
+  let found = Array.isArray(list) ? list.find(l => (l.title || l.name) === title) : null;
+  if (!found) {
+    const created = await api('labels', 'POST', { title, color: '#00c48c' });
+    const payload = created?.payload || created?.data || created || {};
+    found = payload.label || payload || {};
+  }
+  return { id: found.id, title: (found.title || found.name || title) };
+}
+
+function getContactId(obj) {
+  return obj?.id || obj?.contact_id || obj?.payload?.id || obj?.payload?.contact_id ||
+         obj?.payload?.contact?.id || obj?.data?.id || obj?.data?.contact?.id ||
+         obj?.resource?.id || obj?.resource?.contact?.id || obj?.contact?.id || null;
+}
+
+async function getContactLabels(contactId) {
+  try {
+    const data = await api(`contacts/${contactId}/labels`, 'GET');
+    const labels = data?.payload || data?.data || data || [];
+    if (Array.isArray(labels)) return labels.map(l => typeof l === 'string' ? l : (l?.title || l?.name || '')).filter(Boolean);
+    return [];
+  } catch(e) { return []; }
+}
+
+async function findContactByPhone(phone) {
+  const res = await api(`contacts/search?q=${encodeURIComponent(phone)}`, 'GET');
+  const arr = res?.payload || res?.data || [];
+  const c = Array.isArray(arr) ? arr[0] : null;
+  if (!c) return null;
+  const contactId = getContactId(c);
+  if (!contactId) return null;
+  const labels = await getContactLabels(contactId);
+  return { id: contactId, labels: uniq(labels) };
+}
+
+async function attachLabel(contactId, label, existingLabels = []) {
+  const hasLabel = (existingLabels || []).some(l => (l || '').toLowerCase() === (label || '').toLowerCase());
+  if (hasLabel) return { alreadyHad: true, success: false };
+  const allLabels = uniq([...(existingLabels || []), label]);
+  await api(`contacts/${contactId}/labels`, 'POST', { labels: allLabels });
+  return { alreadyHad: false, success: true };
+}
+
+async function startImport() {
+  const m = getMapping();
+  const labelInfo = getActiveLabel();
+  shouldCancel = false;
+
+  // Dedup
+  const seen = new Set();
+  const contacts = [];
+  rows.forEach((r, idx) => {
+    const phone = formatPhone(r[m['col-phone']]);
+    if (!phone || seen.has(phone)) return;
+    seen.add(phone);
+    const labelVal = labelInfo.type === 'column' ? String(r[m['col-labels']] || '').trim() : labelInfo.value;
+    contacts.push({
+      name: toTitleCase(r[m['col-name']] || 'Sem nome'),
+      phone_number: phone,
+      email: m['col-email'] !== '' ? String(r[m['col-email']] || '').trim() : '',
+      city: m['col-city'] !== '' ? toTitleCase(r[m['col-city']] || '') : '',
+      company_name: m['col-company'] !== '' ? toTitleCase(r[m['col-company']] || '') : '',
+      label: labelVal,
+      rowIndex: idx + 2,
+    });
+  });
+
+  if (!contacts.length) { showToast('Nenhum contato válido encontrado.', 'error'); return; }
+
+  document.getElementById('btn-confirm-import').style.display = 'none';
+  document.querySelector('[onclick="backToStep1()"]').disabled = true;
+  document.getElementById('import-progress-card').style.display = 'block';
+
+  // Criar etiqueta se for nova
+  let labelObj = null;
+  if (labelInfo.type === 'new' && labelInfo.value) {
+    try {
+      labelObj = await ensureLabel(labelInfo.value);
+    } catch(e) {
+      showToast('Erro ao criar etiqueta: ' + e.message, 'error');
+      return;
+    }
+  }
+
+  const total = contacts.length;
+  let processed = 0, criados = 0, atualizados = 0, jatem = 0;
+  const errors = [];
+
+  let BATCH_SIZE = contacts.length > 200 ? 1 : 2;
+  let BATCH_DELAY = contacts.length > 200 ? 600 : 350;
+
+  for (let i = 0; i < total; i += BATCH_SIZE) {
+    if (shouldCancel) break;
+    const batch = contacts.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(batch.map(async c => {
+      try {
+        const existing = await findContactByPhone(c.phone_number);
+        let contactId;
+        let existingLabels = [];
+
+        if (existing?.id) {
+          contactId = existing.id;
+          existingLabels = existing.labels || [];
+          atualizados++;
+        } else {
+          const newContact = { name: c.name, phone_number: c.phone_number };
+          if (c.email) newContact.email = c.email;
+          const attrs = {};
+          if (c.city) attrs.location = c.city;
+          if (c.company_name) attrs.company_name = c.company_name;
+          if (Object.keys(attrs).length) newContact.additional_attributes = attrs;
+          const newC = await api('contacts', 'POST', newContact);
+          contactId = getContactId(newC);
+          if (contactId) criados++;
+        }
+
+        if (contactId && c.label) {
+          const lbl = labelObj?.title || c.label;
+          const result = await attachLabel(contactId, lbl, existingLabels);
+          if (result.alreadyHad) jatem++;
+        }
+      } catch(err) {
+        errors.push(`Linha ${c.rowIndex}: ${c.name} (${c.phone_number}) — ${err.message || 'Erro'}`);
+      }
+    }));
+
+    processed += batch.length;
+    const pct = Math.round((processed / total) * 100);
+    document.getElementById('import-bar').style.width = pct + '%';
+    document.getElementById('import-pct').textContent = pct + '%';
+    document.getElementById('import-status').textContent = `Importando ${processed} de ${total}...`;
+    document.getElementById('s2-criados').textContent = `✦ ${criados} novos`;
+    document.getElementById('s2-atualizados').textContent = `↺ ${atualizados} atualizados`;
+    document.getElementById('s2-jatem').textContent = `= ${jatem} já tinham`;
+    document.getElementById('s2-erros').textContent = `✕ ${errors.length} erros`;
+
+    await wait(BATCH_DELAY);
+  }
+
+  // Resultado
+  document.getElementById('import-progress-card').style.display = 'none';
+  const resultBox = document.getElementById('import-result');
+  resultBox.style.display = 'block';
+  document.getElementById('import-actions').style.display = 'none';
+
+  const cancelled = shouldCancel;
+  document.getElementById('result-title').textContent = cancelled
+    ? '⏸ Importação cancelada'
+    : errors.length > 0 ? '⚠ Concluído com erros' : '✓ Importação concluída!';
+  resultBox.className = 'result-box' + (errors.length > 0 ? ' error' : '');
+  document.getElementById('result-title').style.color = errors.length > 0 ? '#ff6b6b' : 'var(--accent)';
+
+  document.getElementById('r-criados').textContent = criados;
+  document.getElementById('r-atualizados').textContent = atualizados;
+  document.getElementById('r-erros').textContent = errors.length;
+
+  if (errors.length > 0) {
+    const el = document.getElementById('errors-list');
+    el.style.display = 'block';
+    el.innerHTML = errors.map(e => `<div>• ${e}</div>`).join('');
+  }
+
+  document.querySelector('[onclick="backToStep1()"]').disabled = false;
+  document.querySelector('[onclick="backToStep1()"]').textContent = '↩ Nova importação';
 }
 </script>
 </body>
