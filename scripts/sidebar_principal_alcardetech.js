@@ -57,7 +57,7 @@
 
     try {
       const res = await fetch(
-        SUPABASE_URL + '/rest/v1/tenants_permissoes?tenant_key=eq.' + tenantKey + '&select=template_builder,kpis,disparo_campanha,kanban,portal_disparo,anexar_imagens,etiquetar_contatos,conversor_contatos&limit=1',
+        SUPABASE_URL + '/rest/v1/tenants_permissoes?tenant_key=eq.' + tenantKey + '&select=*&limit=1',
         {
           headers: {
             'apikey': SUPABASE_KEY,
