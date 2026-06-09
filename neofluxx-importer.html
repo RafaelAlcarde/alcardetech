@@ -488,7 +488,8 @@
 
   <header>
     <h1 style="color: var(--accent);">Conversor de contatos</h1>
-    <p class="subtitle">Converta sua planilha para o formato aceito pela Neofluxx</p>
+    <p class="subtitle">Converta sua planilha para o formato aceito pela Neofluxx.</p>
+    <p class="subtitle" style="margin-top:4px;">Opcionalmente, defina uma etiqueta para segmentar os contatos em campanhas.</p>
     <p class="subtitle" style="margin-top:4px;">Após a conversão, importe os contatos na plataforma.</p>
   </header>
 
@@ -545,7 +546,7 @@
         <select id="col-company" onchange="renderPreview()"></select>
       </div>
       <div class="map-field" style="grid-column: span 2;">
-        <label>Labels <span class="opt-tag">(opcional — coluna da planilha ou etiqueta fixa)</span></label>
+        <label>Etiquetas <span class="opt-tag">(opcional — coluna da planilha ou etiqueta fixa)</span></label>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <select id="col-labels" onchange="onLabelsColChange()" style="flex:1;"></select>
           <span style="font-size: 12px; color: var(--text3); flex-shrink:0;">ou</span>
@@ -605,7 +606,7 @@ const FIELDS = [
   { id: 'col-email',   header: 'email',         label: 'Email',    required: false, isPhone: false, pattern: /email|e-mail|mail/ },
   { id: 'col-city',    header: 'location',      label: 'Cidade',   required: false, isPhone: false, pattern: /cidade|city|cid/ },
   { id: 'col-company', header: 'company_name',  label: 'Empresa',  required: false, isPhone: false, pattern: /empresa|company|companhia|razao|razão/ },
-  { id: 'col-labels',  header: 'labels',        label: 'Labels',   required: false, isPhone: false, isRaw: true, pattern: /label|tag|etiqueta/ },
+  { id: 'col-labels',  header: 'labels',        label: 'Etiquetas',   required: false, isPhone: false, isRaw: true, pattern: /label|tag|etiqueta/ },
 ];
 
 function handleDrop(e) {
@@ -787,7 +788,7 @@ function buildCSV(cols, batch) {
   let activeCols = [...cols];
   const hasLabelsCol = activeCols.some(f => f.id === 'col-labels');
   if (!hasLabelsCol && fixedLabel) {
-    activeCols.push({ id: 'col-labels', header: 'labels', label: 'Labels', required: false, isPhone: false, isRaw: true });
+    activeCols.push({ id: 'col-labels', header: 'labels', label: 'Etiquetas', required: false, isPhone: false, isRaw: true });
   }
 
   let csv = activeCols.map(f => f.header).join(',') + '\n';
