@@ -574,6 +574,10 @@
         <span class="section-label" style="margin:0">Primeiras linhas</span>
         <span class="preview-count" id="preview-count">0 contatos</span>
       </div>
+      <div id="duplicates-warning" style="display:none; padding: 10px 16px; border-bottom: 0.5px solid var(--border);" class="field-warning">
+        <span class="field-warning-icon">⚠</span>
+        <span id="duplicates-warning-text"></span>
+      </div>
       <div class="preview-table-wrap">
         <table id="preview-table"></table>
       </div>
@@ -693,7 +697,9 @@ function getMapping() {
 }
 
 function formatPhone(v) {
-  let s = String(v).replace(/\D/g, '');
+  // Se tiver múltiplos números separados por ; ou , pega só o primeiro
+  const first = String(v).split(/[;,]/)[0].trim();
+  let s = first.replace(/\D/g, '');
   if (!s) return '';
   if (!s.startsWith('55')) s = '55' + s;
   return '+' + s;
@@ -732,9 +738,34 @@ function renderPreview() {
   const m = getMapping();
   const cols = getActiveCols(m);
 
+  // Deduplicação
+  const mDedup = getMapping();
+  const seenPreview = new Set();
+  const dedupedRows = [];
+  rows.forEach(r => {
+    const phone = formatPhone(r[mDedup['col-phone']]);
+    if (phone && seenPreview.has(phone)) return;
+    if (phone) seenPreview.add(phone);
+    dedupedRows.push(r);
+  });
+  const dupCount = rows.length - dedupedRows.length;
+  const totalUnique = dedupedRows.length;
+
+  document.getElementById('preview-count').textContent = totalUnique.toLocaleString('pt-BR') + ' contatos';
+
+  const dupWarn = document.getElementById('duplicates-warning');
+  if (dupCount > 0) {
+    document.getElementById('duplicates-warning-text').textContent =
+      dupCount.toLocaleString('pt-BR') + ' contato' + (dupCount > 1 ? 's duplicados serão removidos.' : ' duplicado será removido.') +
+      ' O CSV será gerado com ' + totalUnique.toLocaleString('pt-BR') + ' contato' + (totalUnique > 1 ? 's.' : '.');
+    dupWarn.style.display = 'flex';
+  } else {
+    dupWarn.style.display = 'none';
+  }
+
   let html = '<tr>' + cols.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
 
-  rows.slice(0, 5).forEach(r => {
+  dedupedRows.slice(0, 5).forEach(r => {
     html += '<tr>';
     cols.forEach(f => {
       const raw = r[m[f.id]];
@@ -745,12 +776,10 @@ function renderPreview() {
   });
 
   document.getElementById('preview-table').innerHTML = html;
-  document.getElementById('preview-count').textContent = rows.length.toLocaleString('pt-BR') + ' contatos';
-
   const more = document.getElementById('more-rows');
-  if (rows.length > 5) {
+  if (dedupedRows.length > 5) {
     more.style.display = 'block';
-    more.textContent = '+ ' + (rows.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
+    more.textContent = '+ ' + (dedupedRows.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
   } else {
     more.style.display = 'none';
   }
@@ -792,8 +821,23 @@ function downloadCSV() {
   m_current = getMapping();
   const cols = getActiveCols(m_current);
 
+  // Remove duplicatas pelo telefone
+  const seenPhones = new Set();
+  const deduped = [];
+  rows.forEach(r => {
+    const phone = formatPhone(r[m_current['col-phone']]);
+    if (phone && !seenPhones.has(phone)) {
+      seenPhones.add(phone);
+      deduped.push(r);
+    } else if (!phone) {
+      deduped.push(r); // sem telefone, mantém e deixa o Chatwoot decidir
+    }
+  });
+  const duplicatesRemoved = rows.length - deduped.length;
+  const rowsToProcess = deduped;
+
   // Bloqueia acima do limite
-  if (rows.length > LIMIT_MAX) {
+  if (rowsToProcess.length > LIMIT_MAX) {
     showToast(
       '⛔ Planilha com ' + rows.length.toLocaleString('pt-BR') + ' contatos excede o limite de ' + LIMIT_MAX.toLocaleString('pt-BR') + '. Divida a planilha e tente novamente.',
       'error'
@@ -802,10 +846,10 @@ function downloadCSV() {
   }
 
   // Divide em lotes de 100
-  const total = rows.length;
+  const total = rowsToProcess.length;
   const batches = [];
   for (let i = 0; i < total; i += LIMIT_BATCH) {
-    batches.push(rows.slice(i, i + LIMIT_BATCH));
+    batches.push(rowsToProcess.slice(i, i + LIMIT_BATCH));
   }
 
   const pad = String(batches.length).length;
@@ -824,10 +868,8 @@ function downloadCSV() {
     URL.revokeObjectURL(url);
   });
 
-  showToast(
-    '✓ ' + total.toLocaleString('pt-BR') + ' contatos exportados em ' + batches.length + ' arquivo' + (batches.length > 1 ? 's' : '') + '.',
-    'success'
-  );
+  const msg = '✓ ' + total.toLocaleString('pt-BR') + ' contatos exportados em ' + batches.length + ' arquivo' + (batches.length > 1 ? 's' : '') + '.';
+  setTimeout(() => showToast(msg, 'success'), 300);
 }
 
 function showToast(msg, type) {
