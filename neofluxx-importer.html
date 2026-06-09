@@ -696,7 +696,7 @@
   </div>
 
 </div>
-<div style="text-align:right; padding: 8px 0 0; font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;">v2.1</div>
+<div style="text-align:right; padding: 8px 0 0; font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;">v2.2</div>
 
 <script>
 let rows = [], headers = [];
@@ -969,11 +969,8 @@ function resetTool() {
 let shouldCancel = false;
 
 function accountId() {
-  try {
-    const parentPath = window.parent.location.pathname;
-    const match = parentPath.match(/accounts\/(\d+)/);
-    if (match) return parseInt(match[1]);
-  } catch(e) {}
+  const urlParam = new URLSearchParams(window.location.search).get('account');
+  if (urlParam) return parseInt(urlParam);
   return parseInt((location.pathname.match(/accounts\/(\d+)/) || [])[1]) || null;
 }
 
