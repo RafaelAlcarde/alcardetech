@@ -17,8 +17,7 @@
     { id: 'etiquetar_contatos',     label: 'Etiquetar Contatos',     type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/etiquetar_contatos.js' },
     { id: 'anexar_imagens',         label: 'Anexar Imagens',         type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_anexar_imagens.js' },
     { id: 'campanha_personalizada', label: 'Campanha Personalizada', type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/campanha_personalizada_etiquetas.js' },
-    { id: 'conversor_contatos',     label: 'Conversor de Contatos',  type: 'modal',  adminOnly: true, url:  `https://rafaelalcarde.github.io/alcardetech/neofluxx-importer-v2.html?account=${parseInt((location.pathname.match(/accounts\/(\d+)/)||[])[1]||0)}` },
-  ];
+    { id: 'conversor_contatos',     label: 'Conversor de Contatos',  type: 'modal', adminOnly: true, urlFn: function() { return 'https://rafaelalcarde.github.io/alcardetech/neofluxx-importer-v2.html?account=' + getAccountId(); } },  ];
 
   // ============================================================
   // SUPABASE ALCARDETECH
@@ -182,7 +181,7 @@
     const title   = document.getElementById('nfx-iframe-title');
     if (!overlay || !iframe) return;
     title.textContent = feature.label;
-    iframe.src = feature.url;
+    iframe.src = feature.urlFn ? feature.urlFn() : feature.url;
     overlay.classList.add('open');
   }
 
