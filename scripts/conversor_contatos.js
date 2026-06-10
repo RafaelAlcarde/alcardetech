@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.5';
+  const VERSION = 'v2.6';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -931,6 +931,7 @@
   function openModal() {
     if (document.getElementById('nfx-conv-overlay')) {
       const existingOverlay = document.getElementById('nfx-conv-overlay');
+      resetTool(existingOverlay);
       existingOverlay.classList.add('open');
       loadNeoLabels(existingOverlay);
       return;
