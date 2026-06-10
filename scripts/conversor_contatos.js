@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.9';
+  const VERSION = 'v2.0';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -14,6 +14,7 @@
   let shouldCancel = false;
   let savedMapping = null;
   let savedLabel = null;
+  let isImporting = false;
 
   // ============================================================
   // ACCOUNT
@@ -423,11 +424,13 @@
 
           <!-- STEP 1: Upload -->
           <div id="nfx-step-upload">
-            <p class="nfx-subtitle" style="margin-bottom:16px;">Importe contatos da sua planilha direto na Neofluxx ou baixe o CSV para importar manualmente.</p>
+            <p class="nfx-subtitle" style="margin-bottom:12px;">Importe contatos da sua planilha direto na Neofluxx ou baixe o CSV para importar manualmente.</p>
             <div class="nfx-info-box">
-              <div class="nfx-info-row">📋 A primeira linha deve conter os cabeçalhos das colunas para o mapeamento funcionar.</div>
-              <div class="nfx-info-row">📱 Inclua o DDD no número (ex: <code>11900000000</code>) — o código +55 é adicionado automaticamente.</div>
-              <div class="nfx-info-row">🏷 Defina uma etiqueta para usar os contatos em campanhas — ela será criada se não existir.</div>
+              <p class="nfx-sec-label" style="margin-bottom:10px;">Como usar</p>
+              <div class="nfx-info-row"><span style="color:#00c48c;font-weight:600;margin-right:6px;">●</span>A primeira linha da planilha deve conter os cabeçalhos das colunas para que o mapeamento funcione corretamente.</div>
+              <div class="nfx-info-row"><span style="color:#00c48c;font-weight:600;margin-right:6px;">●</span>O DDD é obrigatório no número de telefone (ex: <code>11900000000</code>) — o código +55 é adicionado automaticamente.</div>
+              <div class="nfx-info-row"><span style="color:#00c48c;font-weight:600;margin-right:6px;">●</span>Etiquetas são opcionais mas recomendadas para segmentar contatos em campanhas — serão criadas automaticamente se não existirem na plataforma.</div>
+              <div class="nfx-info-row"><span style="color:#00c48c;font-weight:600;margin-right:6px;">●</span>Ao baixar o CSV para importar manualmente na Neofluxx, faça um arquivo por vez, na ordem numerada.</div>
             </div>
             <div class="nfx-drop" id="nfx-drop">
               <span class="nfx-drop-icon">📊</span>
@@ -764,6 +767,7 @@
     const m = savedMapping || getMapping(modal);
     const labelInfo = savedLabel || getActiveLabel(modal);
     shouldCancel = false;
+    isImporting = false;
 
     const deduped = getDedupedRows(modal);
     // Se labels vêm da planilha, garantir que todas existem na plataforma antes de importar
@@ -791,6 +795,7 @@
 
     if (!contacts.length) return;
 
+    isImporting = true;
     modal.querySelector('#btn-confirm-import').style.display = 'none';
     modal.querySelector('#btn-back').disabled = true;
     modal.querySelector('#import-progress-card').style.display = 'block';
@@ -873,6 +878,7 @@
       el.innerHTML = errors.map(e => `<div>• ${e}</div>`).join('');
     }
 
+    isImporting = false;
     modal.querySelector('#btn-back').disabled = false;
     modal.querySelector('#btn-back').textContent = '↩ Nova importação';
   }
@@ -912,8 +918,20 @@
 
     // Fechar
     const closeModal = () => { overlay.classList.remove('open'); resetTool(modal); };
-    modal.querySelector('#nfx-conv-close').addEventListener('click', closeModal);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    modal.querySelector('#nfx-conv-close').addEventListener('click', () => {
+      if (isImporting) {
+        if (confirm('Importação em andamento. Deseja cancelar e sair?')) {
+          shouldCancel = true;
+          isImporting = false;
+          closeModal();
+        }
+      } else {
+        closeModal();
+      }
+    });
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay && !isImporting) closeModal();
+    });
 
     // Drop zone
     const drop = modal.querySelector('#nfx-drop');
