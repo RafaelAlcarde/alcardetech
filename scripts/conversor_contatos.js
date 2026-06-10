@@ -1,12 +1,11 @@
 /**
- * Neofluxx — Conversor de Contatos v1.0
- * Importa planilha XLS/CSV, mapeia colunas, deduplica, etiqueta e importa direto.
+ * Neofluxx — Conversor e Importador de Contatos v2.1
  */
 (function () {
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.0-debug';
+  const VERSION = 'v3.0';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -16,16 +15,16 @@
   let savedLabel = null;
   let isImporting = false;
 
+  const LIMIT_MAX = 1000;
+  const LIMIT_BATCH = 500;
+
   // ============================================================
-  // ACCOUNT
+  // ACCOUNT & API
   // ============================================================
   function accountId() {
     return parseInt((location.pathname.match(/accounts\/(\d+)/) || [])[1]) || null;
   }
 
-  // ============================================================
-  // API
-  // ============================================================
   async function api(path, method = 'GET', body = null) {
     const acc = accountId();
     if (!acc) throw new Error('AccountId não detectado.');
@@ -61,7 +60,7 @@
   async function getContactLabels(contactId) {
     try {
       const data = await api(`contacts/${contactId}/labels`, 'GET');
-        const labels = data?.payload || data?.data || data || [];
+      const labels = data?.payload || data?.data || data || [];
       if (Array.isArray(labels)) return labels.map(l => typeof l === 'string' ? l : (l?.title || l?.name || '')).filter(Boolean);
       return [];
     } catch (e) { return []; }
@@ -81,26 +80,19 @@
   async function attachLabel(contactId, label, existingLabels = []) {
     const normalizedLabel = normalizeLabel(label);
     const normalizedExisting = (existingLabels || []).map(l => normalizeLabel(l));
-    const merged = uniq([...normalizedExisting, normalizedLabel]);
-    const result = await api(`contacts/${contactId}/labels`, 'POST', { labels: merged });
-    const has = normalizedExisting.some(l => l === normalizedLabel);
-    return { alreadyHad: has };
+    await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...normalizedExisting, normalizedLabel]) });
+    return { alreadyHad: normalizedExisting.some(l => l === normalizedLabel) };
   }
 
   // ============================================================
-  // DADOS
+  // UTILS
   // ============================================================
   function normalizeLabel(str) {
     if (!str) return '';
-    return str
-      .toString()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')   // remove acentos
-      .replace(/[^a-z0-9\s-]/g, '')      // remove caracteres especiais
-      .trim()
-      .replace(/\s+/g, '-')              // espaços → hífen
-      .replace(/-+/g, '-');              // hífens duplos → simples
+    return str.toString().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '').trim()
+      .replace(/\s+/g, '-').replace(/-+/g, '-');
   }
 
   function formatPhone(v) {
@@ -120,239 +112,19 @@
     return s.toLowerCase().replace(/(^|\s|-)(\S)/g, (_, sep, char) => sep + char.toUpperCase());
   }
 
-  // ============================================================
-  // SHEETJS — carrega dinamicamente
-  // ============================================================
   function loadSheetJS() {
     return new Promise((resolve, reject) => {
       if (window.XLSX) { resolve(); return; }
       const s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = resolve;
-      s.onerror = reject;
+      s.onload = resolve; s.onerror = reject;
       document.head.appendChild(s);
     });
   }
 
   // ============================================================
-  // CSS
+  // FIELDS
   // ============================================================
-  function injectCSS() {
-    if (document.getElementById('nfx-conv-style')) return;
-    const style = document.createElement('style');
-    style.id = 'nfx-conv-style';
-    style.textContent = `
-      #nfx-conv-overlay {
-        display:none; position:fixed; inset:0; z-index:99999;
-        background:rgba(0,0,0,0.55); align-items:center; justify-content:center;
-      }
-      #nfx-conv-overlay.open { display:flex; }
-      #nfx-conv-box {
-        background:#fff; border-radius:12px; width:90vw; max-width:780px;
-        max-height:90vh; display:flex; flex-direction:column; overflow:hidden;
-        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        animation:nfxConvIn 0.2s ease;
-      }
-      @keyframes nfxConvIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
-      #nfx-conv-header {
-        display:flex; align-items:center; justify-content:space-between;
-        padding:14px 20px; border-bottom:1px solid #e2e5ea; flex-shrink:0;
-      }
-      #nfx-conv-title { font-size:16px; font-weight:600; color:#00c48c; }
-      #nfx-conv-version { font-size:11px; color:#aaa; margin-left:8px; font-family:monospace; }
-      #nfx-conv-close {
-        width:28px; height:28px; border-radius:50%; border:1px solid #e2e5ea;
-        background:transparent; cursor:pointer; font-size:16px; color:#5a6170;
-        display:flex; align-items:center; justify-content:center;
-      }
-      #nfx-conv-close:hover { background:rgba(229,57,53,.1); color:#e53935; border-color:#e53935; }
-      #nfx-conv-body { overflow-y:auto; padding:20px; flex:1; }
-
-      .nfx-subtitle { font-size:13px; color:#6b7280; margin-bottom:4px; line-height:1.5; }
-      .nfx-info-box {
-        background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:8px;
-        padding:12px 16px; margin-bottom:16px;
-      }
-      .nfx-info-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#6b7280; margin-bottom:6px; line-height:1.5; }
-      .nfx-info-row:last-child { margin-bottom:0; }
-      .nfx-info-row code { background:#e5e7eb; border-radius:4px; padding:1px 5px; font-size:12px; color:#1a1a2e; }
-      .nfx-info-row strong { color:#1a1a2e; font-weight:500; }
-
-      .nfx-drop {
-        border:1.5px dashed #d1d5db; border-radius:10px; padding:40px;
-        text-align:center; cursor:pointer; transition:all 0.2s; background:#fff;
-      }
-      .nfx-drop:hover, .nfx-drop.drag { border-color:#00c48c; background:rgba(0,196,140,0.05); }
-      .nfx-drop-icon { font-size:40px; display:block; margin-bottom:12px; }
-      .nfx-drop-title { font-size:15px; font-weight:500; color:#1a1a2e; margin-bottom:4px; }
-      .nfx-drop-sub { font-size:13px; color:#9ca3af; }
-      .nfx-drop-sub span { color:#00c48c; cursor:pointer; }
-
-      .nfx-sec-label {
-        font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
-        color:#9ca3af; margin-bottom:10px;
-      }
-      .nfx-map-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
-      .nfx-field {
-        background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; padding:12px;
-        transition:border-color 0.15s;
-      }
-      .nfx-field:focus-within { border-color:#00c48c; }
-      .nfx-field label {
-        display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600;
-        letter-spacing:.06em; text-transform:uppercase; color:#9ca3af; margin-bottom:6px;
-      }
-      .nfx-dot { width:5px; height:5px; border-radius:50%; background:#00c48c; flex-shrink:0; }
-      .nfx-opt { color:#c4c9d4; font-weight:400; text-transform:none; letter-spacing:0; font-size:10px; }
-      .nfx-field select, .nfx-field input[type=text] {
-        width:100%; background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:6px;
-        color:#1a1a2e; font-family:monospace; font-size:13px; padding:7px 26px 7px 8px;
-        outline:none; transition:border-color 0.15s; -webkit-appearance:none; appearance:none;
-        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-        background-repeat:no-repeat; background-position:right 8px center;
-      }
-      .nfx-field input[type=text] { background-image:none; padding-right:8px; }
-      .nfx-field select:focus, .nfx-field input[type=text]:focus { border-color:#00c48c; }
-
-      .nfx-label-opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
-      .nfx-label-opt {
-        background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; padding:12px;
-        transition:border-color 0.15s;
-      }
-      .nfx-label-opt.selected { border-color:#00c48c; }
-      .nfx-label-opt.disabled { opacity:.4; pointer-events:none; }
-      .nfx-label-opt label {
-        display:block; font-size:11px; font-weight:600; letter-spacing:.06em;
-        text-transform:uppercase; color:#9ca3af; margin-bottom:6px;
-      }
-      .nfx-label-opt select, .nfx-label-opt input[type=text] {
-        width:100%; background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:6px;
-        color:#1a1a2e; font-family:monospace; font-size:13px; padding:7px 26px 7px 8px;
-        outline:none; -webkit-appearance:none; appearance:none;
-        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-        background-repeat:no-repeat; background-position:right 8px center;
-      }
-      .nfx-label-opt input[type=text] { background-image:none; padding-right:8px; }
-      .nfx-btn-create-label {
-        margin-top:6px; background:none; border:0.5px dashed #d1d5db; border-radius:6px;
-        color:#00c48c; font-size:12px; font-family:inherit; padding:5px 10px;
-        cursor:pointer; width:100%; text-align:left; transition:background 0.15s;
-      }
-      .nfx-btn-create-label:hover { background:rgba(0,196,140,0.06); }
-
-      .nfx-preview-box {
-        background:#fff; border:0.5px solid #e2e5ea; border-radius:8px;
-        overflow:hidden; margin-bottom:16px;
-      }
-      .nfx-preview-header {
-        display:flex; align-items:center; justify-content:space-between;
-        padding:8px 14px; border-bottom:0.5px solid #e2e5ea;
-      }
-      .nfx-badge {
-        font-size:12px; font-weight:500; color:#00c48c;
-        background:rgba(0,196,140,0.08); border:0.5px solid rgba(0,196,140,0.25);
-        border-radius:20px; padding:2px 10px; font-family:monospace;
-      }
-      .nfx-table-wrap { overflow-x:auto; }
-      .nfx-table { width:100%; border-collapse:collapse; font-size:13px; }
-      .nfx-table th {
-        padding:8px 14px; text-align:left; font-size:11px; font-weight:600;
-        letter-spacing:.06em; text-transform:uppercase; color:#9ca3af;
-        border-bottom:0.5px solid #e2e5ea; white-space:nowrap;
-      }
-      .nfx-table td {
-        padding:8px 14px; color:#6b7280; border-bottom:0.5px solid #e2e5ea;
-        white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis;
-      }
-      .nfx-table td:first-child { color:#1a1a2e; font-weight:500; }
-      .nfx-table td.phone { font-family:monospace; font-size:12px; color:#00c48c; }
-      .nfx-table tr:last-child td { border-bottom:none; }
-      .nfx-more { padding:8px 14px; font-size:12px; color:#9ca3af; font-style:italic; }
-
-      .nfx-warn {
-        display:flex; align-items:flex-start; gap:8px; padding:10px 14px;
-        background:rgba(245,166,35,0.07); border:0.5px solid rgba(245,166,35,0.3);
-        border-radius:8px; font-size:12px; color:#92600a; line-height:1.5;
-        margin-bottom:12px;
-      }
-
-      .nfx-filename-wrap {
-        display:flex; align-items:center; gap:8px; margin-bottom:12px;
-      }
-      .nfx-filename-wrap label {
-        font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
-        color:#9ca3af; white-space:nowrap;
-      }
-      .nfx-filename-wrap input {
-        flex:1; background:#fff; border:0.5px solid #d1d5db; border-radius:8px;
-        color:#1a1a2e; font-family:monospace; font-size:13px; padding:8px 10px; outline:none;
-        transition:border-color 0.15s;
-      }
-      .nfx-filename-wrap input:focus { border-color:#00c48c; }
-      .nfx-filename-ext { font-size:13px; color:#9ca3af; font-family:monospace; white-space:nowrap; }
-
-      .nfx-actions { display:flex; gap:8px; margin-bottom:12px; }
-      .nfx-btn-primary {
-        flex:1; background:#00c48c; color:#003d2b; border:none; border-radius:8px;
-        padding:11px 20px; font-family:inherit; font-size:14px; font-weight:600;
-        cursor:pointer; transition:all 0.15s; display:flex; align-items:center;
-        justify-content:center; gap:6px;
-      }
-      .nfx-btn-primary:hover { opacity:.88; }
-      .nfx-btn-secondary {
-        background:#fff; color:#6b7280; border:0.5px solid #d1d5db; border-radius:8px;
-        padding:11px 16px; font-family:inherit; font-size:13px; cursor:pointer;
-        transition:all 0.15s;
-      }
-      .nfx-btn-secondary:hover { background:#f9fafb; color:#1a1a2e; }
-      .nfx-btn-csv {
-        background:#fff; color:#1a1a2e; border:0.5px solid #d1d5db; border-radius:8px;
-        padding:11px 16px; font-family:inherit; font-size:13px; font-weight:500;
-        cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:6px;
-      }
-      .nfx-btn-csv:hover { background:#f9fafb; }
-
-      .nfx-toast {
-        display:none; margin-top:10px; padding:10px 14px; border-radius:8px;
-        font-size:13px; align-items:center; gap:8px;
-      }
-      .nfx-toast.show { display:flex; }
-      .nfx-toast.success { background:rgba(0,196,140,0.08); border:0.5px solid rgba(0,196,140,0.3); color:#00c48c; }
-      .nfx-toast.error { background:rgba(220,50,50,0.07); border:0.5px solid rgba(220,50,50,0.25); color:#c0392b; }
-
-      /* Step 2 */
-      .nfx-step2-card {
-        background:#fff; border:0.5px solid #e2e5ea; border-radius:8px;
-        padding:16px; margin-bottom:12px;
-      }
-      .nfx-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-      .nfx-stat-box { background:#f9fafb; border-radius:8px; padding:12px; text-align:center; }
-      .nfx-stat-num { font-size:22px; font-weight:500; color:#1a1a2e; margin:0; }
-      .nfx-stat-num.green { color:#00c48c; }
-      .nfx-stat-label { font-size:11px; color:#6b7280; margin:4px 0 0; }
-      .nfx-progress-track { background:#f3f4f6; border-radius:99px; height:6px; overflow:hidden; margin-bottom:8px; }
-      .nfx-progress-fill { height:100%; background:#00c48c; border-radius:99px; width:0%; transition:width 0.3s; }
-      .nfx-progress-stats { display:flex; gap:12px; font-size:12px; color:#6b7280; flex-wrap:wrap; margin-top:4px; }
-      .nfx-result-box {
-        background:rgba(0,196,140,0.07); border:0.5px solid rgba(0,196,140,0.3);
-        border-radius:8px; padding:16px; margin-bottom:12px; display:none;
-      }
-      .nfx-result-box.has-errors { background:rgba(220,50,50,0.07); border-color:rgba(220,50,50,0.25); }
-      .nfx-errors-list {
-        display:none; margin-top:10px; background:#f9fafb; border-radius:6px;
-        padding:10px 12px; font-size:12px; color:#6b7280; max-height:120px;
-        overflow-y:auto; line-height:1.8;
-      }
-      .nfx-version { text-align:right; font-size:11px; color:#d1d5db; font-family:monospace; margin-top:8px; }
-    `;
-    document.head.appendChild(style);
-  }
-
-  // ============================================================
-  // ESTADO
-  // ============================================================
-  let rows = [], headers = [];
-
   const FIELDS = [
     { id: 'col-name',    header: 'name',         label: 'Nome',     required: true,  isPhone: false, pattern: /nome|name/ },
     { id: 'col-phone',   header: 'phone_number',  label: 'Telefone', required: true,  isPhone: true,  pattern: /tel|fone|phone|cel|whats|mobile/ },
@@ -361,14 +133,7 @@
     { id: 'col-company', header: 'company_name',  label: 'Empresa',  required: false, isPhone: false, pattern: /empresa|company|companhia|razao|razão/ },
   ];
 
-  function setLimitState(modal, exceeded) {
-    ['#nfx-map-grid-wrap','#nfx-labels-wrap','#nfx-preview-wrap','#nfx-filename-wrap','#nfx-actions-wrap'].forEach(sel => {
-      const el = modal.querySelector(sel);
-      if (el) el.style.display = exceeded ? 'none' : '';
-    });
-    const warnDiv = modal.querySelector('#nfx-limit-warn');
-    if (warnDiv) warnDiv.style.display = exceeded ? 'flex' : 'none';
-  }
+  let rows = [], headers = [];
 
   function getMapping(modal) {
     const m = {};
@@ -414,6 +179,125 @@
     return '';
   }
 
+  function setLimitState(modal, exceeded) {
+    ['#nfx-map-grid-wrap','#nfx-labels-wrap','#nfx-preview-wrap','#nfx-filename-wrap','#nfx-actions-wrap'].forEach(sel => {
+      const el = modal.querySelector(sel);
+      if (el) el.style.display = exceeded ? 'none' : '';
+    });
+    const warnDiv = modal.querySelector('#nfx-limit-warn');
+    if (warnDiv) warnDiv.style.display = exceeded ? 'flex' : 'none';
+  }
+
+  // ============================================================
+  // CSS
+  // ============================================================
+  function injectCSS() {
+    if (document.getElementById('nfx-conv-style')) return;
+    const style = document.createElement('style');
+    style.id = 'nfx-conv-style';
+    style.textContent = `
+      #nfx-conv-overlay {
+        display:none; position:fixed; inset:0; z-index:99999;
+        background:rgba(0,0,0,0.55); align-items:center; justify-content:center;
+      }
+      #nfx-conv-overlay.open { display:flex; }
+      #nfx-conv-box {
+        background:#fff; border-radius:12px; width:90vw; max-width:780px;
+        max-height:90vh; display:flex; flex-direction:column; overflow:hidden;
+        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+        animation:nfxConvIn 0.2s ease;
+      }
+      @keyframes nfxConvIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+      #nfx-conv-header {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 20px; border-bottom:1px solid #e2e5ea; flex-shrink:0;
+      }
+      #nfx-conv-title { font-size:16px; font-weight:600; color:#00c48c; }
+      #nfx-conv-version { font-size:11px; color:#aaa; margin-left:8px; font-family:monospace; }
+      #nfx-conv-close {
+        width:28px; height:28px; border-radius:50%; border:1px solid #e2e5ea;
+        background:transparent; cursor:pointer; font-size:16px; color:#5a6170;
+        display:flex; align-items:center; justify-content:center;
+      }
+      #nfx-conv-close:hover { background:rgba(229,57,53,.1); color:#e53935; border-color:#e53935; }
+      #nfx-conv-body { overflow-y:auto; padding:20px; flex:1; }
+      .nfx-subtitle { font-size:13px; color:#6b7280; margin-bottom:4px; line-height:1.5; }
+      .nfx-info-box { background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+      .nfx-info-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#6b7280; margin-bottom:6px; line-height:1.5; }
+      .nfx-info-row:last-child { margin-bottom:0; }
+      .nfx-info-row code { background:#e5e7eb; border-radius:4px; padding:1px 5px; font-size:12px; color:#1a1a2e; }
+      .nfx-drop { border:1.5px dashed #d1d5db; border-radius:10px; padding:40px; text-align:center; cursor:pointer; transition:all 0.2s; background:#fff; }
+      .nfx-drop:hover, .nfx-drop.drag { border-color:#00c48c; background:rgba(0,196,140,0.05); }
+      .nfx-drop-icon { font-size:40px; display:block; margin-bottom:12px; }
+      .nfx-drop-title { font-size:15px; font-weight:500; color:#1a1a2e; margin-bottom:4px; }
+      .nfx-drop-sub { font-size:13px; color:#9ca3af; }
+      .nfx-drop-sub span { color:#00c48c; cursor:pointer; }
+      .nfx-sec-label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:10px; }
+      .nfx-map-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+      .nfx-field { background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; padding:12px; transition:border-color 0.15s; }
+      .nfx-field:focus-within { border-color:#00c48c; }
+      .nfx-field label { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9ca3af; margin-bottom:6px; }
+      .nfx-dot { width:5px; height:5px; border-radius:50%; background:#00c48c; flex-shrink:0; }
+      .nfx-opt { color:#c4c9d4; font-weight:400; text-transform:none; letter-spacing:0; font-size:10px; }
+      .nfx-field select, .nfx-field input[type=text] { width:100%; background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:6px; color:#1a1a2e; font-family:monospace; font-size:13px; padding:7px 26px 7px 8px; outline:none; transition:border-color 0.15s; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+      .nfx-field input[type=text] { background-image:none; padding-right:8px; }
+      .nfx-field select:focus, .nfx-field input[type=text]:focus { border-color:#00c48c; }
+      .nfx-label-opts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+      .nfx-label-opt { background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; padding:12px; transition:border-color 0.15s; }
+      .nfx-label-opt.selected { border-color:#00c48c; }
+      .nfx-label-opt.disabled { opacity:.4; pointer-events:none; }
+      .nfx-label-opt label { display:block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9ca3af; margin-bottom:6px; }
+      .nfx-label-opt select, .nfx-label-opt input[type=text] { width:100%; background:#f9fafb; border:0.5px solid #e2e5ea; border-radius:6px; color:#1a1a2e; font-family:monospace; font-size:13px; padding:7px 26px 7px 8px; outline:none; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23999' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+      .nfx-label-opt input[type=text] { background-image:none; padding-right:8px; }
+      .nfx-btn-create-label { margin-top:6px; background:none; border:0.5px dashed #d1d5db; border-radius:6px; color:#00c48c; font-size:12px; font-family:inherit; padding:5px 10px; cursor:pointer; width:100%; text-align:left; transition:background 0.15s; }
+      .nfx-btn-create-label:hover { background:rgba(0,196,140,0.06); }
+      .nfx-preview-box { background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; overflow:hidden; margin-bottom:16px; }
+      .nfx-preview-header { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; border-bottom:0.5px solid #e2e5ea; }
+      .nfx-badge { font-size:12px; font-weight:500; color:#00c48c; background:rgba(0,196,140,0.08); border:0.5px solid rgba(0,196,140,0.25); border-radius:20px; padding:2px 10px; font-family:monospace; }
+      .nfx-table-wrap { overflow-x:auto; }
+      .nfx-table { width:100%; border-collapse:collapse; font-size:13px; }
+      .nfx-table th { padding:8px 14px; text-align:left; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:#9ca3af; border-bottom:0.5px solid #e2e5ea; white-space:nowrap; }
+      .nfx-table td { padding:8px 14px; color:#6b7280; border-bottom:0.5px solid #e2e5ea; white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; }
+      .nfx-table td:first-child { color:#1a1a2e; font-weight:500; }
+      .nfx-table td.phone { font-family:monospace; font-size:12px; color:#00c48c; }
+      .nfx-table tr:last-child td { border-bottom:none; }
+      .nfx-more { padding:8px 14px; font-size:12px; color:#9ca3af; font-style:italic; }
+      .nfx-warn { display:flex; align-items:flex-start; gap:8px; padding:10px 14px; background:rgba(245,166,35,0.07); border:0.5px solid rgba(245,166,35,0.3); border-radius:8px; font-size:12px; color:#92600a; line-height:1.5; margin-bottom:12px; }
+      .nfx-filename-wrap { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+      .nfx-filename-wrap label { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#9ca3af; white-space:nowrap; }
+      .nfx-filename-wrap input { flex:1; background:#fff; border:0.5px solid #d1d5db; border-radius:8px; color:#1a1a2e; font-family:monospace; font-size:13px; padding:8px 10px; outline:none; transition:border-color 0.15s; }
+      .nfx-filename-wrap input:focus { border-color:#00c48c; }
+      .nfx-filename-ext { font-size:13px; color:#9ca3af; font-family:monospace; white-space:nowrap; }
+      .nfx-actions { display:flex; gap:8px; margin-bottom:12px; }
+      .nfx-btn-primary { flex:1; background:#00c48c; color:#003d2b; border:none; border-radius:8px; padding:11px 20px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+      .nfx-btn-primary:hover { opacity:.88; }
+      .nfx-btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+      .nfx-btn-secondary { background:#fff; color:#6b7280; border:0.5px solid #d1d5db; border-radius:8px; padding:11px 16px; font-family:inherit; font-size:13px; cursor:pointer; transition:all 0.15s; }
+      .nfx-btn-secondary:hover { background:#f9fafb; color:#1a1a2e; }
+      .nfx-btn-csv { background:#fff; color:#1a1a2e; border:0.5px solid #d1d5db; border-radius:8px; padding:11px 16px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:6px; }
+      .nfx-btn-csv:hover { background:#f9fafb; }
+      .nfx-btn-csv:disabled { opacity:.4; cursor:not-allowed; }
+      .nfx-toast { display:none; margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; align-items:center; gap:8px; }
+      .nfx-toast.show { display:flex; }
+      .nfx-toast.success { background:rgba(0,196,140,0.08); border:0.5px solid rgba(0,196,140,0.3); color:#00c48c; }
+      .nfx-toast.error { background:rgba(220,50,50,0.07); border:0.5px solid rgba(220,50,50,0.25); color:#c0392b; }
+      .nfx-step2-card { background:#fff; border:0.5px solid #e2e5ea; border-radius:8px; padding:16px; margin-bottom:12px; }
+      .nfx-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+      .nfx-stat-box { background:#f9fafb; border-radius:8px; padding:12px; text-align:center; }
+      .nfx-stat-num { font-size:22px; font-weight:500; color:#1a1a2e; margin:0; }
+      .nfx-stat-num.green { color:#00c48c; }
+      .nfx-stat-label { font-size:11px; color:#6b7280; margin:4px 0 0; }
+      .nfx-progress-track { background:#f3f4f6; border-radius:99px; height:6px; overflow:hidden; margin-bottom:8px; }
+      .nfx-progress-fill { height:100%; background:#00c48c; border-radius:99px; width:0%; transition:width 0.3s; }
+      .nfx-progress-stats { display:flex; gap:12px; font-size:12px; color:#6b7280; flex-wrap:wrap; margin-top:4px; }
+      .nfx-result-box { background:rgba(0,196,140,0.07); border:0.5px solid rgba(0,196,140,0.3); border-radius:8px; padding:16px; margin-bottom:12px; display:none; }
+      .nfx-result-box.has-errors { background:rgba(220,50,50,0.07); border-color:rgba(220,50,50,0.25); }
+      .nfx-errors-list { display:none; margin-top:10px; background:#f9fafb; border-radius:6px; padding:10px 12px; font-size:12px; color:#6b7280; max-height:120px; overflow-y:auto; line-height:1.8; }
+      .nfx-version { text-align:right; font-size:11px; color:#d1d5db; font-family:monospace; margin-top:8px; }
+    `;
+    document.head.appendChild(style);
+  }
+
   // ============================================================
   // MODAL HTML
   // ============================================================
@@ -444,7 +328,7 @@
             <div class="nfx-drop" id="nfx-drop">
               <span class="nfx-drop-icon">📊</span>
               <p class="nfx-drop-title">Arraste sua planilha aqui</p>
-              <p class="nfx-drop-sub">ou <span id="nfx-drop-click">clique para selecionar</span> · .xlsx, .xls, .csv</p>
+              <p class="nfx-drop-sub">ou <span>clique para selecionar</span> · .xlsx, .xls, .csv</p>
             </div>
             <input type="file" id="nfx-file-input" accept=".xlsx,.xls,.csv" style="display:none">
           </div>
@@ -459,9 +343,11 @@
               </div>
               <button id="btn-trocar-arquivo" style="background:none;border:0.5px solid #e2e5ea;border-radius:6px;color:#6b7280;font-size:12px;font-family:inherit;padding:5px 12px;cursor:pointer;white-space:nowrap;">↩ Trocar arquivo</button>
             </div>
-            <div id="nfx-limit-warn" style="display:none; margin-bottom:12px; padding:10px 14px; background:rgba(220,50,50,0.07); border:0.5px solid rgba(220,50,50,0.3); border-radius:8px; font-size:13px; color:#c0392b; align-items:flex-start; gap:8px;">
+
+            <div id="nfx-limit-warn" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(220,50,50,0.07);border:0.5px solid rgba(220,50,50,0.3);border-radius:8px;font-size:13px;color:#c0392b;align-items:flex-start;gap:8px;">
               ⛔ <span id="nfx-limit-warn-text"></span>
             </div>
+
             <div id="nfx-map-grid-wrap">
             <p class="nfx-sec-label">Mapeamento de colunas</p>
             <div class="nfx-map-grid">
@@ -486,8 +372,8 @@
                 <select id="col-company"></select>
               </div>
             </div>
-
             </div>
+
             <div id="nfx-labels-wrap">
             <p class="nfx-sec-label">Etiquetas <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#c4c9d4;">(opcional)</span></p>
             <div class="nfx-label-opts">
@@ -502,8 +388,6 @@
                 <input type="text" id="label-new" placeholder="Nome da nova etiqueta..." maxlength="50" style="display:none;margin-top:8px;" />
               </div>
             </div>
-            <div class="nfx-warn" id="label-warn" style="display:none;">
-              ⚠ As etiquetas precisam estar criadas previamente na Neofluxx. Se uma etiqueta não existir na plataforma, o lote inteiro será rejeitado e nenhum contato será importado.
             </div>
 
             <div id="nfx-preview-wrap">
@@ -513,7 +397,7 @@
                 <span class="nfx-sec-label" style="margin:0;">Primeiras linhas</span>
                 <span class="nfx-badge" id="preview-count">0 contatos</span>
               </div>
-              <div id="dup-warn" style="display:none; padding:8px 14px; border-bottom:0.5px solid #fde68a; background:rgba(245,166,35,0.06); font-size:12px; color:#92600a;">
+              <div id="dup-warn" style="display:none;padding:8px 14px;border-bottom:0.5px solid #fde68a;background:rgba(245,166,35,0.06);font-size:12px;color:#92600a;">
                 ⚠ <span id="dup-warn-text"></span>
               </div>
               <div class="nfx-table-wrap">
@@ -521,24 +405,24 @@
               </div>
               <div id="preview-more" style="display:none;" class="nfx-more"></div>
             </div>
-
             </div>
+
             <div id="nfx-filename-wrap">
             <div class="nfx-filename-wrap">
               <label>Nome do arquivo</label>
               <input type="text" id="filename-input" placeholder="contatos_neofluxx" maxlength="60" />
               <span class="nfx-filename-ext">_01.csv</span>
             </div>
-
             </div>
+
             <div id="nfx-actions-wrap">
             <div class="nfx-actions">
               <button class="nfx-btn-primary" id="btn-import-direto">☁ Importar direto na Neofluxx</button>
               <button class="nfx-btn-csv" id="btn-download-csv">⬇ Só baixar CSV</button>
               <button class="nfx-btn-secondary" id="btn-reset">↩</button>
             </div>
-            </div>
             <div class="nfx-toast" id="map-toast"><span id="map-toast-text"></span></div>
+            </div>
           </div>
 
           <!-- STEP 3: Importar direto -->
@@ -588,7 +472,7 @@
   }
 
   // ============================================================
-  // LÓGICA UI
+  // POPULATE SELECTS
   // ============================================================
   function populateSelects(modal) {
     const lower = headers.map(h => h.toLowerCase());
@@ -599,8 +483,7 @@
       if (!f.required) sel.innerHTML = '<option value="">— nenhum —</option>';
       headers.forEach((h, j) => {
         const opt = document.createElement('option');
-        opt.value = j;
-        opt.textContent = h || 'Coluna ' + (j + 1);
+        opt.value = j; opt.textContent = h || 'Coluna ' + (j + 1);
         sel.appendChild(opt);
       });
       if (f.required) {
@@ -610,13 +493,11 @@
       sel.addEventListener('change', () => renderPreview(modal));
     });
 
-    // col-labels — sem auto-seleção, sempre inicia em nenhum
     const colLabels = modal.querySelector('#col-labels');
     colLabels.innerHTML = '<option value="">— nenhum —</option>';
     headers.forEach((h, j) => {
       const opt = document.createElement('option');
-      opt.value = j;
-      opt.textContent = h || 'Coluna ' + (j + 1);
+      opt.value = j; opt.textContent = h || 'Coluna ' + (j + 1);
       colLabels.appendChild(opt);
     });
   }
@@ -637,18 +518,29 @@
     }
   }
 
+  // ============================================================
+  // RENDER PREVIEW
+  // ============================================================
   function renderPreview(modal) {
     const m = getMapping(modal);
-    const deduped = getDedupedRows(modal);
-    const dupCount = rows.length - deduped.length;
+    const mDedup = getMapping(modal);
+    const seenPreview = new Set();
+    const dedupedRows = [];
+    rows.forEach(r => {
+      const phone = formatPhone(r[mDedup['col-phone']]);
+      if (phone && seenPreview.has(phone)) return;
+      if (phone) seenPreview.add(phone);
+      dedupedRows.push(r);
+    });
+    const dupCount = rows.length - dedupedRows.length;
 
-    modal.querySelector('#preview-count').textContent = deduped.length.toLocaleString('pt-BR') + ' contatos';
+    modal.querySelector('#preview-count').textContent = dedupedRows.length.toLocaleString('pt-BR') + ' contatos';
 
     const dupWarn = modal.querySelector('#dup-warn');
     if (dupCount > 0) {
       modal.querySelector('#dup-warn-text').textContent =
         dupCount + ' contato' + (dupCount > 1 ? 's duplicados serão removidos.' : ' duplicado será removido.') +
-        ' O CSV será gerado com ' + deduped.length + ' contatos.';
+        ' O CSV será gerado com ' + dedupedRows.length + ' contatos.';
       dupWarn.style.display = 'block';
     } else {
       dupWarn.style.display = 'none';
@@ -657,10 +549,10 @@
     const activeLabel = getActiveLabel(modal);
     const activeCols = FIELDS.filter(f => m[f.id] !== '');
     const hasLabelCol = m['col-labels'] !== '';
-    const showLabel = hasLabelCol || (activeLabel.value !== '');
+    const showLabel = hasLabelCol || activeLabel.value !== '';
 
     let html = '<tr>' + activeCols.map(f => `<th>${f.label}</th>`).join('') + (showLabel ? '<th>Etiquetas</th>' : '') + '</tr>';
-    deduped.slice(0, 5).forEach(r => {
+    dedupedRows.slice(0, 5).forEach(r => {
       html += '<tr>';
       activeCols.forEach(f => {
         const raw = r[m[f.id]];
@@ -676,24 +568,26 @@
     modal.querySelector('#preview-table').innerHTML = html;
 
     const more = modal.querySelector('#preview-more');
-    if (deduped.length > 5) {
+    if (dedupedRows.length > 5) {
       more.style.display = 'block';
-      more.textContent = '+ ' + (deduped.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
+      more.textContent = '+ ' + (dedupedRows.length - 5).toLocaleString('pt-BR') + ' linhas adicionais';
     } else {
       more.style.display = 'none';
     }
+
+    const exceeded = rows.length > LIMIT_MAX;
+    const warnText = modal.querySelector('#nfx-limit-warn-text');
+    if (warnText) warnText.textContent = 'Planilha com ' + rows.length.toLocaleString('pt-BR') + ' linhas excede o limite de ' + LIMIT_MAX.toLocaleString('pt-BR') + '. Divida a planilha e tente novamente.';
+    setLimitState(modal, exceeded);
   }
 
   // ============================================================
   // DOWNLOAD CSV
   // ============================================================
-  const LIMIT_MAX = 1000;
-  const LIMIT_BATCH = 500;
-
   function downloadCSV(modal) {
     const m = getMapping(modal);
-    const deduped = getDedupedRows(modal);
     const activeLabel = getActiveLabel(modal);
+    const deduped = getDedupedRows(modal);
 
     if (deduped.length > LIMIT_MAX) {
       showMapToast(modal, '⛔ Planilha excede o limite de ' + LIMIT_MAX + ' contatos.', 'error');
@@ -703,7 +597,6 @@
     const cols = FIELDS.filter(f => m[f.id] !== '');
     const hasLabelCol = m['col-labels'] !== '';
     const allCols = [...cols];
-    // Adiciona coluna de labels se: vem da planilha OU vem do dropdown/nova
     if (hasLabelCol || activeLabel.value) {
       allCols.push({ id: 'col-labels', header: 'labels', isPhone: false, isRaw: true });
     }
@@ -718,9 +611,7 @@
       let csv = allCols.map(f => f.header).join(',') + '\n';
       batch.forEach(r => {
         const vals = allCols.map(f => {
-          if (f.id === 'col-labels') {
-            return getLabelValue(r, m, activeLabel);
-          }
+          if (f.id === 'col-labels') return getLabelValue(r, m, activeLabel);
           const raw = r[m[f.id]];
           const val = processValue(f, raw);
           if (f.isPhone) return val;
@@ -756,18 +647,15 @@
     savedMapping = getMapping(modal);
     savedLabel = getActiveLabel(modal);
     const deduped = getDedupedRows(modal);
-    const label = savedLabel;
     const dupes = rows.length - deduped.length;
 
-    // Mostrar valor real da etiqueta, não o índice nem o cabeçalho
     let labelDisplay = '—';
-    if (label.type === 'column' && label.value !== '') {
-      const idx = parseInt(label.value);
-      // Pega o primeiro valor não vazio da coluna como exemplo
+    if (savedLabel.type === 'column' && savedLabel.value !== '') {
+      const idx = parseInt(savedLabel.value);
       const sample = deduped.find(r => r[idx] && String(r[idx]).trim());
       labelDisplay = sample ? normalizeLabel(String(sample[idx])) : (headers[idx] || '—');
-    } else if (label.value) {
-      labelDisplay = label.value;
+    } else if (savedLabel.value) {
+      labelDisplay = savedLabel.value;
     }
 
     modal.querySelector('#s2-total').textContent = deduped.length.toLocaleString('pt-BR');
@@ -788,7 +676,6 @@
     const m = savedMapping || getMapping(modal);
     const labelInfo = savedLabel || getActiveLabel(modal);
     shouldCancel = false;
-    isImporting = false;
 
     const deduped = getDedupedRows(modal);
 
@@ -799,7 +686,6 @@
       return;
     }
 
-    // Se labels vêm da planilha, garantir que todas existem na plataforma antes de importar
     if (labelInfo.type === 'column' && m['col-labels'] !== '') {
       const uniqueLabels = [...new Set(deduped.map(r => normalizeLabel(r[parseInt(m['col-labels'])] || '')).filter(Boolean))];
       for (const lbl of uniqueLabels) {
@@ -811,7 +697,7 @@
       const labelVal = labelInfo.type === 'column'
         ? normalizeLabel(r[parseInt(m['col-labels'])] || '')
         : labelInfo.value;
-        return {
+      return {
         name: toTitleCase(r[m['col-name']] || 'Sem nome'),
         phone_number: formatPhone(r[m['col-phone']]),
         email: m['col-email'] !== '' ? String(r[m['col-email']] || '').trim() : '',
@@ -832,7 +718,7 @@
     let labelTitle = '';
     if (labelInfo.type === 'new' && labelInfo.value) {
       try { labelTitle = await ensureLabel(labelInfo.value); }
-      catch (e) { log('Erro ao criar etiqueta:', e); return; }
+      catch (e) { log('Erro ao criar etiqueta:', e); isImporting = false; return; }
     }
 
     const total = contacts.length;
@@ -886,6 +772,7 @@
       await wait(BATCH_DELAY);
     }
 
+    isImporting = false;
     modal.querySelector('#import-progress-card').style.display = 'none';
     const resultBox = modal.querySelector('#import-result');
     resultBox.style.display = 'block';
@@ -907,7 +794,6 @@
       el.innerHTML = errors.map(e => `<div>• ${e}</div>`).join('');
     }
 
-    isImporting = false;
     modal.querySelector('#btn-back').disabled = false;
     modal.querySelector('#btn-back').textContent = '↩ Nova importação';
   }
@@ -918,62 +804,56 @@
   function resetTool(modal) {
     rows = []; headers = [];
     savedMapping = null; savedLabel = null;
-    modal.querySelector('#nfx-file-input').value = '';
+    shouldCancel = false; isImporting = false;
+    const fi = modal.querySelector('#nfx-file-input');
+    if (fi) fi.value = '';
     modal.querySelector('#nfx-step-map').style.display = 'none';
     modal.querySelector('#nfx-step-import').style.display = 'none';
     modal.querySelector('#nfx-step-upload').style.display = 'block';
-    shouldCancel = false;
   }
 
   // ============================================================
-  // ABRIR MODAL
+  // OPEN MODAL
   // ============================================================
   function openModal() {
-    if (document.getElementById('nfx-conv-overlay')) {
-      const existingOverlay = document.getElementById('nfx-conv-overlay');
-      log('DEBUG openModal reopen - step-upload display ANTES:', existingOverlay.querySelector('#nfx-step-upload').style.display);
-      existingOverlay.classList.add('open');
-      log('DEBUG openModal reopen - step-upload display DEPOIS:', existingOverlay.querySelector('#nfx-step-upload').style.display);
-      loadNeoLabels(existingOverlay);
-      return;
-    }
+    injectCSS();
+    loadSheetJS().catch(e => log('Erro ao carregar SheetJS:', e));
 
     const overlay = buildModal();
     document.body.appendChild(overlay);
     overlay.classList.add('open');
     const modal = overlay;
 
-    // Pré-carregar SheetJS e etiquetas da Neofluxx
-    loadSheetJS().catch(e => log('Erro ao carregar SheetJS:', e));
     loadNeoLabels(modal);
 
-    // Fechar
-    const closeModal = () => {
-      overlay.classList.remove('open');
-      // Garantir que ao fechar volta para a tela inicial
-      overlay.querySelector('#nfx-step-upload').style.display = 'block';
-      overlay.querySelector('#nfx-step-map').style.display = 'none';
-      overlay.querySelector('#nfx-step-import').style.display = 'none';
-      rows = []; headers = [];
-      savedMapping = null; savedLabel = null;
-      shouldCancel = false; isImporting = false;
-      log('DEBUG closeModal - step-upload display:', overlay.querySelector('#nfx-step-upload').style.display);
-    };
+    // Fechar — clicar fora só fecha na tela de upload
+    overlay.addEventListener('click', e => {
+      if (e.target !== overlay) return;
+      const isOnUpload = modal.querySelector('#nfx-step-upload').style.display !== 'none';
+      if (isOnUpload) {
+        overlay.remove();
+        rows = []; headers = [];
+        savedMapping = null; savedLabel = null;
+        shouldCancel = false; isImporting = false;
+      }
+    });
+
+    // Fechar pelo X
     modal.querySelector('#nfx-conv-close').addEventListener('click', () => {
       if (isImporting) {
         if (confirm('Importação em andamento. Deseja cancelar e sair?')) {
           shouldCancel = true;
           isImporting = false;
-          closeModal();
+          overlay.remove();
+          rows = []; headers = [];
+          savedMapping = null; savedLabel = null;
         }
       } else {
-        closeModal();
+        overlay.remove();
+        rows = []; headers = [];
+        savedMapping = null; savedLabel = null;
+        shouldCancel = false; isImporting = false;
       }
-    });
-    overlay.addEventListener('click', e => {
-      // Bloqueia fechar clicando fora em todas as telas exceto upload
-      const isOnUpload = modal.querySelector('#nfx-step-upload').style.display !== 'none';
-      if (e.target === overlay && isOnUpload) closeModal();
     });
 
     // Drop zone
@@ -991,7 +871,7 @@
       if (sel) sel.addEventListener('change', () => renderPreview(modal));
     });
 
-    // Labels — planilha vs neofluxx
+    // Labels
     const colLabels = modal.querySelector('#col-labels');
     const neoLabels = modal.querySelector('#neo-labels');
     const labelNew = modal.querySelector('#label-new');
@@ -1040,8 +920,14 @@
     // Botões step map
     modal.querySelector('#btn-import-direto').addEventListener('click', () => goImport(modal));
     modal.querySelector('#btn-download-csv').addEventListener('click', () => downloadCSV(modal));
-    modal.querySelector('#btn-reset').addEventListener('click', () => resetTool(modal));
-    modal.querySelector('#btn-trocar-arquivo').addEventListener('click', () => resetTool(modal));
+    modal.querySelector('#btn-reset').addEventListener('click', () => {
+      resetTool(modal);
+      setLimitState(modal, false);
+    });
+    modal.querySelector('#btn-trocar-arquivo').addEventListener('click', () => {
+      resetTool(modal);
+      setLimitState(modal, false);
+    });
 
     // Botões step import
     modal.querySelector('#btn-confirm-import').addEventListener('click', () => startImport(modal));
@@ -1060,14 +946,14 @@
   }
 
   // ============================================================
-  // LER ARQUIVO
+  // HANDLE FILE
   // ============================================================
   async function handleFile(file, modal) {
     if (!file) return;
     await loadSheetJS();
+    setLimitState(modal, false);
     const reader = new FileReader();
     reader.onload = e => {
-      setLimitState(modal, false); // reset estado do limite antes de processar novo arquivo
       const wb = XLSX.read(e.target.result, { type: 'binary' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
@@ -1076,14 +962,12 @@
       rows = data.slice(1).filter(r => r.some(c => c !== ''));
       populateSelects(modal);
       renderPreview(modal);
-      // Preencher badge do arquivo
       const badgeName = modal.querySelector('#nfx-badge-name');
       const badgeMeta = modal.querySelector('#nfx-badge-meta');
       if (badgeName) badgeName.textContent = file.name;
       if (badgeMeta) badgeMeta.textContent = (file.size / 1024).toFixed(0) + ' KB · ' + rows.length.toLocaleString('pt-BR') + ' linhas';
       modal.querySelector('#nfx-step-upload').style.display = 'none';
       modal.querySelector('#nfx-step-map').style.display = 'block';
-      // Verificar limite pelo total bruto de linhas
       if (rows.length > LIMIT_MAX) {
         const warnText = modal.querySelector('#nfx-limit-warn-text');
         if (warnText) warnText.textContent = 'Planilha com ' + rows.length.toLocaleString('pt-BR') + ' linhas excede o limite de ' + LIMIT_MAX.toLocaleString('pt-BR') + '. Divida a planilha e tente novamente.';
