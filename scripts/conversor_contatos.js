@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.0';
+  const VERSION = 'v1.1';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -558,7 +558,7 @@
       sel.addEventListener('change', () => renderPreview(modal));
     });
 
-    // col-labels
+    // col-labels — sem auto-seleção, sempre inicia em nenhum
     const colLabels = modal.querySelector('#col-labels');
     colLabels.innerHTML = '<option value="">— nenhum —</option>';
     headers.forEach((h, j) => {
@@ -567,8 +567,6 @@
       opt.textContent = h || 'Coluna ' + (j + 1);
       colLabels.appendChild(opt);
     });
-    const labelIdx = lower.findIndex(h => /label|tag|etiqueta/.test(h));
-    if (labelIdx >= 0) colLabels.value = labelIdx;
   }
 
   async function loadNeoLabels(modal) {
@@ -652,9 +650,11 @@
 
     const cols = FIELDS.filter(f => m[f.id] !== '');
     const hasLabelCol = m['col-labels'] !== '';
-    const addLabelCol = !hasLabelCol && activeLabel.value;
     const allCols = [...cols];
-    if (addLabelCol) allCols.push({ id: 'col-labels', header: 'labels', isPhone: false, isRaw: true });
+    // Adiciona coluna de labels se: vem da planilha OU vem do dropdown/nova
+    if (hasLabelCol || activeLabel.value) {
+      allCols.push({ id: 'col-labels', header: 'labels', isPhone: false, isRaw: true });
+    }
 
     const total = deduped.length;
     const fname = (modal.querySelector('#filename-input').value.trim() || 'contatos_neofluxx').replace(/[^a-zA-Z0-9_\-]/g, '_');
@@ -851,17 +851,18 @@
     overlay.classList.add('open');
     const modal = overlay;
 
-    // Carregar etiquetas da Neofluxx
+    // Pré-carregar SheetJS e etiquetas da Neofluxx
+    loadSheetJS().catch(e => log('Erro ao carregar SheetJS:', e));
     loadNeoLabels(modal);
 
     // Fechar
-    modal.querySelector('#nfx-conv-close').addEventListener('click', () => overlay.classList.remove('open'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    const closeModal = () => { overlay.classList.remove('open'); resetTool(modal); };
+    modal.querySelector('#nfx-conv-close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 
     // Drop zone
     const drop = modal.querySelector('#nfx-drop');
     const fileInput = modal.querySelector('#nfx-file-input');
-    modal.querySelector('#nfx-drop-click').addEventListener('click', () => fileInput.click());
     drop.addEventListener('click', () => fileInput.click());
     drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
     drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
