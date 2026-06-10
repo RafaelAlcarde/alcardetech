@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.7';
+  const VERSION = 'v1.7-debug';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -80,9 +80,11 @@
   async function attachLabel(contactId, label, existingLabels = []) {
     const normalizedLabel = normalizeLabel(label);
     const normalizedExisting = (existingLabels || []).map(l => normalizeLabel(l));
+    const merged = uniq([...normalizedExisting, normalizedLabel]);
+    log('attachLabel POST:', contactId, '| label:', normalizedLabel, '| sending:', JSON.stringify(merged));
+    const result = await api(`contacts/${contactId}/labels`, 'POST', { labels: merged });
+    log('attachLabel RESPONSE:', JSON.stringify(result));
     const has = normalizedExisting.some(l => l === normalizedLabel);
-    // Sempre faz POST para garantir que o valor está normalizado na plataforma
-    await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...normalizedExisting, normalizedLabel]) });
     return { alreadyHad: has };
   }
 
