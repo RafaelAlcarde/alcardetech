@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.0';
+  const VERSION = 'v3.0-debug';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -931,7 +931,9 @@
   function openModal() {
     if (document.getElementById('nfx-conv-overlay')) {
       const existingOverlay = document.getElementById('nfx-conv-overlay');
+      log('DEBUG openModal reopen - step-upload display ANTES:', existingOverlay.querySelector('#nfx-step-upload').style.display);
       existingOverlay.classList.add('open');
+      log('DEBUG openModal reopen - step-upload display DEPOIS:', existingOverlay.querySelector('#nfx-step-upload').style.display);
       loadNeoLabels(existingOverlay);
       return;
     }
@@ -955,6 +957,7 @@
       rows = []; headers = [];
       savedMapping = null; savedLabel = null;
       shouldCancel = false; isImporting = false;
+      log('DEBUG closeModal - step-upload display:', overlay.querySelector('#nfx-step-upload').style.display);
     };
     modal.querySelector('#nfx-conv-close').addEventListener('click', () => {
       if (isImporting) {
