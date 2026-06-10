@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.3';
+  const VERSION = 'v2.4';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -362,16 +362,10 @@
   ];
 
   function setLimitState(modal, exceeded) {
-    modal.querySelectorAll('#nfx-step-map select').forEach(s => {
-      s.disabled = exceeded;
-      s.style.opacity = exceeded ? '0.4' : '1';
+    ['#nfx-map-grid-wrap','#nfx-labels-wrap','#nfx-preview-wrap','#nfx-filename-wrap','#nfx-actions-wrap'].forEach(sel => {
+      const el = modal.querySelector(sel);
+      if (el) el.style.display = exceeded ? 'none' : '';
     });
-    const btnImport = modal.querySelector('#btn-import-direto');
-    const btnCsv = modal.querySelector('#btn-download-csv');
-    btnImport.disabled = exceeded;
-    btnImport.style.opacity = exceeded ? '0.4' : '1';
-    btnCsv.disabled = exceeded;
-    btnCsv.style.opacity = exceeded ? '0.4' : '1';
     const warnDiv = modal.querySelector('#nfx-limit-warn');
     if (warnDiv) warnDiv.style.display = exceeded ? 'flex' : 'none';
   }
@@ -465,6 +459,10 @@
               </div>
               <button id="btn-trocar-arquivo" style="background:none;border:0.5px solid #e2e5ea;border-radius:6px;color:#6b7280;font-size:12px;font-family:inherit;padding:5px 12px;cursor:pointer;white-space:nowrap;">↩ Trocar arquivo</button>
             </div>
+            <div id="nfx-limit-warn" style="display:none; margin-bottom:12px; padding:10px 14px; background:rgba(220,50,50,0.07); border:0.5px solid rgba(220,50,50,0.3); border-radius:8px; font-size:13px; color:#c0392b; align-items:flex-start; gap:8px;">
+              ⛔ <span id="nfx-limit-warn-text"></span>
+            </div>
+            <div id="nfx-map-grid-wrap">
             <p class="nfx-sec-label">Mapeamento de colunas</p>
             <div class="nfx-map-grid">
               <div class="nfx-field">
@@ -489,6 +487,8 @@
               </div>
             </div>
 
+            </div>
+            <div id="nfx-labels-wrap">
             <p class="nfx-sec-label">Etiquetas <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#c4c9d4;">(opcional)</span></p>
             <div class="nfx-label-opts">
               <div class="nfx-label-opt" id="opt-planilha">
@@ -506,6 +506,7 @@
               ⚠ As etiquetas precisam estar criadas previamente na Neofluxx. Se uma etiqueta não existir na plataforma, o lote inteiro será rejeitado e nenhum contato será importado.
             </div>
 
+            <div id="nfx-preview-wrap">
             <p class="nfx-sec-label">Preview</p>
             <div class="nfx-preview-box">
               <div class="nfx-preview-header">
@@ -521,16 +522,21 @@
               <div id="preview-more" style="display:none;" class="nfx-more"></div>
             </div>
 
+            </div>
+            <div id="nfx-filename-wrap">
             <div class="nfx-filename-wrap">
               <label>Nome do arquivo</label>
               <input type="text" id="filename-input" placeholder="contatos_neofluxx" maxlength="60" />
               <span class="nfx-filename-ext">_01.csv</span>
             </div>
 
+            </div>
+            <div id="nfx-actions-wrap">
             <div class="nfx-actions">
               <button class="nfx-btn-primary" id="btn-import-direto">☁ Importar direto na Neofluxx</button>
               <button class="nfx-btn-csv" id="btn-download-csv">⬇ Só baixar CSV</button>
               <button class="nfx-btn-secondary" id="btn-reset">↩</button>
+            </div>
             </div>
             <div class="nfx-toast" id="map-toast"><span id="map-toast-text"></span></div>
           </div>
