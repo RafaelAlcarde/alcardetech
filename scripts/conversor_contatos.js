@@ -6,12 +6,14 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.3';
+  const VERSION = 'v1.4';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
 
   let shouldCancel = false;
+  let savedMapping = null;
+  let savedLabel = null;
 
   // ============================================================
   // ACCOUNT
@@ -728,8 +730,10 @@
   // IMPORTAR DIRETO
   // ============================================================
   function goImport(modal) {
+    savedMapping = getMapping(modal);
+    savedLabel = getActiveLabel(modal);
     const deduped = getDedupedRows(modal);
-    const label = getActiveLabel(modal);
+    const label = savedLabel;
     const dupes = rows.length - deduped.length;
 
     modal.querySelector('#s2-total').textContent = deduped.length.toLocaleString('pt-BR');
@@ -747,8 +751,8 @@
   }
 
   async function startImport(modal) {
-    const m = getMapping(modal);
-    const labelInfo = getActiveLabel(modal);
+    const m = savedMapping || getMapping(modal);
+    const labelInfo = savedLabel || getActiveLabel(modal);
     shouldCancel = false;
 
     const deduped = getDedupedRows(modal);
@@ -860,6 +864,7 @@
   // ============================================================
   function resetTool(modal) {
     rows = []; headers = [];
+    savedMapping = null; savedLabel = null;
     modal.querySelector('#nfx-file-input').value = '';
     modal.querySelector('#nfx-step-map').style.display = 'none';
     modal.querySelector('#nfx-step-import').style.display = 'none';
