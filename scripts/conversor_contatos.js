@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.1';
+  const VERSION = 'v2.2';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -360,6 +360,21 @@
     { id: 'col-city',    header: 'location',      label: 'Cidade',   required: false, isPhone: false, pattern: /cidade|city|cid/ },
     { id: 'col-company', header: 'company_name',  label: 'Empresa',  required: false, isPhone: false, pattern: /empresa|company|companhia|razao|razão/ },
   ];
+
+  function setLimitState(modal, exceeded) {
+    modal.querySelectorAll('#nfx-step-map select').forEach(s => {
+      s.disabled = exceeded;
+      s.style.opacity = exceeded ? '0.4' : '1';
+    });
+    const btnImport = modal.querySelector('#btn-import-direto');
+    const btnCsv = modal.querySelector('#btn-download-csv');
+    btnImport.disabled = exceeded;
+    btnImport.style.opacity = exceeded ? '0.4' : '1';
+    btnCsv.disabled = exceeded;
+    btnCsv.style.opacity = exceeded ? '0.4' : '1';
+    const warnDiv = modal.querySelector('#nfx-limit-warn');
+    if (warnDiv) warnDiv.style.display = exceeded ? 'flex' : 'none';
+  }
 
   function getMapping(modal) {
     const m = {};
@@ -770,6 +785,14 @@
     isImporting = false;
 
     const deduped = getDedupedRows(modal);
+
+    if (deduped.length > LIMIT_MAX) {
+      isImporting = false;
+      modal.querySelector('#btn-confirm-import').style.display = 'flex';
+      modal.querySelector('#btn-back').disabled = false;
+      return;
+    }
+
     // Se labels vêm da planilha, garantir que todas existem na plataforma antes de importar
     if (labelInfo.type === 'column' && m['col-labels'] !== '') {
       const uniqueLabels = [...new Set(deduped.map(r => normalizeLabel(r[parseInt(m['col-labels'])] || '')).filter(Boolean))];
