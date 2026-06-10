@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.4-debug2';
+  const VERSION = 'v1.4-debug3';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -60,6 +60,7 @@
   async function getContactLabels(contactId) {
     try {
       const data = await api(`contacts/${contactId}/labels`, 'GET');
+      log('DEBUG getContactLabels raw:', JSON.stringify(data));
       const labels = data?.payload || data?.data || data || [];
       if (Array.isArray(labels)) return labels.map(l => typeof l === 'string' ? l : (l?.title || l?.name || '')).filter(Boolean);
       return [];
