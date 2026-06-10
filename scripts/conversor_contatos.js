@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.1';
+  const VERSION = 'v1.2';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -346,6 +346,7 @@
   function getMapping(modal) {
     const m = {};
     FIELDS.forEach(f => { m[f.id] = modal.querySelector('#' + f.id)?.value || ''; });
+    m['col-labels'] = modal.querySelector('#col-labels')?.value || '';
     return m;
   }
 
@@ -421,6 +422,14 @@
 
           <!-- STEP 2: Map + Preview -->
           <div id="nfx-step-map" style="display:none;">
+            <div id="nfx-file-badge" style="display:flex;align-items:center;gap:12px;background:#f9fafb;border:0.5px solid #e2e5ea;border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+              <span style="font-size:20px;">📄</span>
+              <div style="flex:1;min-width:0;">
+                <div id="nfx-badge-name" style="font-size:14px;font-weight:500;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="nfx-badge-meta" style="font-size:12px;color:#9ca3af;margin-top:2px;"></div>
+              </div>
+              <button id="btn-trocar-arquivo" style="background:none;border:0.5px solid #e2e5ea;border-radius:6px;color:#6b7280;font-size:12px;font-family:inherit;padding:5px 12px;cursor:pointer;white-space:nowrap;">↩ Trocar arquivo</button>
+            </div>
             <p class="nfx-sec-label">Mapeamento de colunas</p>
             <div class="nfx-map-grid">
               <div class="nfx-field">
@@ -553,8 +562,10 @@
         opt.textContent = h || 'Coluna ' + (j + 1);
         sel.appendChild(opt);
       });
-      const found = lower.findIndex(h => f.pattern.test(h));
-      if (found >= 0) sel.value = found;
+      if (f.required) {
+        const found = lower.findIndex(h => f.pattern.test(h));
+        if (found >= 0) sel.value = found;
+      }
       sel.addEventListener('change', () => renderPreview(modal));
     });
 
@@ -804,7 +815,8 @@
     modal.querySelector('#import-progress-card').style.display = 'none';
     const resultBox = modal.querySelector('#import-result');
     resultBox.style.display = 'block';
-    modal.querySelector('#import-actions').style.display = 'none';
+    modal.querySelector('#btn-confirm-import').style.display = 'none';
+    modal.querySelector('#import-actions').style.display = 'flex';
 
     const hasErrors = errors.length > 0;
     resultBox.className = 'nfx-result-box' + (hasErrors ? ' has-errors' : '');
@@ -842,7 +854,9 @@
   // ============================================================
   function openModal() {
     if (document.getElementById('nfx-conv-overlay')) {
-      document.getElementById('nfx-conv-overlay').classList.add('open');
+      const existingOverlay = document.getElementById('nfx-conv-overlay');
+      existingOverlay.classList.add('open');
+      loadNeoLabels(existingOverlay);
       return;
     }
 
@@ -925,6 +939,7 @@
     modal.querySelector('#btn-import-direto').addEventListener('click', () => goImport(modal));
     modal.querySelector('#btn-download-csv').addEventListener('click', () => downloadCSV(modal));
     modal.querySelector('#btn-reset').addEventListener('click', () => resetTool(modal));
+    modal.querySelector('#btn-trocar-arquivo').addEventListener('click', () => resetTool(modal));
 
     // Botões step import
     modal.querySelector('#btn-confirm-import').addEventListener('click', () => startImport(modal));
@@ -957,6 +972,11 @@
       rows = data.slice(1).filter(r => r.some(c => c !== ''));
       populateSelects(modal);
       renderPreview(modal);
+      // Preencher badge do arquivo
+      const badgeName = modal.querySelector('#nfx-badge-name');
+      const badgeMeta = modal.querySelector('#nfx-badge-meta');
+      if (badgeName) badgeName.textContent = file.name;
+      if (badgeMeta) badgeMeta.textContent = (file.size / 1024).toFixed(0) + ' KB · ' + rows.length.toLocaleString('pt-BR') + ' linhas';
       modal.querySelector('#nfx-step-upload').style.display = 'none';
       modal.querySelector('#nfx-step-map').style.display = 'block';
     };
