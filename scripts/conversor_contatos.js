@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.0';
+  const VERSION = 'v2.1';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -930,7 +930,9 @@
       }
     });
     overlay.addEventListener('click', e => {
-      if (e.target === overlay && !isImporting) closeModal();
+      // Bloqueia fechar clicando fora em todas as telas exceto upload
+      const isOnUpload = modal.querySelector('#nfx-step-upload').style.display !== 'none';
+      if (e.target === overlay && isOnUpload) closeModal();
     });
 
     // Drop zone
