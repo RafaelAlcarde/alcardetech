@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.5';
+  const VERSION = 'v1.6';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -758,6 +758,14 @@
     shouldCancel = false;
 
     const deduped = getDedupedRows(modal);
+    // Se labels vêm da planilha, garantir que todas existem na plataforma antes de importar
+    if (labelInfo.type === 'column' && m['col-labels'] !== '') {
+      const uniqueLabels = [...new Set(deduped.map(r => normalizeLabel(r[parseInt(m['col-labels'])] || '')).filter(Boolean))];
+      for (const lbl of uniqueLabels) {
+        try { await ensureLabel(lbl); } catch(e) { log('Erro ao garantir etiqueta:', lbl, e); }
+      }
+    }
+
     const contacts = deduped.map((r, idx) => {
       const labelVal = labelInfo.type === 'column'
         ? normalizeLabel(r[parseInt(m['col-labels'])] || '')
