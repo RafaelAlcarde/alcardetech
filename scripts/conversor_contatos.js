@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.2';
+  const VERSION = 'v1.3';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -85,6 +85,19 @@
   // ============================================================
   // DADOS
   // ============================================================
+  function normalizeLabel(str) {
+    if (!str) return '';
+    return str
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')   // remove acentos
+      .replace(/[^a-z0-9\s-]/g, '')      // remove caracteres especiais
+      .trim()
+      .replace(/\s+/g, '-')              // espaços → hífen
+      .replace(/-+/g, '-');              // hífens duplos → simples
+  }
+
   function formatPhone(v) {
     const first = String(v).split(/[;,]/)[0].trim();
     let s = first.replace(/\D/g, '');
@@ -355,7 +368,7 @@
     const neoVal = modal.querySelector('#neo-labels')?.value || '';
     const newVal = (modal.querySelector('#label-new')?.value || '').trim();
     if (colVal !== '') return { type: 'column', value: colVal };
-    if (newVal) return { type: 'new', value: newVal.toLowerCase().replace(/\s+/g, '-') };
+    if (newVal) return { type: 'new', value: normalizeLabel(newVal) };
     if (neoVal) return { type: 'existing', value: neoVal };
     return { type: 'none', value: '' };
   }
@@ -379,7 +392,10 @@
   }
 
   function getLabelValue(row, mapping, activeLabel) {
-    if (activeLabel.type === 'column' && mapping['col-labels'] !== '') return String(row[mapping['col-labels']] || '').trim();
+    if (activeLabel.type === 'column' && mapping['col-labels'] !== '') {
+      const idx = parseInt(mapping['col-labels']);
+      return normalizeLabel(row[idx] || '');
+    }
     if (activeLabel.type === 'existing' || activeLabel.type === 'new') return activeLabel.value;
     return '';
   }
@@ -737,7 +753,9 @@
 
     const deduped = getDedupedRows(modal);
     const contacts = deduped.map((r, idx) => {
-      const labelVal = labelInfo.type === 'column' ? String(r[m['col-labels']] || '').trim() : labelInfo.value;
+      const labelVal = labelInfo.type === 'column'
+        ? normalizeLabel(r[parseInt(m['col-labels'])] || '')
+        : labelInfo.value;
       return {
         name: toTitleCase(r[m['col-name']] || 'Sem nome'),
         phone_number: formatPhone(r[m['col-phone']]),
