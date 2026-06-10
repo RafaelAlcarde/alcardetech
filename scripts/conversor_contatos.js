@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.7';
+  const VERSION = 'v2.8';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -947,7 +947,7 @@
     loadNeoLabels(modal);
 
     // Fechar
-    const closeModal = () => { overlay.classList.remove('open'); resetTool(modal); };
+    const closeModal = () => { overlay.classList.remove('open'); };
     modal.querySelector('#nfx-conv-close').addEventListener('click', () => {
       if (isImporting) {
         if (confirm('Importação em andamento. Deseja cancelar e sair?')) {
