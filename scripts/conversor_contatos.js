@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.8';
+  const VERSION = 'v1.9';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -735,11 +735,13 @@
     const label = savedLabel;
     const dupes = rows.length - deduped.length;
 
-    // Mostrar nome da etiqueta, não o índice
+    // Mostrar valor real da etiqueta, não o índice nem o cabeçalho
     let labelDisplay = '—';
     if (label.type === 'column' && label.value !== '') {
       const idx = parseInt(label.value);
-      labelDisplay = headers[idx] || '—';
+      // Pega o primeiro valor não vazio da coluna como exemplo
+      const sample = deduped.find(r => r[idx] && String(r[idx]).trim());
+      labelDisplay = sample ? normalizeLabel(String(sample[idx])) : (headers[idx] || '—');
     } else if (label.value) {
       labelDisplay = label.value;
     }
