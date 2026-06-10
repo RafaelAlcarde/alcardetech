@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.7-debug';
+  const VERSION = 'v1.8';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -81,9 +81,7 @@
     const normalizedLabel = normalizeLabel(label);
     const normalizedExisting = (existingLabels || []).map(l => normalizeLabel(l));
     const merged = uniq([...normalizedExisting, normalizedLabel]);
-    log('attachLabel POST:', contactId, '| label:', normalizedLabel, '| sending:', JSON.stringify(merged));
     const result = await api(`contacts/${contactId}/labels`, 'POST', { labels: merged });
-    log('attachLabel RESPONSE:', JSON.stringify(result));
     const has = normalizedExisting.some(l => l === normalizedLabel);
     return { alreadyHad: has };
   }
@@ -416,7 +414,7 @@
       <div id="nfx-conv-box">
         <div id="nfx-conv-header">
           <div>
-            <span id="nfx-conv-title">Conversor de Contatos</span>
+            <span id="nfx-conv-title">Conversor e Importador de Contatos</span>
             <span id="nfx-conv-version">${VERSION}</span>
           </div>
           <button id="nfx-conv-close">✕</button>
@@ -425,14 +423,11 @@
 
           <!-- STEP 1: Upload -->
           <div id="nfx-step-upload">
-            <p class="nfx-subtitle">Converta sua planilha para o formato aceito pela Neofluxx.</p>
-            <p class="nfx-subtitle">Opcionalmente, defina uma etiqueta para segmentar os contatos em campanhas.</p>
-            <p class="nfx-subtitle" style="margin-bottom:16px;">Após a conversão, importe os contatos na plataforma.</p>
+            <p class="nfx-subtitle" style="margin-bottom:16px;">Importe contatos da sua planilha direto na Neofluxx ou baixe o CSV para importar manualmente.</p>
             <div class="nfx-info-box">
-              <div class="nfx-info-row">📋 A primeira linha da planilha deve conter os cabeçalhos com o nome de cada coluna para que o mapeamento funcione corretamente.</div>
-              <div class="nfx-info-row">📱 Inclua o DDD junto ao número (ex: <code>11900000000</code>). O código +55 é adicionado automaticamente.</div>
-              <div class="nfx-info-row">☁ Você pode importar os contatos direto na Neofluxx ou baixar o CSV para importar manualmente.</div>
-              <div class="nfx-info-row">🏷 Para usar em campanhas, defina uma etiqueta — ela será criada automaticamente se não existir.</div>
+              <div class="nfx-info-row">📋 A primeira linha deve conter os cabeçalhos das colunas para o mapeamento funcionar.</div>
+              <div class="nfx-info-row">📱 Inclua o DDD no número (ex: <code>11900000000</code>) — o código +55 é adicionado automaticamente.</div>
+              <div class="nfx-info-row">🏷 Defina uma etiqueta para usar os contatos em campanhas — ela será criada se não existir.</div>
             </div>
             <div class="nfx-drop" id="nfx-drop">
               <span class="nfx-drop-icon">📊</span>
@@ -740,8 +735,17 @@
     const label = savedLabel;
     const dupes = rows.length - deduped.length;
 
+    // Mostrar nome da etiqueta, não o índice
+    let labelDisplay = '—';
+    if (label.type === 'column' && label.value !== '') {
+      const idx = parseInt(label.value);
+      labelDisplay = headers[idx] || '—';
+    } else if (label.value) {
+      labelDisplay = label.value;
+    }
+
     modal.querySelector('#s2-total').textContent = deduped.length.toLocaleString('pt-BR');
-    modal.querySelector('#s2-label').textContent = label.value || '—';
+    modal.querySelector('#s2-label').textContent = labelDisplay;
     modal.querySelector('#s2-dupes').textContent = dupes.toLocaleString('pt-BR');
 
     modal.querySelector('#nfx-step-map').style.display = 'none';
@@ -988,6 +992,7 @@
       modal.querySelector('#import-actions').style.display = 'flex';
       modal.querySelector('#btn-back').textContent = '← Voltar';
       modal.querySelector('#btn-back').disabled = false;
+      loadNeoLabels(modal);
     });
   }
 
