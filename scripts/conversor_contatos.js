@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.9';
+  const VERSION = 'v3.0';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -932,10 +932,7 @@
     if (document.getElementById('nfx-conv-overlay')) {
       const existingOverlay = document.getElementById('nfx-conv-overlay');
       existingOverlay.classList.add('open');
-      setTimeout(() => {
-        resetTool(existingOverlay);
-        loadNeoLabels(existingOverlay);
-      }, 50);
+      loadNeoLabels(existingOverlay);
       return;
     }
 
@@ -949,7 +946,16 @@
     loadNeoLabels(modal);
 
     // Fechar
-    const closeModal = () => { overlay.classList.remove('open'); };
+    const closeModal = () => {
+      overlay.classList.remove('open');
+      // Garantir que ao fechar volta para a tela inicial
+      overlay.querySelector('#nfx-step-upload').style.display = 'block';
+      overlay.querySelector('#nfx-step-map').style.display = 'none';
+      overlay.querySelector('#nfx-step-import').style.display = 'none';
+      rows = []; headers = [];
+      savedMapping = null; savedLabel = null;
+      shouldCancel = false; isImporting = false;
+    };
     modal.querySelector('#nfx-conv-close').addEventListener('click', () => {
       if (isImporting) {
         if (confirm('Importação em andamento. Deseja cancelar e sair?')) {
