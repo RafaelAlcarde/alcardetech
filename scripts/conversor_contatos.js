@@ -1,4 +1,3 @@
-<script>
 /**
  * Neofluxx — Conversor de Contatos v1.0
  * Importa planilha XLS/CSV, mapeia colunas, deduplica, etiqueta e importa direto.
@@ -975,4 +974,3 @@
   log(`Iniciado na conta ${accountId()}.`);
 
 })();
-</script>
