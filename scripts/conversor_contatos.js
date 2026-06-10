@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.4-debug';
+  const VERSION = 'v1.4-debug2';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -78,6 +78,7 @@
   }
 
   async function attachLabel(contactId, label, existingLabels = []) {
+    log('DEBUG attachLabel - label:', label, '| existingLabels:', JSON.stringify(existingLabels));
     const has = (existingLabels || []).some(l => (l || '').toLowerCase() === (label || '').toLowerCase());
     if (has) return { alreadyHad: true };
     await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...(existingLabels || []), label]) });
