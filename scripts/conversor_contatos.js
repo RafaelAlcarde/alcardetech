@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.6';
+  const VERSION = 'v1.7';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -81,9 +81,9 @@
     const normalizedLabel = normalizeLabel(label);
     const normalizedExisting = (existingLabels || []).map(l => normalizeLabel(l));
     const has = normalizedExisting.some(l => l === normalizedLabel);
-    if (has) return { alreadyHad: true };
+    // Sempre faz POST para garantir que o valor está normalizado na plataforma
     await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...normalizedExisting, normalizedLabel]) });
-    return { alreadyHad: false };
+    return { alreadyHad: has };
   }
 
   // ============================================================
