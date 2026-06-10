@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.4-debug3';
+  const VERSION = 'v1.5';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -60,8 +60,7 @@
   async function getContactLabels(contactId) {
     try {
       const data = await api(`contacts/${contactId}/labels`, 'GET');
-      log('DEBUG getContactLabels raw:', JSON.stringify(data));
-      const labels = data?.payload || data?.data || data || [];
+        const labels = data?.payload || data?.data || data || [];
       if (Array.isArray(labels)) return labels.map(l => typeof l === 'string' ? l : (l?.title || l?.name || '')).filter(Boolean);
       return [];
     } catch (e) { return []; }
@@ -79,10 +78,11 @@
   }
 
   async function attachLabel(contactId, label, existingLabels = []) {
-    log('DEBUG attachLabel - label:', label, '| existingLabels:', JSON.stringify(existingLabels));
-    const has = (existingLabels || []).some(l => (l || '').toLowerCase() === (label || '').toLowerCase());
+    const normalizedLabel = normalizeLabel(label);
+    const normalizedExisting = (existingLabels || []).map(l => normalizeLabel(l));
+    const has = normalizedExisting.some(l => l === normalizedLabel);
     if (has) return { alreadyHad: true };
-    await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...(existingLabels || []), label]) });
+    await api(`contacts/${contactId}/labels`, 'POST', { labels: uniq([...normalizedExisting, normalizedLabel]) });
     return { alreadyHad: false };
   }
 
@@ -758,15 +758,11 @@
     shouldCancel = false;
 
     const deduped = getDedupedRows(modal);
-    log('DEBUG labelInfo:', JSON.stringify(labelInfo));
-    log('DEBUG m col-labels:', m['col-labels']);
-    log('DEBUG primeira row:', JSON.stringify(deduped[0]));
     const contacts = deduped.map((r, idx) => {
       const labelVal = labelInfo.type === 'column'
         ? normalizeLabel(r[parseInt(m['col-labels'])] || '')
         : labelInfo.value;
-      log('DEBUG labelVal linha', idx, ':', labelVal);
-      return {
+        return {
         name: toTitleCase(r[m['col-name']] || 'Sem nome'),
         phone_number: formatPhone(r[m['col-phone']]),
         email: m['col-email'] !== '' ? String(r[m['col-email']] || '').trim() : '',
