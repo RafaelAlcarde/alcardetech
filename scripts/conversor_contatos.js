@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v1.4';
+  const VERSION = 'v1.4-debug';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -756,10 +756,14 @@
     shouldCancel = false;
 
     const deduped = getDedupedRows(modal);
+    log('DEBUG labelInfo:', JSON.stringify(labelInfo));
+    log('DEBUG m col-labels:', m['col-labels']);
+    log('DEBUG primeira row:', JSON.stringify(deduped[0]));
     const contacts = deduped.map((r, idx) => {
       const labelVal = labelInfo.type === 'column'
         ? normalizeLabel(r[parseInt(m['col-labels'])] || '')
         : labelInfo.value;
+      log('DEBUG labelVal linha', idx, ':', labelVal);
       return {
         name: toTitleCase(r[m['col-name']] || 'Sem nome'),
         phone_number: formatPhone(r[m['col-phone']]),
