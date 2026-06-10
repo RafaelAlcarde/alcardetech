@@ -6,7 +6,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v2.2';
+  const VERSION = 'v2.3';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -1064,6 +1064,12 @@
       if (badgeMeta) badgeMeta.textContent = (file.size / 1024).toFixed(0) + ' KB · ' + rows.length.toLocaleString('pt-BR') + ' linhas';
       modal.querySelector('#nfx-step-upload').style.display = 'none';
       modal.querySelector('#nfx-step-map').style.display = 'block';
+      // Verificar limite pelo total bruto de linhas
+      if (rows.length > LIMIT_MAX) {
+        const warnText = modal.querySelector('#nfx-limit-warn-text');
+        if (warnText) warnText.textContent = 'Planilha com ' + rows.length.toLocaleString('pt-BR') + ' linhas excede o limite de ' + LIMIT_MAX.toLocaleString('pt-BR') + '. Divida a planilha e tente novamente.';
+        setLimitState(modal, true);
+      }
     };
     reader.readAsBinaryString(file);
   }
