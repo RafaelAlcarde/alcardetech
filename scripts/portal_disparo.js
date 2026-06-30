@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const PORTAL_VERSION = 'v1.0';
+  const PORTAL_VERSION = 'v2.0';
   console.log(`[Portal Disparo WhatsApp] ${PORTAL_VERSION} carregado`);
 
   const CONFIG = {
@@ -646,13 +646,11 @@
     if (!hasImg) { state.imgUrl = ''; }
 
     // Detectar variáveis do body {{1}}, {{2}}, etc.
-    const COLUNAS = ['name', 'consultora', 'data'];
+    const COLUNAS = ['name', 'consultora', 'data', 'area'];
     const body = (t.components || []).find(c => c.type === 'BODY');
     const bodyText = body ? (body.text || '') : '';
     const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
     state.templateParams = COLUNAS.slice(0, varCount);
-    window._dbgTemplateParams = state.templateParams;
-    console.log('[Portal Disparo] templateParams detectado:', state.templateParams);
 
     // Renderizar seletor de variáveis
     const varMap = document.getElementById('nfxd-var-map');
@@ -927,7 +925,6 @@
 
   window.nfxdUpdVar = function(idx, val) {
     state.templateParams[idx] = val;
-    window._dbgTemplateParams = state.templateParams;
   };
 
   // ─── HISTÓRICO ──────────────────────────────────────────────────────────────
