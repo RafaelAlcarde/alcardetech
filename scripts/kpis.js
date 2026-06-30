@@ -599,6 +599,7 @@
     loading: false,
     error: null,
     showCustom: false,
+    showCostBreakdown: false,
   };
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -621,7 +622,7 @@
 
   // ─── RENDER OVERVIEW ──────────────────────────────────────────────────────
   const renderOverview = (panel) => {
-    const { analytics, templates, loading, error, analyticsIncomplete } = panelState;
+    const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown } = panelState;
 
     // Todos os data_points juntos para totais consolidados
     const allDp = getDpForTemplate(analytics, null);
@@ -630,14 +631,19 @@
     const totalRead      = sumMetric(allDp, 'read');
     const totalClicked   = sumClicked(allDp);
 
-    // Custo estimado — calcula por template usando categoria
+    // Custo estimado — calcula por template usando categoria, e também por categoria agregada
     let totalCost = 0;
+    const costByCategory = {};
     for (const t of templates) {
       const dp = getDpForTemplate(analytics, t.id);
       const delivered = sumMetric(dp, 'delivered');
-      totalCost += calcCost(delivered, t.category);
+      const c = calcCost(delivered, t.category);
+      totalCost += c;
+      const cat = (t.category || 'MARKETING').toUpperCase();
+      costByCategory[cat] = (costByCategory[cat] || 0) + c;
     }
     const costPerMsg = totalDelivered > 0 ? totalCost / totalDelivered : 0;
+    const categoryRows = Object.entries(costByCategory).sort((a, b) => b[1] - a[1]);
 
     // Apenas templates com envio no período entram na tabela de custo
     const sentTemplates = templates
@@ -669,9 +675,26 @@
           <div class="neo-kpi-card-sub">${loading ? '' : pct(totalClicked, totalDelivered)} CTR</div>
         </div>
         <div class="neo-kpi-card cost ${loading ? 'loading' : ''}">
-          <div class="neo-kpi-card-label">Custo estimado</div>
+          <div class="neo-kpi-card-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span>Custo estimado</span>
+            ${!loading && categoryRows.length > 0 ? `
+              <button id="neo-cost-toggle" style="background:none;border:none;cursor:pointer;color:var(--ac);font-size:11px;font-weight:600;padding:0;white-space:nowrap;">
+                ${showCostBreakdown ? 'ocultar ▲' : 'por categoria ▼'}
+              </button>
+            ` : ''}
+          </div>
           <div class="neo-kpi-card-value">${loading ? '000' : '≈ ' + fmtUSD(totalCost)}</div>
           <div class="neo-kpi-card-sub">${loading ? '' : (costPerMsg > 0 ? fmtUSD(costPerMsg) + ' / msg entregue' : 'rate card Meta')}</div>
+          ${!loading && showCostBreakdown && categoryRows.length > 0 ? `
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:6px;">
+              ${categoryRows.map(([cat, val]) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+                  <span class="neo-tag gray" style="font-size:10px;">${cat}</span>
+                  <span style="color:var(--tx);font-weight:600;">${fmtUSD(val)}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
         </div>
       </div>
 
@@ -744,6 +767,15 @@
         renderPanel();
       });
     });
+
+    // Toggle do breakdown de custo por categoria
+    const costToggle = document.getElementById('neo-cost-toggle');
+    if (costToggle) {
+      costToggle.onclick = () => {
+        panelState.showCostBreakdown = !panelState.showCostBreakdown;
+        renderPanel();
+      };
+    }
   };
 
   // ─── RENDER DETAIL ────────────────────────────────────────────────────────
