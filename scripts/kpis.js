@@ -80,19 +80,27 @@
   };
 
   const fetchTemplates = async (wabaId, token) => {
-    const data = await metaFetch(
-      `${wabaId}/message_templates?fields=name,status,category,language&limit=100`,
-      token
-    );
-    return (data.data || []).filter(t => t.status === 'APPROVED');
+    const all = [];
+    let url = `${wabaId}/message_templates?fields=name,status,category,language&limit=100`;
+    while (url) {
+      const data = await metaFetch(url, token);
+      all.push(...(data.data || []));
+      const after = data.paging?.cursors?.after;
+      url = data.paging?.next && after
+        ? `${wabaId}/message_templates?fields=name,status,category,language&limit=100&after=${after}`
+        : null;
+    }
+    return all.filter(t => t.status === 'APPROVED');
   };
 
   const fetchTemplateAnalytics = async (wabaId, token, start, end, templateIds) => {
-    if (!templateIds || templateIds.length === 0) return [];
+    if (!templateIds || templateIds.length === 0) return { dataPoints: [{ data_points: [] }], incomplete: false };
     const chunks = [];
     for (let i = 0; i < templateIds.length; i += 10) {
       chunks.push(templateIds.slice(i, i + 10));
     }
+
+    let incomplete = false;
 
     const chunkResults = await Promise.all(chunks.map(async (chunk) => {
       const dps = [];
@@ -110,13 +118,14 @@
             : null;
         }
       } catch (e) {
+        incomplete = true;
         console.warn('[NeoKPI] Erro no chunk:', e.message);
       }
       return dps;
     }));
 
     const allResults = chunkResults.flat();
-    return [{ data_points: allResults }];
+    return { dataPoints: [{ data_points: allResults }], incomplete };
   };
 
   // ─── AGGREGATE HELPERS ────────────────────────────────────────────────────
@@ -191,12 +200,35 @@
     s.textContent = `
       /* botão flutuante KPI removido — abertura via menu Neofluxx */
 
+      #neo-kpi-overlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        background: rgba(0,0,0,.55);
+        align-items: center;
+        justify-content: center;
+      }
+
+      @keyframes neoKpiFadeIn {
+        from { opacity: 0; transform: scale(.97); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+
       #${PANEL_ID} {
         font-family: 'DM Sans', -apple-system, sans-serif;
-        padding: 0;
-        max-width: 100%;
+        padding: 28px 36px 40px 36px;
+        width: 90vw;
+        max-width: 1400px;
+        height: 88vh;
         color: #111827;
         box-sizing: border-box;
+        background: #F3F4F6;
+        border-radius: 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,.3);
+        animation: neoKpiFadeIn .2s ease;
       }
 
       .neo-kpi-header {
@@ -517,6 +549,7 @@
     customEnd: '',
     selectedTemplate: null,
     analytics: [],
+    analyticsIncomplete: false,
     templates: [],
     loading: false,
     error: null,
@@ -543,7 +576,7 @@
 
   // ─── RENDER OVERVIEW ──────────────────────────────────────────────────────
   const renderOverview = (panel) => {
-    const { analytics, templates, loading, error } = panelState;
+    const { analytics, templates, loading, error, analyticsIncomplete } = panelState;
 
     // Todos os data_points juntos para totais consolidados
     const allDp = getDpForTemplate(analytics, null);
@@ -561,8 +594,14 @@
     }
     const costPerMsg = totalDelivered > 0 ? totalCost / totalDelivered : 0;
 
+    // Apenas templates com envio no período entram na tabela de custo
+    const sentTemplates = templates
+      .map(t => ({ t, dp: getDpForTemplate(analytics, t.id) }))
+      .filter(({ dp }) => sumMetric(dp, 'sent') > 0);
+
     panel.innerHTML = `
       ${error ? `<div class="neo-kpi-error-banner">⚠️ ${error}</div>` : ''}
+      ${!error && analyticsIncomplete ? `<div class="neo-kpi-error-banner">⚠️ Não foi possível carregar os dados de alguns templates — os totais e custos abaixo podem estar subestimados. Tente atualizar.</div>` : ''}
 
       <div class="neo-kpi-cards">
         <div class="neo-kpi-card ${loading ? 'loading' : ''}">
@@ -595,7 +634,13 @@
             <span>Nenhum template aprovado encontrado</span>
           </div>
         ` : ''}
-        ${!loading && templates.length > 0 ? `
+        ${!loading && templates.length > 0 && sentTemplates.length === 0 ? `
+          <div class="neo-kpi-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+            <span>Nenhum template com envios no período</span>
+          </div>
+        ` : ''}
+        ${!loading && sentTemplates.length > 0 ? `
           <table class="neo-kpi-table">
             <thead>
               <tr>
@@ -610,8 +655,7 @@
               </tr>
             </thead>
             <tbody>
-              ${templates.map(t => {
-                const dp        = getDpForTemplate(analytics, t.id);
+              ${sentTemplates.map(({ t, dp }) => {
                 const sent      = sumMetric(dp, 'sent');
                 const delivered = sumMetric(dp, 'delivered');
                 const read      = sumMetric(dp, 'read');
@@ -824,6 +868,7 @@
 
     panelState.loading = true;
     panelState.error = null;
+    panelState.analyticsIncomplete = false;
     renderPanel();
 
     const { start, end } = getDateRange(panelState.preset, {
@@ -834,8 +879,9 @@
       const templates = await fetchTemplates(cfg.wabaId, cfg.token);
       panelState.templates = templates;
       const templateIds = templates.map(t => t.id);
-      const analytics = await fetchTemplateAnalytics(cfg.wabaId, cfg.token, start, end, templateIds);
-      panelState.analytics = analytics;
+      const { dataPoints, incomplete } = await fetchTemplateAnalytics(cfg.wabaId, cfg.token, start, end, templateIds);
+      panelState.analytics = dataPoints;
+      panelState.analyticsIncomplete = incomplete;
     } catch (e) {
       panelState.error = e.message || 'Erro ao buscar dados da Meta.';
     }
@@ -932,14 +978,7 @@
       showConfigModal(() => loadData());
 
     // Botão fechar — remove painel instantaneamente, sem reload
-    document.getElementById('neo-close').onclick = () => {
-      const panelEl = document.getElementById(PANEL_ID);
-      if (panelEl) panelEl.remove();
-      // Navega via SPA sem reload
-      const accountId = getAccountId();
-      history.pushState({}, '', `/app/accounts/${accountId}/conversations`);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    };
+    document.getElementById('neo-close').onclick = closePanel;
 
     // Conteúdo
     if (panelState.view === 'detail') {
@@ -950,29 +989,31 @@
   };
 
   // ─── INJECT PANEL INTO ROUTE ──────────────────────────────────────────────
+  const closePanel = () => {
+    const overlayEl = document.getElementById('neo-kpi-overlay');
+    if (overlayEl) overlayEl.remove();
+    document.removeEventListener('keydown', onEscClose);
+    // Navega via SPA sem reload
+    const accountId = getAccountId();
+    history.pushState({}, '', `/app/accounts/${accountId}/conversations`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
+
+  const onEscClose = (e) => { if (e.key === 'Escape') closePanel(); };
+
   const mountPanel = () => {
     if (document.getElementById(PANEL_ID)) return;
 
+    const overlay = document.createElement('div');
+    overlay.id = 'neo-kpi-overlay';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closePanel(); });
+    document.addEventListener('keydown', onEscClose);
+
     const host = document.createElement('div');
     host.id = PANEL_ID;
-    host.style.cssText = `
-      padding: 28px 36px 40px 36px;
-      margin: 0;
-      width: 100%;
-      min-height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      background: #F3F4F6;
-      box-sizing: border-box;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 9000;
-    `;
 
-    document.body.appendChild(host);
+    overlay.appendChild(host);
+    document.body.appendChild(overlay);
     renderPanel();
     if (loadConfig()) loadData();
   };
