@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  const PORTAL_VERSION = 'v1.0';
+  console.log(`[Portal Disparo WhatsApp] ${PORTAL_VERSION} carregado`);
+
   const CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/disparo-whatsapp-v2',
     get tenantKey() {
