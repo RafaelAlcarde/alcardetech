@@ -27,6 +27,34 @@
     return 'US$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
+  const fmtBRL = (val) => {
+    if (val === 0) return 'R$ 0,00';
+    return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // ─── COTAÇÃO USD/BRL ──────────────────────────────────────────────────────
+  // Cache em memória por sessão (5 min) — evita reconsultar a cada troca de período.
+  let _usdBrlCache = { rate: null, fetchedAt: 0 };
+  const USD_BRL_CACHE_MS = 5 * 60 * 1000;
+
+  const fetchUsdBrlRate = async () => {
+    const now = Date.now();
+    if (_usdBrlCache.rate && (now - _usdBrlCache.fetchedAt) < USD_BRL_CACHE_MS) {
+      return _usdBrlCache.rate;
+    }
+    try {
+      const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+      const data = await res.json();
+      const bid = parseFloat(data?.USDBRL?.bid);
+      if (!bid || Number.isNaN(bid)) return null;
+      _usdBrlCache = { rate: bid, fetchedAt: now };
+      return bid;
+    } catch (e) {
+      console.warn('[NeoKPI] Erro ao buscar cotação USD/BRL:', e.message);
+      return null; // fallback silencioso — painel segue mostrando só USD
+    }
+  };
+
 
   const getAccountId = () => {
     const m = location.pathname.match(/accounts\/(\d+)/);
@@ -600,6 +628,7 @@
     error: null,
     showCustom: false,
     showCostBreakdown: false,
+    usdBrlRate: null,
   };
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -622,7 +651,7 @@
 
   // ─── RENDER OVERVIEW ──────────────────────────────────────────────────────
   const renderOverview = (panel) => {
-    const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown } = panelState;
+    const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown, usdBrlRate } = panelState;
 
     // Todos os data_points juntos para totais consolidados
     const allDp = getDpForTemplate(analytics, null);
@@ -676,7 +705,10 @@
         </div>
         <div class="neo-kpi-card cost ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-            <span>Custo estimado</span>
+            <span style="display:flex;align-items:center;gap:4px;">
+              Custo estimado
+              <span title="Estimativa com base na tabela de preços da Meta e cotação do dólar do dia. Não substitui a fatura oficial. Podem ocorrer variações." style="cursor:help;color:var(--tx3);font-size:11px;border:1px solid var(--bd2);border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">i</span>
+            </span>
             ${!loading && categoryRows.length > 0 ? `
               <button id="neo-cost-toggle" style="background:none;border:none;cursor:pointer;color:var(--ac);font-size:11px;font-weight:600;padding:0;white-space:nowrap;">
                 ${showCostBreakdown ? 'ocultar ▲' : 'por categoria ▼'}
@@ -684,6 +716,7 @@
             ` : ''}
           </div>
           <div class="neo-kpi-card-value">${loading ? '000' : '≈ ' + fmtUSD(totalCost)}</div>
+          ${!loading && usdBrlRate ? `<div class="neo-kpi-card-sub">≈ ${fmtBRL(totalCost * usdBrlRate)}</div>` : ''}
           <div class="neo-kpi-card-sub">${loading ? '' : (costPerMsg > 0 ? fmtUSD(costPerMsg) + ' / msg entregue' : 'rate card Meta')}</div>
           ${!loading && showCostBreakdown && categoryRows.length > 0 ? `
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:6px;">
@@ -955,6 +988,12 @@
 
     const { start, end } = getDateRange(panelState.preset, {
       start: panelState.customStart, end: panelState.customEnd
+    });
+
+    // Cotação USD/BRL — busca em paralelo, nunca bloqueia nem quebra o fluxo principal
+    fetchUsdBrlRate().then(rate => {
+      panelState.usdBrlRate = rate;
+      if (!panelState.loading) renderPanel(); // se já terminou de carregar, atualiza o card sozinho
     });
 
     try {
