@@ -637,6 +637,13 @@
     state.templateHasImg = hasImg;
     if (!hasImg) { state.imgUrl = ''; }
 
+    // Detectar variáveis do body {{1}}, {{2}}, etc.
+    const fieldOrder = ['nome', 'consultora', 'data'];
+    const body = (t.components || []).find(c => c.type === 'BODY');
+    const bodyText = body ? (body.text || '') : '';
+    const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
+    state.templateParams = fieldOrder.slice(0, varCount);
+
     document.querySelectorAll('.nfxd-tpl-card').forEach(c => c.classList.remove('sel'));
     const el = document.getElementById('nfxd-tpl-' + id);
     if (el) el.classList.add('sel');
@@ -874,6 +881,7 @@
             url_image: state.imgUrl || null,
             dt_disparo: `${data}T${hora}:00`,
             waba_nome: state.wabaNome || null,
+            template_params: state.templateParams || ['nome'],
           }
         })
       });
