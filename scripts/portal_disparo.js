@@ -646,6 +646,8 @@
     const bodyText = body ? (body.text || '') : '';
     const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
     state.templateParams = fieldOrder.slice(0, varCount);
+    window._dbgTemplateParams = state.templateParams;
+    console.log('[Portal Disparo] templateParams detectado:', state.templateParams);
 
     document.querySelectorAll('.nfxd-tpl-card').forEach(c => c.classList.remove('sel'));
     const el = document.getElementById('nfxd-tpl-' + id);
