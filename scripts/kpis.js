@@ -813,7 +813,7 @@
 
   // ─── RENDER DETAIL ────────────────────────────────────────────────────────
   const renderDetail = (panel) => {
-    const { selectedTemplate, analytics, loading } = panelState;
+    const { selectedTemplate, analytics, loading, usdBrlRate } = panelState;
 
     const { start, end, displayStart, displayEnd } = getDateRange(panelState.preset, {
       start: panelState.customStart, end: panelState.customEnd
@@ -845,11 +845,13 @@
           <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--ac);min-width:140px;">
             <div class="neo-kpi-card-label">Valor estimado · ${displayStart} até ${displayEnd}</div>
             <div style="font-size:18px;font-weight:700;color:var(--tx);">${fmtUSD(cost)}</div>
+            ${usdBrlRate ? `<div style="font-size:12px;color:var(--tx2);margin-top:2px;">≈ ${fmtBRL(cost * usdBrlRate)}</div>` : ''}
             <div style="font-size:11px;color:var(--tx3);margin-top:3px;">Tarifa: ${fmtUSD(META_PRICES[selectedTemplate?.category?.toUpperCase()] ?? META_PRICES.MARKETING)}/msg · BR 2026</div>
           </div>
           <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--green);min-width:140px;">
             <div class="neo-kpi-card-label">Custo por entregue</div>
             <div style="font-size:18px;font-weight:700;color:var(--tx);">${fmtUSD(costPerMsg)}</div>
+            ${usdBrlRate ? `<div style="font-size:12px;color:var(--tx2);margin-top:2px;">≈ ${fmtBRL(costPerMsg * usdBrlRate)}</div>` : ''}
             <div style="font-size:11px;color:var(--tx3);margin-top:3px;">${fmt(delivered)} msgs entregues</div>
           </div>
         </div>
