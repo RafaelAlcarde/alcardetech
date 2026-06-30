@@ -245,6 +245,7 @@
         <span style="font-size:10px;color:var(--tx3)">/ Neofluxx</span>
         <div class="nfxd-sp"></div>
         <div class="nfxd-pill"><div class="nfxd-dot"></div><span id="nfxd-stxt">Sincronizado</span></div>
+        <span style="font-size:9px;color:var(--tx3);margin-left:4px">${PORTAL_VERSION}</span>
         <button id="nfxd-xbtn" onclick="nfxdClose()">✕</button>
       </div>
 
@@ -317,6 +318,10 @@
             <div class="nfxd-sh"><div class="nfxd-sn" id="nfxd-n2">2</div><div class="nfxd-st">Template</div><button class="nfxd-bs" style="margin-left:auto;padding:4px 10px;font-size:11px" onclick="nfxdLoadTemplates()">↺ Atualizar</button></div>
             <div class="nfxd-sb">
               <div id="nfxd-tpl-container"><div class="nfxd-ld">Carregando templates...</div></div>
+            </div>
+            <div id="nfxd-var-map" style="display:none;margin-top:12px;padding:12px;background:var(--sf2);border-radius:8px;border:1px solid var(--bd)">
+              <div style="font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:10px">Mapeamento de variáveis</div>
+              <div id="nfxd-var-rows"></div>
             </div>
           </div>
 
@@ -641,13 +646,30 @@
     if (!hasImg) { state.imgUrl = ''; }
 
     // Detectar variáveis do body {{1}}, {{2}}, etc.
-    const fieldOrder = ['nome', 'consultora', 'data'];
+    const COLUNAS = ['name', 'consultora', 'data'];
     const body = (t.components || []).find(c => c.type === 'BODY');
     const bodyText = body ? (body.text || '') : '';
     const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
-    state.templateParams = fieldOrder.slice(0, varCount);
+    state.templateParams = COLUNAS.slice(0, varCount);
     window._dbgTemplateParams = state.templateParams;
     console.log('[Portal Disparo] templateParams detectado:', state.templateParams);
+
+    // Renderizar seletor de variáveis
+    const varMap = document.getElementById('nfxd-var-map');
+    const varRows = document.getElementById('nfxd-var-rows');
+    if (varCount > 0) {
+      varRows.innerHTML = state.templateParams.map((col, i) => `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--tx2);min-width:40px">{{${i+1}}}</span>
+          <select onchange="nfxdUpdVar(${i}, this.value)" style="background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 8px;color:var(--tx);font-size:12px;font-family:inherit">
+            ${COLUNAS.map(c => `<option value="${c}" ${c === col ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      `).join('');
+      varMap.style.display = 'block';
+    } else {
+      varMap.style.display = 'none';
+    }
 
     document.querySelectorAll('.nfxd-tpl-card').forEach(c => c.classList.remove('sel'));
     const el = document.getElementById('nfxd-tpl-' + id);
@@ -886,7 +908,7 @@
             url_image: state.imgUrl || null,
             dt_disparo: `${data}T${hora}:00`,
             waba_nome: state.wabaNome || null,
-            template_params: state.templateParams || ['nome'],
+            template_params: state.templateParams || ['name'],
           }
         })
       });
@@ -901,6 +923,11 @@
       btn.disabled = false;
       btn.innerHTML = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"/></svg> Agendar disparo';
     }
+  };
+
+  window.nfxdUpdVar = function(idx, val) {
+    state.templateParams[idx] = val;
+    window._dbgTemplateParams = state.templateParams;
   };
 
   // ─── HISTÓRICO ──────────────────────────────────────────────────────────────
