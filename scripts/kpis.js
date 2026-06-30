@@ -215,19 +215,42 @@
         to   { opacity: 1; transform: scale(1); }
       }
 
+      #${PANEL_ID}.light {
+        --bg: #F3F4F6; --sf: #fff; --sf2: #F9FAFB; --sf3: #F3F4F6;
+        --bd: #E5E7EB; --bd2: #D1D5DB;
+        --tx: #111827; --tx2: #6B7280; --tx3: #9CA3AF;
+        --ac: #2563EB; --acdim: rgba(37,99,235,.08); --acgl: rgba(37,99,235,.25);
+        --red: #DC2626; --reddim: #FEF2F2; --redbd: #FECACA;
+        --green: #065F46; --greenbg: #D1FAE5;
+        --blue: #1E40AF; --bluebg: #DBEAFE;
+        --amber: #92400E; --amberbg: #FEF3C7;
+        --shadow: 0 20px 60px rgba(0,0,0,.3);
+      }
+      #${PANEL_ID}.dark {
+        --bg: #0F0F11; --sf: #17171B; --sf2: #1E1E24; --sf3: #252530;
+        --bd: #2A2A35; --bd2: #35354A;
+        --tx: #F0F0F5; --tx2: #9090A8; --tx3: #55556A;
+        --ac: #4F8EF7; --acdim: rgba(79,142,247,.12); --acgl: rgba(79,142,247,.3);
+        --red: #FF5E5E; --reddim: rgba(255,94,94,.1); --redbd: rgba(255,94,94,.3);
+        --green: #4ADE80; --greenbg: rgba(74,222,128,.12);
+        --blue: #60A5FA; --bluebg: rgba(96,165,250,.12);
+        --amber: #FBBF24; --amberbg: rgba(251,191,36,.12);
+        --shadow: 0 20px 60px rgba(0,0,0,.6);
+      }
+
       #${PANEL_ID} {
         font-family: 'DM Sans', -apple-system, sans-serif;
         padding: 28px 36px 40px 36px;
         width: 90vw;
         max-width: 1400px;
         height: 88vh;
-        color: #111827;
+        color: var(--tx);
         box-sizing: border-box;
-        background: #F3F4F6;
+        background: var(--bg);
         border-radius: 14px;
         overflow-y: auto;
         overflow-x: hidden;
-        box-shadow: 0 20px 60px rgba(0,0,0,.3);
+        box-shadow: var(--shadow);
         animation: neoKpiFadeIn .2s ease;
       }
 
@@ -239,8 +262,8 @@
         flex-wrap: wrap;
         gap: 12px;
       }
-      .neo-kpi-title { font-size: 20px; font-weight: 700; color: #111827; }
-      .neo-kpi-subtitle { font-size: 13px; color: #6B7280; margin-top: 2px; }
+      .neo-kpi-title { font-size: 20px; font-weight: 700; color: var(--tx); }
+      .neo-kpi-subtitle { font-size: 13px; color: var(--tx2); margin-top: 2px; }
 
       .neo-kpi-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
@@ -248,23 +271,23 @@
       .neo-kpi-period-btn {
         padding: 6px 12px;
         border-radius: 8px;
-        border: 1px solid #E5E7EB;
-        background: #fff;
-        color: #374151;
+        border: 1px solid var(--bd);
+        background: var(--sf);
+        color: var(--tx2);
         font-size: 13px;
         cursor: pointer;
         font-weight: 500;
         transition: all .15s;
       }
-      .neo-kpi-period-btn:hover { border-color: #2563EB; color: #2563EB; }
-      .neo-kpi-period-btn.active { background: #2563EB; color: #fff; border-color: #2563EB; }
+      .neo-kpi-period-btn:hover { border-color: var(--ac); color: var(--ac); }
+      .neo-kpi-period-btn.active { background: var(--ac); color: #fff; border-color: var(--ac); }
 
       .neo-kpi-btn {
         padding: 7px 14px;
         border-radius: 8px;
-        border: 1px solid #E5E7EB;
-        background: #fff;
-        color: #374151;
+        border: 1px solid var(--bd);
+        background: var(--sf);
+        color: var(--tx2);
         font-size: 13px;
         cursor: pointer;
         font-weight: 500;
@@ -273,36 +296,41 @@
         align-items: center;
         gap: 6px;
       }
-      .neo-kpi-btn:hover { border-color: #9CA3AF; background: #F9FAFB; }
-      .neo-kpi-btn.primary { background: #2563EB; color: #fff; border-color: #2563EB; }
-      .neo-kpi-btn.primary:hover { background: #1D4ED8; }
-      .neo-kpi-btn.danger { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
-      .neo-kpi-btn.danger:hover { background: #FEE2E2; }
+      .neo-kpi-btn:hover { border-color: var(--bd2); background: var(--sf2); }
+      .neo-kpi-btn.primary { background: var(--ac); color: #fff; border-color: var(--ac); }
+      .neo-kpi-btn.primary:hover { filter: brightness(1.1); }
+      .neo-kpi-btn.danger { background: var(--reddim); color: var(--red); border-color: var(--redbd); }
+      .neo-kpi-btn.danger:hover { filter: brightness(1.1); }
 
       .neo-kpi-cards {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: 12px;
         margin-bottom: 16px;
       }
-      @media (max-width: 900px) { .neo-kpi-cards { grid-template-columns: repeat(2,1fr); } }
+      @media (max-width: 1100px) { .neo-kpi-cards { grid-template-columns: repeat(3,1fr); } }
+      @media (max-width: 700px) { .neo-kpi-cards { grid-template-columns: repeat(2,1fr); } }
+
+      .neo-kpi-cards.cols-4 { grid-template-columns: repeat(4, 1fr); }
+      @media (max-width: 900px) { .neo-kpi-cards.cols-4 { grid-template-columns: repeat(2,1fr); } }
 
       .neo-kpi-card {
-        background: #fff;
-        border: 1px solid #E5E7EB;
+        background: var(--sf);
+        border: 1px solid var(--bd);
         border-radius: 12px;
         padding: 18px 20px;
       }
-      .neo-kpi-card-label { font-size: 12px; color: #6B7280; font-weight: 500; margin-bottom: 8px; }
-      .neo-kpi-card-value { font-size: 28px; font-weight: 700; color: #111827; line-height: 1; }
-      .neo-kpi-card-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }
+      .neo-kpi-card.cost { background: var(--acdim); border-color: var(--acgl); }
+      .neo-kpi-card-label { font-size: 12px; color: var(--tx2); font-weight: 500; margin-bottom: 8px; }
+      .neo-kpi-card-value { font-size: 28px; font-weight: 700; color: var(--tx); line-height: 1; }
+      .neo-kpi-card-sub { font-size: 12px; color: var(--tx2); margin-top: 4px; }
       .neo-kpi-card-delta { font-size: 12px; margin-top: 4px; font-weight: 600; }
-      .neo-kpi-card-delta.up { color: #059669; }
-      .neo-kpi-card-delta.down { color: #DC2626; }
+      .neo-kpi-card-delta.up { color: var(--green); }
+      .neo-kpi-card-delta.down { color: var(--red); }
 
       .neo-kpi-section {
-        background: #fff;
-        border: 1px solid #E5E7EB;
+        background: var(--sf);
+        border: 1px solid var(--bd);
         border-radius: 12px;
         padding: 20px 24px;
         margin-bottom: 16px;
@@ -310,7 +338,7 @@
       .neo-kpi-section-title {
         font-size: 14px;
         font-weight: 600;
-        color: #111827;
+        color: var(--tx);
         margin-bottom: 14px;
       }
 
@@ -318,21 +346,21 @@
       .neo-kpi-table th {
         text-align: left;
         padding: 8px 12px;
-        color: #6B7280;
+        color: var(--tx2);
         font-weight: 500;
-        border-bottom: 1px solid #F3F4F6;
+        border-bottom: 1px solid var(--sf3);
         font-size: 12px;
       }
       .neo-kpi-table td {
         padding: 10px 12px;
-        border-bottom: 1px solid #F9FAFB;
-        color: #374151;
+        border-bottom: 1px solid var(--sf3);
+        color: var(--tx2);
       }
       .neo-kpi-table tr:last-child td { border-bottom: none; }
       .neo-kpi-table tr.clickable { cursor: pointer; }
-      .neo-kpi-table tr.clickable:hover td { background: #F0F7FF; }
-      .neo-kpi-table td.bold { font-weight: 600; color: #111827; }
-      .neo-kpi-table td.muted { color: #9CA3AF; }
+      .neo-kpi-table tr.clickable:hover td { background: var(--acdim); }
+      .neo-kpi-table td.bold { font-weight: 600; color: var(--tx); }
+      .neo-kpi-table td.muted { color: var(--tx3); }
 
       .neo-tag {
         display: inline-flex;
@@ -342,11 +370,11 @@
         font-size: 11px;
         font-weight: 600;
       }
-      .neo-tag.green { background: #D1FAE5; color: #065F46; }
-      .neo-tag.blue { background: #DBEAFE; color: #1E40AF; }
-      .neo-tag.amber { background: #FEF3C7; color: #92400E; }
-      .neo-tag.red { background: #FEE2E2; color: #991B1B; }
-      .neo-tag.gray { background: #F3F4F6; color: #4B5563; }
+      .neo-tag.green { background: var(--greenbg); color: var(--green); }
+      .neo-tag.blue { background: var(--bluebg); color: var(--blue); }
+      .neo-tag.amber { background: var(--amberbg); color: var(--amber); }
+      .neo-tag.red { background: var(--reddim); color: var(--red); }
+      .neo-tag.gray { background: var(--sf3); color: var(--tx2); }
 
       .neo-kpi-chart-wrap { position: relative; height: 220px; margin-top: 8px; }
 
@@ -356,13 +384,13 @@
         align-items: center;
         justify-content: center;
         padding: 60px 20px;
-        color: #6B7280;
+        color: var(--tx2);
         gap: 12px;
       }
       .neo-kpi-spinner {
         width: 32px; height: 32px;
-        border: 3px solid #E5E7EB;
-        border-top-color: #2563EB;
+        border: 3px solid var(--bd);
+        border-top-color: var(--ac);
         border-radius: 50%;
         animation: neo-spin .7s linear infinite;
       }
@@ -370,13 +398,13 @@
 
       .neo-kpi-empty {
         display: flex; flex-direction: column; align-items: center;
-        justify-content: center; padding: 60px 20px; color: #9CA3AF; gap: 8px;
+        justify-content: center; padding: 60px 20px; color: var(--tx3); gap: 8px;
       }
       .neo-kpi-empty svg { opacity: .4; }
 
       .neo-kpi-back {
         display: inline-flex; align-items: center; gap: 6px;
-        font-size: 13px; color: #2563EB; cursor: pointer;
+        font-size: 13px; color: var(--ac); cursor: pointer;
         margin-bottom: 16px; font-weight: 500;
         background: none; border: none; padding: 0;
       }
@@ -385,14 +413,14 @@
       /* Shimmer loading */
       @keyframes neo-shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
       .neo-shimmer {
-        background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+        background: linear-gradient(90deg, var(--sf3) 25%, var(--bd) 50%, var(--sf3) 75%);
         background-size: 800px 100%;
         animation: neo-shimmer 1.4s ease infinite;
         border-radius: 6px;
       }
       .neo-kpi-card.loading .neo-kpi-card-value {
         height: 36px; width: 80px;
-        background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+        background: linear-gradient(90deg, var(--sf3) 25%, var(--bd) 50%, var(--sf3) 75%);
         background-size: 800px 100%;
         animation: neo-shimmer 1.4s ease infinite;
         border-radius: 6px; color: transparent;
@@ -405,12 +433,12 @@
       /* Seção de erros */
       .neo-kpi-err-item {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 10px 0; border-bottom: 1px solid #F3F4F6; font-size: 13px;
+        padding: 10px 0; border-bottom: 1px solid var(--sf3); font-size: 13px;
       }
       .neo-kpi-err-item:last-child { border-bottom: none; }
       .neo-kpi-err-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-      .neo-kpi-err-label { display: flex; align-items: center; color: #374151; }
-      .neo-kpi-err-count { font-weight: 600; color: #111827; min-width: 40px; text-align: right; }
+      .neo-kpi-err-label { display: flex; align-items: center; color: var(--tx2); }
+      .neo-kpi-err-count { font-weight: 600; color: var(--tx); min-width: 40px; text-align: right; }
 
       /* Modal */
       .neo-kpi-modal-overlay {
@@ -420,43 +448,46 @@
         display: flex; align-items: center; justify-content: center;
       }
       .neo-kpi-modal {
-        background: #fff;
+        background: var(--sf, #fff);
+        color: var(--tx, #111827);
         border-radius: 16px;
         padding: 28px;
         width: 460px;
         max-width: 95vw;
         box-shadow: 0 20px 60px rgba(0,0,0,.15);
       }
-      .neo-kpi-modal h3 { font-size: 17px; font-weight: 700; color: #111827; margin-bottom: 6px; }
-      .neo-kpi-modal p { font-size: 13px; color: #6B7280; margin-bottom: 20px; }
+      .neo-kpi-modal h3 { font-size: 17px; font-weight: 700; color: var(--tx, #111827); margin-bottom: 6px; }
+      .neo-kpi-modal p { font-size: 13px; color: var(--tx2, #6B7280); margin-bottom: 20px; }
       .neo-kpi-field { margin-bottom: 14px; }
-      .neo-kpi-field label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+      .neo-kpi-field label { display: block; font-size: 12px; font-weight: 600; color: var(--tx2, #374151); margin-bottom: 5px; }
       .neo-kpi-field input {
         width: 100%; padding: 9px 12px;
-        border: 1px solid #D1D5DB; border-radius: 8px;
-        font-size: 13px; color: #111827;
+        border: 1px solid var(--bd2, #D1D5DB); border-radius: 8px;
+        background: var(--sf2, #fff);
+        font-size: 13px; color: var(--tx, #111827);
         outline: none; transition: border-color .15s;
         box-sizing: border-box;
       }
-      .neo-kpi-field input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+      .neo-kpi-field input:focus { border-color: var(--ac, #2563EB); box-shadow: 0 0 0 3px var(--acdim, rgba(37,99,235,.1)); }
       .neo-kpi-modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 
       .neo-kpi-date-row { display: flex; gap: 8px; align-items: center; }
       .neo-kpi-date-row input[type=date] {
-        padding: 7px 10px; border: 1px solid #D1D5DB;
-        border-radius: 8px; font-size: 13px; color: #111827;
+        padding: 7px 10px; border: 1px solid var(--bd2);
+        background: var(--sf); color: var(--tx);
+        border-radius: 8px; font-size: 13px;
         outline: none; cursor: pointer;
       }
-      .neo-kpi-date-row input[type=date]:focus { border-color: #2563EB; }
+      .neo-kpi-date-row input[type=date]:focus { border-color: var(--ac); }
 
       .neo-kpi-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
-      .neo-kpi-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6B7280; }
+      .neo-kpi-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--tx2); }
       .neo-kpi-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
       .neo-kpi-error-banner {
-        background: #FEF2F2; border: 1px solid #FECACA;
+        background: var(--reddim); border: 1px solid var(--redbd);
         border-radius: 10px; padding: 14px 16px;
-        color: #991B1B; font-size: 13px; margin-bottom: 16px;
+        color: var(--red); font-size: 13px; margin-bottom: 16px;
         display: flex; align-items: center; gap: 8px;
       }
 
@@ -465,10 +496,24 @@
         justify-content: center; min-height: 60vh; text-align: center; gap: 16px;
       }
       .neo-kpi-setup-icon { font-size: 48px; opacity: .6; }
-      .neo-kpi-setup h2 { font-size: 20px; font-weight: 700; color: #111827; }
-      .neo-kpi-setup p { font-size: 14px; color: #6B7280; max-width: 360px; line-height: 1.6; }
+      .neo-kpi-setup h2 { font-size: 20px; font-weight: 700; color: var(--tx); }
+      .neo-kpi-setup p { font-size: 14px; color: var(--tx2); max-width: 360px; line-height: 1.6; }
     `;
     document.head.appendChild(s);
+  };
+
+  // ─── DARK MODE DETECTION ──────────────────────────────────────────────────
+  const isDark = () =>
+    document.documentElement.classList.contains('dark') ||
+    document.body.classList.contains('dark') ||
+    document.querySelector('.app-wrapper')?.classList.contains('dark-theme') ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const applyTheme = () => {
+    const el = document.getElementById(PANEL_ID);
+    if (!el) return;
+    el.classList.remove('light', 'dark');
+    el.classList.add(isDark() ? 'dark' : 'light');
   };
 
   // ─── MODAL DE CONFIG ──────────────────────────────────────────────────────
@@ -623,6 +668,11 @@
           <div class="neo-kpi-card-value">${loading ? '000' : fmt(totalClicked)}</div>
           <div class="neo-kpi-card-sub">${loading ? '' : pct(totalClicked, totalDelivered)} CTR</div>
         </div>
+        <div class="neo-kpi-card cost ${loading ? 'loading' : ''}">
+          <div class="neo-kpi-card-label">Custo estimado</div>
+          <div class="neo-kpi-card-value">${loading ? '000' : '≈ ' + fmtUSD(totalCost)}</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : (costPerMsg > 0 ? fmtUSD(costPerMsg) + ' / msg entregue' : 'rate card Meta')}</div>
+        </div>
       </div>
 
       <div class="neo-kpi-section">
@@ -672,7 +722,7 @@
                     <td>${fmt(read)}</td>
                     <td>${fmt(clicked)}</td>
                     <td><span class="neo-tag ${color}">${readPct}</span></td>
-                    <td style="color:#6B7280;font-size:12px;">${fmtUSD(cost)}</td>
+                    <td style="color:var(--tx2);font-size:12px;">${fmtUSD(cost)}</td>
                   </tr>
                 `;
               }).join('')}
@@ -723,24 +773,24 @@
 
       <div style="margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div>
-          <div style="font-size:18px;font-weight:700;color:#111827;">${selectedTemplate?.name || '—'}</div>
-          <div style="font-size:13px;color:#6B7280;margin-top:2px;">Detalhes do template · ${displayStart} até ${displayEnd}</div>
+          <div style="font-size:18px;font-weight:700;color:var(--tx);">${selectedTemplate?.name || '—'}</div>
+          <div style="font-size:13px;color:var(--tx2);margin-top:2px;">Detalhes do template · ${displayStart} até ${displayEnd}</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-left:auto;">
-          <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid #2563EB;min-width:140px;">
+          <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--ac);min-width:140px;">
             <div class="neo-kpi-card-label">Valor estimado · ${displayStart} até ${displayEnd}</div>
-            <div style="font-size:18px;font-weight:700;color:#111827;">${fmtUSD(cost)}</div>
-            <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">Tarifa: ${fmtUSD(META_PRICES[selectedTemplate?.category?.toUpperCase()] ?? META_PRICES.MARKETING)}/msg · BR 2026</div>
+            <div style="font-size:18px;font-weight:700;color:var(--tx);">${fmtUSD(cost)}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:3px;">Tarifa: ${fmtUSD(META_PRICES[selectedTemplate?.category?.toUpperCase()] ?? META_PRICES.MARKETING)}/msg · BR 2026</div>
           </div>
-          <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid #059669;min-width:140px;">
+          <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--green);min-width:140px;">
             <div class="neo-kpi-card-label">Custo por entregue</div>
-            <div style="font-size:18px;font-weight:700;color:#111827;">${fmtUSD(costPerMsg)}</div>
-            <div style="font-size:11px;color:#9CA3AF;margin-top:3px;">${fmt(delivered)} msgs entregues</div>
+            <div style="font-size:18px;font-weight:700;color:var(--tx);">${fmtUSD(costPerMsg)}</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:3px;">${fmt(delivered)} msgs entregues</div>
           </div>
         </div>
       </div>
 
-      <div class="neo-kpi-cards">
+      <div class="neo-kpi-cards cols-4">
         <div class="neo-kpi-card ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label">Enviadas</div>
           <div class="neo-kpi-card-value">${loading ? '000' : fmt(sent)}</div>
@@ -786,7 +836,7 @@
           <div class="neo-kpi-section-title">Cliques por botão</div>
           ${buttons.length === 0 ? `
             <div class="neo-kpi-empty" style="padding:30px 10px;">
-              <span style="font-size:13px;color:#9CA3AF;">Sem cliques no período</span>
+              <span style="font-size:13px;color:var(--tx3);">Sem cliques no período</span>
             </div>
           ` : `
             <table class="neo-kpi-table">
@@ -937,7 +987,7 @@
           ${panelState.preset === 'custom' ? `
             <div class="neo-kpi-date-row">
               <input type="date" id="neo-dt-start" value="${panelState.customStart}" />
-              <span style="color:#9CA3AF;font-size:13px;">até</span>
+              <span style="color:var(--tx3);font-size:13px;">até</span>
               <input type="date" id="neo-dt-end" value="${panelState.customEnd}" />
               <button class="neo-kpi-btn primary" id="neo-dt-apply">Aplicar</button>
             </div>
@@ -1011,11 +1061,16 @@
 
     const host = document.createElement('div');
     host.id = PANEL_ID;
+    host.classList.add(isDark() ? 'dark' : 'light');
 
     overlay.appendChild(host);
     document.body.appendChild(overlay);
     renderPanel();
     if (loadConfig()) loadData();
+
+    const themeObs = new MutationObserver(applyTheme);
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    themeObs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
   };
 
   // botão flutuante KPI removido — abertura via window.nfx_kpis_open()
