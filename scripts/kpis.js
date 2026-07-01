@@ -1025,7 +1025,7 @@
       panel.innerHTML = `
         <div class="neo-kpi-setup">
           <div class="neo-kpi-setup-icon">📊</div>
-          <h2>KPI Analytics · Neofluxx</h2>
+          <h2>Meta Insights · Neofluxx</h2>
           <p>Configure suas credenciais do WhatsApp Business para visualizar os indicadores de performance dos seus templates.</p>
           <button class="neo-kpi-btn primary" id="neo-open-cfg" style="padding:10px 20px;font-size:14px;">
             ⚙️ Configurar credenciais
@@ -1046,7 +1046,7 @@
     const headerHTML = `
       <div class="neo-kpi-header">
         <div>
-          <div class="neo-kpi-title">KPI Analytics</div>
+          <div class="neo-kpi-title">Meta Insights</div>
           <div class="neo-kpi-subtitle">WhatsApp Business · ${displayStart} até ${displayEnd} <span style="color:#F59E0B;font-size:11px;margin-left:6px;">⚠ ${panelState.preset === 'today' ? 'Dados do dia atual processados com delay pela Meta' : 'Dados do dia atual podem ser parciais'}</span></div>
         </div>
         <div class="neo-kpi-actions">
