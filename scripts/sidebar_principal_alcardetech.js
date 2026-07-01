@@ -9,7 +9,7 @@
   // adminOnly: true — só aparece para administradores
   // ============================================================
   const FEATURES = [
-    { id: 'portal_disparo',         label: 'Portal Disparo',         type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/portal_disparo.js' },
+    { id: 'portal_disparo',         label: 'Portal Campanhas',         type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/portal_disparo.js' },
     { id: 'template_builder',       label: 'Template Builder',       type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_builder.js' },
     { id: 'kpis',                   label: 'Meta Insights',          type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kpis.js' },
     { id: 'kanban',                 label: 'Kanban',                 type: 'script', adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/kanban.js' },
