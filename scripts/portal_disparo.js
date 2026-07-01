@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const PORTAL_VERSION = 'v2.0';
+  const PORTAL_VERSION = 'v2.1';
   console.log(`[Portal Disparo WhatsApp] ${PORTAL_VERSION} carregado`);
 
   const CONFIG = {
@@ -650,22 +650,25 @@
     const body = (t.components || []).find(c => c.type === 'BODY');
     const bodyText = body ? (body.text || '') : '';
     const varCount = (bodyText.match(/\{\{\d+\}\}/g) || []).length;
-    state.templateParams = COLUNAS.slice(0, varCount);
 
-    // Renderizar seletor de variáveis
+    // Renderizar seletor de variáveis com defaults
     const varMap = document.getElementById('nfxd-var-map');
     const varRows = document.getElementById('nfxd-var-rows');
     if (varCount > 0) {
-      varRows.innerHTML = state.templateParams.map((col, i) => `
+      const defaults = COLUNAS.slice(0, varCount);
+      varRows.innerHTML = defaults.map((col, i) => `
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
           <span style="font-size:11px;color:var(--tx2);min-width:40px">{{${i+1}}}</span>
-          <select onchange="nfxdUpdVar(${i}, this.value)" style="background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 8px;color:var(--tx);font-size:12px;font-family:inherit">
+          <select id="nfxd-var-sel-${i}" onchange="nfxdSyncVars()" style="background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:5px 8px;color:var(--tx);font-size:12px;font-family:inherit">
             ${COLUNAS.map(c => `<option value="${c}" ${c === col ? 'selected' : ''}>${c}</option>`).join('')}
           </select>
         </div>
       `).join('');
       varMap.style.display = 'block';
+      // Sincroniza state com os valores dos dropdowns
+      nfxdSyncVars();
     } else {
+      state.templateParams = [];
       varMap.style.display = 'none';
     }
 
@@ -924,7 +927,12 @@
   };
 
   window.nfxdUpdVar = function(idx, val) {
-    state.templateParams[idx] = val;
+    nfxdSyncVars();
+  };
+
+  window.nfxdSyncVars = function() {
+    const selects = document.querySelectorAll('[id^="nfxd-var-sel-"]');
+    state.templateParams = Array.from(selects).map(s => s.value);
   };
 
   // ─── HISTÓRICO ──────────────────────────────────────────────────────────────
