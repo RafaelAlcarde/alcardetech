@@ -6,6 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v21.0';
+  const KPI_VERSION  = 'v1.1';
 
   // ─── TABELA DE PREÇOS META BRASIL 2026 (por mensagem entregue) ───────────
   // Fonte: Meta rate card 2026 — valores em USD
@@ -1035,11 +1036,11 @@
     // Linha 2 — seletor de conta (só aparece com mais de uma WABA)
     const wabaRowHTML = panelState.wabaList.length > 1 ? `
       <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);">
-        <span style="font-size:12px;color:var(--tx2);font-weight:500;">Selecione a conta:</span>
+        <span style="font-size:12px;color:var(--tx2);font-weight:500;white-space:nowrap;">Selecione a conta:</span>
         <select id="neo-waba-select" style="
           padding:5px 12px; border-radius:8px; border:1px solid var(--bd);
           background:var(--sf); color:var(--tx); font-size:13px; font-weight:500;
-          cursor:pointer; outline:none; min-width:160px;
+          cursor:pointer; outline:none; width:auto;
         ">
           ${panelState.wabaList.map((w, i) => `
             <option value="${i}" ${i === panelState.selectedWabaIdx ? 'selected' : ''}>${w.wabaNome}</option>
@@ -1053,7 +1054,7 @@
       <div class="neo-kpi-header">
         <div>
           <div class="neo-kpi-title">Meta Insights</div>
-          <div class="neo-kpi-subtitle">WhatsApp Business · ${displayStart} até ${displayEnd} <span style="color:#F59E0B;font-size:11px;margin-left:6px;">⚠ ${panelState.preset === 'today' ? 'Dados do dia atual processados com delay pela Meta' : 'Dados do dia atual podem ser parciais'}</span></div>
+          <div class="neo-kpi-subtitle">WhatsApp Business · ${displayStart} até ${displayEnd} <span style="color:#F59E0B;font-size:11px;margin-left:6px;">⚠ ${panelState.preset === 'today' ? 'Dados do dia atual processados com delay pela Meta' : 'Dados do dia atual podem ser parciais'}</span> <span style="color:var(--tx3);font-size:11px;margin-left:8px;">${KPI_VERSION}</span></div>
         </div>
         <div class="neo-kpi-actions">
           <div class="neo-kpi-period-btns">
