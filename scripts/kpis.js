@@ -5,7 +5,6 @@
   const KPI_ROUTE    = 'neofluxx-kpi';
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
-  const STORAGE_KEY  = 'neofluxx_kpi_config';
   const GRAPH_VER    = 'v21.0';
 
   // ─── TABELA DE PREÇOS META BRASIL 2026 (por mensagem entregue) ───────────
@@ -65,12 +64,39 @@
 
   const isKpiRoute = () => location.pathname.includes(`/campaigns/${KPI_ROUTE}`);
 
-  const loadConfig = () => {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); }
-    catch { return null; }
-  };
+  const SUPABASE_URL = 'https://stsstxdxmlwniezzmbxe.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
 
-  const saveConfig = (cfg) => localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
+  // Cache em memória por sessão — evita reconsultar o Supabase a cada troca de período
+  let _wabaConfigCache = null;
+
+  const fetchWabaConfig = async () => {
+    if (_wabaConfigCache) return _wabaConfigCache;
+    const accountId = getAccountId();
+    if (!accountId) return null;
+    const tenantKey = 'account-' + accountId;
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/tenants?tenant_key=eq.${tenantKey}&select=waba_id,phone_id,token,waba_nome&limit=1`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Accept-Profile': 'public',
+          }
+        }
+      );
+      const data = await res.json();
+      if (!data || data.length === 0) return null;
+      const row = data[0];
+      if (!row.waba_id || !row.token) return null;
+      _wabaConfigCache = { wabaId: row.waba_id, phoneId: row.phone_id, token: row.token, wabaNome: row.waba_nome };
+      return _wabaConfigCache;
+    } catch (e) {
+      console.warn('[NeoKPI] Erro ao buscar config Supabase:', e.message);
+      return null;
+    }
+  };
 
   // ─── DATE HELPERS ─────────────────────────────────────────────────────────
   const toYMD = (d) => {
@@ -545,75 +571,6 @@
   };
 
   // ─── MODAL DE CONFIG ──────────────────────────────────────────────────────
-  const showConfigModal = (onSave) => {
-    const cfg = loadConfig() || {};
-    const overlay = document.createElement('div');
-    overlay.className = 'neo-kpi-modal-overlay';
-    overlay.innerHTML = `
-      <div class="neo-kpi-modal">
-        <h3>⚙️ Configurar credenciais Meta</h3>
-        <p>Preencha os dados do seu WhatsApp Business Account para conectar ao painel.</p>
-        <div class="neo-kpi-field">
-          <label>WABA ID</label>
-          <input id="neo-waba" type="text" placeholder="Ex: 123456789012345" value="${cfg.wabaId || ''}" />
-        </div>
-        <div class="neo-kpi-field">
-          <label>Phone Number ID</label>
-          <input id="neo-phone" type="text" placeholder="Ex: 987654321098765" value="${cfg.phoneId || ''}" />
-        </div>
-        <div class="neo-kpi-field">
-          <label>Access Token</label>
-          <input id="neo-token" type="password" placeholder="EAAxxxxxxx..." value="${cfg.token || ''}" />
-        </div>
-        <div id="neo-cfg-err" style="color:#DC2626;font-size:12px;min-height:16px;margin-top:4px;"></div>
-        <div class="neo-kpi-modal-actions">
-          <button class="neo-kpi-btn" id="neo-cfg-cancel">Cancelar</button>
-          ${cfg.wabaId ? `<button class="neo-kpi-btn danger" id="neo-cfg-clear">Limpar</button>` : ''}
-          <button class="neo-kpi-btn primary" id="neo-cfg-save">
-            <span id="neo-cfg-save-txt">Salvar e conectar</span>
-          </button>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    document.getElementById('neo-cfg-cancel').onclick = () => overlay.remove();
-
-    const clearBtn = document.getElementById('neo-cfg-clear');
-    if (clearBtn) clearBtn.onclick = () => {
-      localStorage.removeItem(STORAGE_KEY);
-      overlay.remove();
-      renderPanel();
-    };
-
-    document.getElementById('neo-cfg-save').onclick = async () => {
-      const wabaId = document.getElementById('neo-waba').value.trim();
-      const phoneId = document.getElementById('neo-phone').value.trim();
-      const token = document.getElementById('neo-token').value.trim();
-      const errEl = document.getElementById('neo-cfg-err');
-      const saveTxt = document.getElementById('neo-cfg-save-txt');
-
-      if (!wabaId || !phoneId || !token) {
-        errEl.textContent = 'Preencha todos os campos.';
-        return;
-      }
-
-      saveTxt.textContent = 'Validando...';
-      errEl.textContent = '';
-
-      try {
-        await metaFetch(`${wabaId}?fields=name,id`, token);
-        saveConfig({ wabaId, phoneId, token });
-        overlay.remove();
-        onSave && onSave();
-      } catch (e) {
-        errEl.textContent = 'Erro ao conectar: ' + (e.message || 'verifique suas credenciais.');
-        saveTxt.textContent = 'Salvar e conectar';
-      }
-    };
-  };
-
   // ─── PANEL STATE ──────────────────────────────────────────────────────────
   let panelState = {
     view: 'overview',        // 'overview' | 'detail'
@@ -629,6 +586,7 @@
     showCustom: false,
     showCostBreakdown: false,
     usdBrlRate: null,
+    connected: null, // null=verificando, true=conectado, false=erro
   };
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -980,13 +938,19 @@
 
   // ─── LOAD DATA ────────────────────────────────────────────────────────────
   const loadData = async () => {
-    const cfg = loadConfig();
-    if (!cfg) return;
-
     panelState.loading = true;
     panelState.error = null;
     panelState.analyticsIncomplete = false;
     renderPanel();
+
+    const cfg = await fetchWabaConfig();
+    if (!cfg) {
+      panelState.connected = false;
+      panelState.loading = false;
+      renderPanel();
+      return;
+    }
+    panelState.connected = true;
 
     const { start, end } = getDateRange(panelState.preset, {
       start: panelState.customStart, end: panelState.customEnd
@@ -995,7 +959,7 @@
     // Cotação USD/BRL — busca em paralelo, nunca bloqueia nem quebra o fluxo principal
     fetchUsdBrlRate().then(rate => {
       panelState.usdBrlRate = rate;
-      if (!panelState.loading) renderPanel(); // se já terminou de carregar, atualiza o card sozinho
+      if (!panelState.loading) renderPanel();
     });
 
     try {
@@ -1018,22 +982,28 @@
     let panel = document.getElementById(PANEL_ID);
     if (!panel) return;
 
-    const cfg = loadConfig();
+    const { connected } = panelState;
 
-    // Tela de setup
-    if (!cfg) {
+    // Tela de "não conectado" — tenant não encontrado no Supabase
+    if (connected === false) {
       panel.innerHTML = `
         <div class="neo-kpi-setup">
-          <div class="neo-kpi-setup-icon">📊</div>
+          <div class="neo-kpi-setup-icon">📡</div>
           <h2>Meta Insights · Neofluxx</h2>
-          <p>Configure suas credenciais do WhatsApp Business para visualizar os indicadores de performance dos seus templates.</p>
-          <button class="neo-kpi-btn primary" id="neo-open-cfg" style="padding:10px 20px;font-size:14px;">
-            ⚙️ Configurar credenciais
-          </button>
+          <p>Não foi possível encontrar as credenciais WhatsApp Business para esta conta. Verifique se o tenant está configurado corretamente.</p>
         </div>
       `;
-      document.getElementById('neo-open-cfg').onclick = () =>
-        showConfigModal(() => loadData());
+      return;
+    }
+
+    // Tela de carregamento inicial (ainda buscando config do Supabase)
+    if (connected === null && panelState.loading) {
+      panel.innerHTML = `
+        <div class="neo-kpi-loading" style="min-height:60vh;">
+          <div class="neo-kpi-spinner"></div>
+          <span>Conectando ao WhatsApp Business...</span>
+        </div>
+      `;
       return;
     }
 
@@ -1041,6 +1011,15 @@
       start: panelState.customStart, end: panelState.customEnd
     });
     const { start, end, displayStart, displayEnd } = range;
+
+    // Badge de status
+    const badgeHTML = connected
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.25);border-radius:99px;padding:3px 10px;">
+           <span style="width:7px;height:7px;border-radius:50%;background:#059669;display:inline-block;"></span>Sincronizado
+         </span>`
+      : `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--tx3);background:var(--sf3);border:1px solid var(--bd);border-radius:99px;padding:3px 10px;">
+           <span style="width:7px;height:7px;border-radius:50%;background:var(--tx3);display:inline-block;"></span>Desconectado
+         </span>`;
 
     // Header sempre visível
     const headerHTML = `
@@ -1065,8 +1044,8 @@
               <button class="neo-kpi-btn primary" id="neo-dt-apply">Aplicar</button>
             </div>
           ` : ''}
+          ${badgeHTML}
           <button class="neo-kpi-btn" id="neo-refresh">↻ Atualizar</button>
-          <button class="neo-kpi-btn" id="neo-settings">⚙️</button>
           <button class="neo-kpi-btn" id="neo-close" title="Fechar painel" style="padding:7px 10px;">✕</button>
         </div>
       </div>
@@ -1097,8 +1076,6 @@
     };
 
     document.getElementById('neo-refresh').onclick = loadData;
-    document.getElementById('neo-settings').onclick = () =>
-      showConfigModal(() => loadData());
 
     // Botão fechar — remove painel instantaneamente, sem reload
     document.getElementById('neo-close').onclick = closePanel;
@@ -1139,7 +1116,7 @@
     overlay.appendChild(host);
     document.body.appendChild(overlay);
     renderPanel();
-    if (loadConfig()) loadData();
+    loadData();
 
     const themeObs = new MutationObserver(applyTheme);
     themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
