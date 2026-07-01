@@ -68,16 +68,16 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
 
   // Cache em memória por sessão — evita reconsultar o Supabase a cada troca de período
-  let _wabaConfigCache = null;
+  let _wabaListCache = null;
 
-  const fetchWabaConfig = async () => {
-    if (_wabaConfigCache) return _wabaConfigCache;
+  const fetchWabaList = async () => {
+    if (_wabaListCache) return _wabaListCache;
     const accountId = getAccountId();
     if (!accountId) return null;
     const tenantKey = 'account-' + accountId;
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/tenants?tenant_key=eq.${tenantKey}&select=waba_id,phone_id,token,waba_nome&limit=1`,
+        `${SUPABASE_URL}/rest/v1/tenants?tenant_key=eq.${tenantKey}&select=waba_id,phone_id,token,waba_nome&order=waba_nome.asc`,
         {
           headers: {
             'apikey': SUPABASE_KEY,
@@ -88,12 +88,15 @@
       );
       const data = await res.json();
       if (!data || data.length === 0) return null;
-      const row = data[0];
-      if (!row.waba_id || !row.token) return null;
-      _wabaConfigCache = { wabaId: row.waba_id, phoneId: row.phone_id, token: row.token, wabaNome: row.waba_nome };
-      return _wabaConfigCache;
+      _wabaListCache = data.map(row => ({
+        wabaId:   row.waba_id,
+        phoneId:  row.phone_id,
+        token:    row.token,
+        wabaNome: row.waba_nome || row.waba_id,
+      }));
+      return _wabaListCache;
     } catch (e) {
-      console.warn('[NeoKPI] Erro ao buscar config Supabase:', e.message);
+      console.warn('[NeoKPI] Erro ao buscar WABAs do Supabase:', e.message);
       return null;
     }
   };
@@ -573,7 +576,7 @@
   // ─── MODAL DE CONFIG ──────────────────────────────────────────────────────
   // ─── PANEL STATE ──────────────────────────────────────────────────────────
   let panelState = {
-    view: 'overview',        // 'overview' | 'detail'
+    view: 'overview',
     preset: '7d',
     customStart: '',
     customEnd: '',
@@ -586,7 +589,9 @@
     showCustom: false,
     showCostBreakdown: false,
     usdBrlRate: null,
-    connected: null, // null=verificando, true=conectado, false=erro
+    connected: null,
+    wabaList: [],        // todas as WABAs do tenant
+    selectedWabaIdx: 0, // índice da WABA ativa
   };
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -943,20 +948,25 @@
     panelState.analyticsIncomplete = false;
     renderPanel();
 
-    const cfg = await fetchWabaConfig();
-    if (!cfg) {
+    // Busca lista de WABAs (cacheada após primeira chamada)
+    const wabaList = await fetchWabaList();
+    if (!wabaList) {
       panelState.connected = false;
       panelState.loading = false;
       renderPanel();
       return;
     }
+    panelState.wabaList = wabaList;
     panelState.connected = true;
+
+    // WABA ativa conforme seleção do usuário
+    const cfg = wabaList[panelState.selectedWabaIdx] || wabaList[0];
 
     const { start, end } = getDateRange(panelState.preset, {
       start: panelState.customStart, end: panelState.customEnd
     });
 
-    // Cotação USD/BRL — busca em paralelo, nunca bloqueia nem quebra o fluxo principal
+    // Cotação USD/BRL — paralela, nunca bloqueia
     fetchUsdBrlRate().then(rate => {
       panelState.usdBrlRate = rate;
       if (!panelState.loading) renderPanel();
@@ -1012,6 +1022,19 @@
     });
     const { start, end, displayStart, displayEnd } = range;
 
+    // Dropdown de WABA (só aparece se houver mais de uma)
+    const wabaDropdown = panelState.wabaList.length > 1 ? `
+      <select id="neo-waba-select" style="
+        padding:5px 10px; border-radius:8px; border:1px solid var(--bd);
+        background:var(--sf); color:var(--tx); font-size:13px; font-weight:500;
+        cursor:pointer; outline:none; max-width:180px;
+      ">
+        ${panelState.wabaList.map((w, i) => `
+          <option value="${i}" ${i === panelState.selectedWabaIdx ? 'selected' : ''}>${w.wabaNome}</option>
+        `).join('')}
+      </select>
+    ` : '';
+
     // Badge de status
     const badgeHTML = connected
       ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.25);border-radius:99px;padding:3px 10px;">
@@ -1044,6 +1067,7 @@
               <button class="neo-kpi-btn primary" id="neo-dt-apply">Aplicar</button>
             </div>
           ` : ''}
+          ${wabaDropdown}
           ${badgeHTML}
           <button class="neo-kpi-btn" id="neo-refresh">↻ Atualizar</button>
           <button class="neo-kpi-btn" id="neo-close" title="Fechar painel" style="padding:7px 10px;">✕</button>
@@ -1076,6 +1100,16 @@
     };
 
     document.getElementById('neo-refresh').onclick = loadData;
+
+    const wabaSelect = document.getElementById('neo-waba-select');
+    if (wabaSelect) {
+      wabaSelect.onchange = (e) => {
+        panelState.selectedWabaIdx = parseInt(e.target.value);
+        panelState.analytics = [];
+        panelState.templates = [];
+        loadData();
+      };
+    }
 
     // Botão fechar — remove painel instantaneamente, sem reload
     document.getElementById('neo-close').onclick = closePanel;
