@@ -1023,18 +1023,6 @@
     const { start, end, displayStart, displayEnd } = range;
 
     // Dropdown de WABA (só aparece se houver mais de uma)
-    const wabaDropdown = panelState.wabaList.length > 1 ? `
-      <select id="neo-waba-select" style="
-        padding:5px 10px; border-radius:8px; border:1px solid var(--bd);
-        background:var(--sf); color:var(--tx); font-size:13px; font-weight:500;
-        cursor:pointer; outline:none; max-width:180px;
-      ">
-        ${panelState.wabaList.map((w, i) => `
-          <option value="${i}" ${i === panelState.selectedWabaIdx ? 'selected' : ''}>${w.wabaNome}</option>
-        `).join('')}
-      </select>
-    ` : '';
-
     // Badge de status
     const badgeHTML = connected
       ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.25);border-radius:99px;padding:3px 10px;">
@@ -1043,6 +1031,22 @@
       : `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--tx3);background:var(--sf3);border:1px solid var(--bd);border-radius:99px;padding:3px 10px;">
            <span style="width:7px;height:7px;border-radius:50%;background:var(--tx3);display:inline-block;"></span>Desconectado
          </span>`;
+
+    // Linha 2 — seletor de conta (só aparece com mais de uma WABA)
+    const wabaRowHTML = panelState.wabaList.length > 1 ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);">
+        <span style="font-size:12px;color:var(--tx2);font-weight:500;">Selecione a conta:</span>
+        <select id="neo-waba-select" style="
+          padding:5px 12px; border-radius:8px; border:1px solid var(--bd);
+          background:var(--sf); color:var(--tx); font-size:13px; font-weight:500;
+          cursor:pointer; outline:none; min-width:160px;
+        ">
+          ${panelState.wabaList.map((w, i) => `
+            <option value="${i}" ${i === panelState.selectedWabaIdx ? 'selected' : ''}>${w.wabaNome}</option>
+          `).join('')}
+        </select>
+      </div>
+    ` : '';
 
     // Header sempre visível
     const headerHTML = `
@@ -1067,12 +1071,12 @@
               <button class="neo-kpi-btn primary" id="neo-dt-apply">Aplicar</button>
             </div>
           ` : ''}
-          ${wabaDropdown}
-          ${badgeHTML}
           <button class="neo-kpi-btn" id="neo-refresh">↻ Atualizar</button>
+          ${badgeHTML}
           <button class="neo-kpi-btn" id="neo-close" title="Fechar painel" style="padding:7px 10px;">✕</button>
         </div>
       </div>
+      ${wabaRowHTML}
     `;
 
     const contentEl = document.createElement('div');
