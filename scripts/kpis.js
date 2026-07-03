@@ -119,7 +119,8 @@
 
   // ─── META GRAPH API ───────────────────────────────────────────────────────
   const metaFetch = async (path, token) => {
-    const url = `https://graph.facebook.com/${GRAPH_VER}/${path}&access_token=${token}`;
+    const sep = path.includes('?') ? '&' : '?';
+    const url = `https://graph.facebook.com/${GRAPH_VER}/${path}${sep}access_token=${token}`;
     const res = await fetch(url);
     const json = await res.json();
     if (json.error) throw new Error(json.error.message);
