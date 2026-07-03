@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.3';
+  const KPI_VERSION  = 'v2.4';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -793,6 +793,7 @@
 
       <div class="neo-kpi-section">
         <div class="neo-kpi-section-title">Performance por template</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:12px;">ℹ️ Os dados de performance por template são processados com delay pela Meta e podem apresentar pequenas variações em relação aos totais exibidos nos cards. Para o filtro dia atual, os dados podem estar incompletos até o processamento ser concluído.</div>
         ${loading ? `<div class="neo-kpi-loading"><div class="neo-kpi-spinner"></div><span>Carregando dados da Meta...</span></div>` : ''}
         ${!loading && templates.length === 0 ? `
           <div class="neo-kpi-empty">
