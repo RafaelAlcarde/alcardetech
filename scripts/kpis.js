@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v1.8';
+  const KPI_VERSION  = 'v1.9';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -108,7 +108,14 @@
   const getDateRange = (preset, custom) => {
     const now = new Date();
     if (preset === 'custom' && custom?.start && custom?.end) {
-      return { start: custom.start, end: custom.end, displayStart: custom.start, displayEnd: custom.end };
+      // Se start = end, adiciona +1 dia ao end (Meta não aceita intervalo zero)
+      let end = custom.end;
+      if (custom.start === custom.end) {
+        const d = new Date(custom.end);
+        d.setDate(d.getDate() + 1);
+        end = toYMD(d);
+      }
+      return { start: custom.start, end, displayStart: custom.start, displayEnd: custom.end };
     }
     if (preset === 'today') {
       const today = toYMD(now);
