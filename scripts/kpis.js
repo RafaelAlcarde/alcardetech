@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.1';
+  const KPI_VERSION  = 'v2.2';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -655,9 +655,7 @@
     const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown, usdBrlRate, pricingData } = panelState;
 
     // Performance por template (lidas, cliques) — continua via template_analytics
-    const allDp = getDpForTemplate(analytics, null);
-    const totalRead    = sumMetric(allDp, 'read');
-    const totalClicked = sumClicked(allDp);
+    // Calculado após sentTemplates para garantir consistência com a tabela
 
     // Volume real via pricing_analytics
     const marketingData = pricingData?.MARKETING     || { volume: 0, cost: 0 };
@@ -698,6 +696,10 @@
     const sentTemplates = templates
       .map(t => ({ t, dp: getDpForTemplate(analytics, t.id) }))
       .filter(({ dp }) => sumMetric(dp, 'sent') > 0);
+
+    // Lidas e cliques apenas dos templates visíveis na tabela
+    const totalRead    = sentTemplates.reduce((s, { dp }) => s + sumMetric(dp, 'read'), 0);
+    const totalClicked = sentTemplates.reduce((s, { dp }) => s + sumClicked(dp), 0);
 
     panel.innerHTML = `
       ${error ? `<div class="neo-kpi-error-banner">⚠️ ${error}</div>` : ''}
