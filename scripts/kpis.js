@@ -628,21 +628,25 @@
   const renderOverview = (panel) => {
     const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown, usdBrlRate, pricingData } = panelState;
 
-    // Todos os data_points juntos para totais consolidados (performance)
+    // Performance por template (lidas, cliques) — continua via template_analytics
     const allDp = getDpForTemplate(analytics, null);
-    const totalSent      = sumMetric(allDp, 'sent');
-    const totalDelivered = sumMetric(allDp, 'delivered');
-    const totalRead      = sumMetric(allDp, 'read');
-    const totalClicked   = sumClicked(allDp);
+    const totalRead    = sumMetric(allDp, 'read');
+    const totalClicked = sumClicked(allDp);
 
-    // Custo real via pricing_analytics
-    const marketingData = pricingData?.MARKETING || { volume: 0, cost: 0 };
-    const serviceData   = pricingData?.SERVICE   || { volume: 0, cost: 0 };
-    const utilityData   = pricingData?.UTILITY   || { volume: 0, cost: 0 };
+    // Volume real via pricing_analytics
+    const marketingData = pricingData?.MARKETING     || { volume: 0, cost: 0 };
+    const serviceData   = pricingData?.SERVICE       || { volume: 0, cost: 0 };
+    const utilityData   = pricingData?.UTILITY       || { volume: 0, cost: 0 };
     const authData      = pricingData?.AUTHENTICATION || { volume: 0, cost: 0 };
 
+    // Enviadas e entregues = todos os volumes do pricing_analytics (templates pagos + service)
+    const totalDelivered = marketingData.volume + utilityData.volume + authData.volume + serviceData.volume;
+    // Enviadas: pricing_analytics só conta entregues, então usamos o mesmo valor
+    // (a Meta não expõe "enviadas" no pricing_analytics, só entregues)
+    const totalSent = totalDelivered;
+
     const totalCost = marketingData.cost + utilityData.cost + authData.cost;
-    const costPerMsg = marketingData.volume + utilityData.volume + authData.volume > 0
+    const costPerMsg = (marketingData.volume + utilityData.volume + authData.volume) > 0
       ? totalCost / (marketingData.volume + utilityData.volume + authData.volume)
       : 0;
 
@@ -675,23 +679,24 @@
 
       <div class="neo-kpi-cards">
         <div class="neo-kpi-card ${loading ? 'loading' : ''}">
-          <div class="neo-kpi-card-label">Mensagens enviadas</div>
-          <div class="neo-kpi-card-value">${loading ? '000' : fmt(totalSent)}</div>
-        </div>
-        <div class="neo-kpi-card ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label">Mensagens entregues</div>
           <div class="neo-kpi-card-value">${loading ? '000' : fmt(totalDelivered)}</div>
-          <div class="neo-kpi-card-sub">${loading ? '' : pct(totalDelivered, totalSent)} de entrega</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : 'templates + serviço'}</div>
+        </div>
+        <div class="neo-kpi-card ${loading ? 'loading' : ''}">
+          <div class="neo-kpi-card-label">Templates entregues</div>
+          <div class="neo-kpi-card-value">${loading ? '000' : fmt(marketingData.volume + utilityData.volume + authData.volume)}</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : 'marketing + utility + auth'}</div>
         </div>
         <div class="neo-kpi-card ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label">Mensagens lidas</div>
           <div class="neo-kpi-card-value">${loading ? '000' : fmt(totalRead)}</div>
-          <div class="neo-kpi-card-sub">${loading ? '' : pct(totalRead, totalDelivered)} de leitura</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : pct(totalRead, marketingData.volume + utilityData.volume + authData.volume)} de leitura</div>
         </div>
         <div class="neo-kpi-card ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label">Cliques em botões</div>
           <div class="neo-kpi-card-value">${loading ? '000' : fmt(totalClicked)}</div>
-          <div class="neo-kpi-card-sub">${loading ? '' : pct(totalClicked, totalDelivered)} CTR</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : pct(totalClicked, marketingData.volume + utilityData.volume + authData.volume)} CTR</div>
         </div>
         <div class="neo-kpi-card cost ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
