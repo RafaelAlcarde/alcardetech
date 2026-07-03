@@ -813,6 +813,23 @@
                   </tr>
                 `;
               }).join('')}
+              ${(() => {
+                const tableCost = sentTemplates.reduce((s, { t, dp }) => {
+                  return s + costForTemplate(sumMetric(dp, 'delivered'), t.category);
+                }, 0);
+                const residual = totalCost - tableCost;
+                if (residual < 0.01) return '';
+                return `
+                  <tr style="border-top:2px solid var(--bd2);">
+                    <td class="muted" colspan="3" style="font-style:italic;">Templates não identificados</td>
+                    <td class="muted">—</td>
+                    <td class="muted">—</td>
+                    <td class="muted">—</td>
+                    <td class="muted">—</td>
+                    <td style="color:var(--tx2);font-size:12px;">${fmtUSD(residual)}</td>
+                  </tr>
+                `;
+              })()}
             </tbody>
           </table>
         ` : ''}
