@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.0';
+  const KPI_VERSION  = 'v2.1';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -200,7 +200,13 @@
     // Converte YMD para Unix timestamp em São Paulo (UTC-3 = +3h em relação a UTC meia-noite)
     const toUnix = (ymd) => Math.floor(new Date(ymd + 'T03:00:00Z').getTime() / 1000);
     const startTs = toUnix(start);
-    const endTs   = toUnix(end);
+    // Garante que endTs > startTs — Meta rejeita intervalo zero
+    let endTs = toUnix(end);
+    if (endTs <= startTs) {
+      const d = new Date(end + 'T03:00:00Z');
+      d.setDate(d.getDate() + 1);
+      endTs = Math.floor(d.getTime() / 1000);
+    }
     try {
       const url = `${wabaId}?fields=pricing_analytics.start(${startTs}).end(${endTs}).granularity(DAILY).dimensions(["PRICING_CATEGORY"]).metric_types(["COST","VOLUME"])`;
       const data = await metaFetch(url, token);
