@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v1.9';
+  const KPI_VERSION  = 'v2.0';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -197,8 +197,8 @@
 
   // ─── PRICING ANALYTICS (custo real por categoria) ────────────────────────
   const fetchPricingAnalytics = async (wabaId, token, start, end) => {
-    // Converte datas YMD para Unix timestamp
-    const toUnix = (ymd) => Math.floor(new Date(ymd).getTime() / 1000);
+    // Converte YMD para Unix timestamp em São Paulo (UTC-3 = +3h em relação a UTC meia-noite)
+    const toUnix = (ymd) => Math.floor(new Date(ymd + 'T03:00:00Z').getTime() / 1000);
     const startTs = toUnix(start);
     const endTs   = toUnix(end);
     try {
