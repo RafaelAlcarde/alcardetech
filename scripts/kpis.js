@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.2';
+  const KPI_VERSION  = 'v2.3';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -1262,6 +1262,23 @@
     const overlayEl = document.getElementById('neo-kpi-overlay');
     if (overlayEl) overlayEl.remove();
     document.removeEventListener('keydown', onEscClose);
+
+    // Reset do estado — próxima abertura começa do zero
+    panelState.view = 'overview';
+    panelState.preset = '7d';
+    panelState.customStart = '';
+    panelState.customEnd = '';
+    panelState.selectedTemplate = null;
+    panelState.analytics = [];
+    panelState.analyticsIncomplete = false;
+    panelState.templates = [];
+    panelState.loading = false;
+    panelState.error = null;
+    panelState.showCostBreakdown = false;
+    panelState.connected = null;
+    panelState.pricingData = null;
+    // wabaList e selectedWabaIdx mantidos — evita reconsultar o Supabase
+
     // Navega via SPA sem reload
     const accountId = getAccountId();
     history.pushState({}, '', `/app/accounts/${accountId}/conversations`);
