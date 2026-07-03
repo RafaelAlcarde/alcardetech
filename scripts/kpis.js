@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v1.6';
+  const KPI_VERSION  = 'v1.7';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -151,8 +151,8 @@
   const fetchTemplateAnalytics = async (wabaId, token, start, end, templateIds) => {
     if (!templateIds || templateIds.length === 0) return { dataPoints: [{ data_points: [] }], incomplete: false };
 
-    // Meta limita template_analytics a 90 dias — garante que o start não ultrapasse esse limite
-    const maxStart = toYMD(new Date(Date.now() - 89 * 24 * 60 * 60 * 1000));
+    // Meta limita template_analytics a 90 dias — usa 88 dias de margem pra evitar erro de borda
+    const maxStart = toYMD(new Date(Date.now() - 88 * 24 * 60 * 60 * 1000));
     const safeStart = start < maxStart ? maxStart : start;
 
     const chunks = [];
