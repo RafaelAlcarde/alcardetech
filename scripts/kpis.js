@@ -5,22 +5,11 @@
   const KPI_ROUTE    = 'neofluxx-kpi';
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
-  const GRAPH_VER    = 'v21.0';
-  const KPI_VERSION  = 'v1.1';
+  const GRAPH_VER    = 'v25.0';
+  const KPI_VERSION  = 'v1.2';
 
-  // ─── TABELA DE PREÇOS META BRASIL 2026 (por mensagem entregue) ───────────
-  // Fonte: Meta rate card 2026 — valores em USD
-  const META_PRICES = {
-    MARKETING:      0.0625,  // US$ 0,0625 por msg entregue
-    UTILITY:        0.0068,  // US$ 0,0068 por msg entregue (tier 1)
-    AUTHENTICATION: 0.0068,  // US$ 0,0068 por msg entregue
-    SERVICE:        0.0000,  // gratuito
-  };
-
-  const calcCost = (delivered, category) => {
-    const price = META_PRICES[category?.toUpperCase()] ?? META_PRICES.MARKETING;
-    return delivered * price;
-  };
+  // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
+  const SERVICE_FUTURE_PRICE = 0.0068;
 
   const fmtUSD = (val) => {
     if (val === 0) return 'US$ 0,00';
@@ -186,7 +175,29 @@
     return { dataPoints: [{ data_points: allResults }], incomplete };
   };
 
-  // ─── AGGREGATE HELPERS ────────────────────────────────────────────────────
+  // ─── PRICING ANALYTICS (custo real por categoria) ────────────────────────
+  const fetchPricingAnalytics = async (wabaId, token, start, end) => {
+    // Converte datas YMD para Unix timestamp
+    const toUnix = (ymd) => Math.floor(new Date(ymd).getTime() / 1000);
+    const startTs = toUnix(start);
+    const endTs   = toUnix(end);
+    try {
+      const url = `${wabaId}?fields=pricing_analytics.start(${startTs}).end(${endTs}).granularity(DAILY).dimensions(["PRICING_CATEGORY"]).metric_types(["COST","VOLUME"])`;
+      const data = await metaFetch(url, token);
+      const points = data.pricing_analytics?.data?.[0]?.data_points || [];
+      const result = {};
+      for (const p of points) {
+        const cat = p.pricing_category;
+        if (!result[cat]) result[cat] = { volume: 0, cost: 0 };
+        result[cat].volume += p.volume || 0;
+        result[cat].cost   += p.cost   || 0;
+      }
+      return result; // ex: { MARKETING: { volume: 3203, cost: 200.19 }, SERVICE: { volume: 1287, cost: 0 } }
+    } catch (e) {
+      console.warn('[NeoKPI] Erro ao buscar pricing_analytics:', e.message);
+      return null;
+    }
+  };
 
   // Filtra data_points de um analytics response por template_id
   const getDpForTemplate = (analyticsData, templateId) => {
@@ -574,7 +585,6 @@
     el.classList.add(isDark() ? 'dark' : 'light');
   };
 
-  // ─── MODAL DE CONFIG ──────────────────────────────────────────────────────
   // ─── PANEL STATE ──────────────────────────────────────────────────────────
   let panelState = {
     view: 'overview',
@@ -591,8 +601,9 @@
     showCostBreakdown: false,
     usdBrlRate: null,
     connected: null,
-    wabaList: [],        // todas as WABAs do tenant
-    selectedWabaIdx: 0, // índice da WABA ativa
+    wabaList: [],
+    selectedWabaIdx: 0,
+    pricingData: null, // dados do pricing_analytics por categoria
   };
 
   // ─── RENDER HELPERS ───────────────────────────────────────────────────────
@@ -615,30 +626,45 @@
 
   // ─── RENDER OVERVIEW ──────────────────────────────────────────────────────
   const renderOverview = (panel) => {
-    const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown, usdBrlRate } = panelState;
+    const { analytics, templates, loading, error, analyticsIncomplete, showCostBreakdown, usdBrlRate, pricingData } = panelState;
 
-    // Todos os data_points juntos para totais consolidados
+    // Todos os data_points juntos para totais consolidados (performance)
     const allDp = getDpForTemplate(analytics, null);
     const totalSent      = sumMetric(allDp, 'sent');
     const totalDelivered = sumMetric(allDp, 'delivered');
     const totalRead      = sumMetric(allDp, 'read');
     const totalClicked   = sumClicked(allDp);
 
-    // Custo estimado — calcula por template usando categoria, e também por categoria agregada
-    let totalCost = 0;
-    const costByCategory = {};
-    for (const t of templates) {
-      const dp = getDpForTemplate(analytics, t.id);
-      const delivered = sumMetric(dp, 'delivered');
-      const c = calcCost(delivered, t.category);
-      totalCost += c;
-      const cat = (t.category || 'MARKETING').toUpperCase();
-      costByCategory[cat] = (costByCategory[cat] || 0) + c;
-    }
-    const costPerMsg = totalDelivered > 0 ? totalCost / totalDelivered : 0;
-    const categoryRows = Object.entries(costByCategory).sort((a, b) => b[1] - a[1]);
+    // Custo real via pricing_analytics
+    const marketingData = pricingData?.MARKETING || { volume: 0, cost: 0 };
+    const serviceData   = pricingData?.SERVICE   || { volume: 0, cost: 0 };
+    const utilityData   = pricingData?.UTILITY   || { volume: 0, cost: 0 };
+    const authData      = pricingData?.AUTHENTICATION || { volume: 0, cost: 0 };
 
-    // Apenas templates com envio no período entram na tabela de custo
+    const totalCost = marketingData.cost + utilityData.cost + authData.cost;
+    const costPerMsg = marketingData.volume + utilityData.volume + authData.volume > 0
+      ? totalCost / (marketingData.volume + utilityData.volume + authData.volume)
+      : 0;
+
+    // Breakdown de custo por categoria (só categorias com custo > 0)
+    const categoryRows = [
+      ['MARKETING', marketingData.cost],
+      ['UTILITY', utilityData.cost],
+      ['AUTHENTICATION', authData.cost],
+    ].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+
+    // Custo por template — proporcional ao volume da categoria
+    const costForTemplate = (delivered, category) => {
+      const cat = (category || 'MARKETING').toUpperCase();
+      const catData = pricingData?.[cat];
+      if (!catData || catData.volume === 0) return 0;
+      return (delivered / catData.volume) * catData.cost;
+    };
+
+    // SERVICE — custo futuro estimado (out/2026)
+    const serviceFutureCost = serviceData.volume * SERVICE_FUTURE_PRICE;
+
+    // Apenas templates com envio no período entram na tabela
     const sentTemplates = templates
       .map(t => ({ t, dp: getDpForTemplate(analytics, t.id) }))
       .filter(({ dp }) => sumMetric(dp, 'sent') > 0);
@@ -670,8 +696,8 @@
         <div class="neo-kpi-card cost ${loading ? 'loading' : ''}">
           <div class="neo-kpi-card-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
             <span style="display:flex;align-items:center;gap:4px;">
-              Custo estimado
-              <span title="Estimativa com base na tabela de preços da Meta e cotação do dólar do dia. Não substitui a fatura oficial. Podem ocorrer variações." style="cursor:help;color:var(--tx3);font-size:11px;border:1px solid var(--bd2);border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">i</span>
+              Custo de templates
+              <span title="Custo real calculado pela Meta via pricing_analytics. Não substitui a fatura oficial. Podem ocorrer variações." style="cursor:help;color:var(--tx3);font-size:11px;border:1px solid var(--bd2);border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">i</span>
             </span>
             ${!loading && categoryRows.length > 0 ? `
               <button id="neo-cost-toggle" style="background:none;border:none;cursor:pointer;color:var(--ac);font-size:11px;font-weight:600;padding:0;white-space:nowrap;">
@@ -679,9 +705,9 @@
               </button>
             ` : ''}
           </div>
-          <div class="neo-kpi-card-value">${loading ? '000' : '≈ ' + fmtUSD(totalCost)}</div>
+          <div class="neo-kpi-card-value">${loading ? '000' : fmtUSD(totalCost)}</div>
           ${!loading && usdBrlRate ? `<div class="neo-kpi-card-sub">≈ ${fmtBRL(totalCost * usdBrlRate)}</div>` : ''}
-          <div class="neo-kpi-card-sub">${loading ? '' : (costPerMsg > 0 ? fmtUSD(costPerMsg) + ' / msg entregue' : 'rate card Meta')}</div>
+          <div class="neo-kpi-card-sub">${loading ? '' : (costPerMsg > 0 ? fmtUSD(costPerMsg) + ' / msg entregue' : '—')}</div>
           ${!loading && showCostBreakdown && categoryRows.length > 0 ? `
             <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:6px;">
               ${categoryRows.map(([cat, val]) => `
@@ -694,6 +720,42 @@
           ` : ''}
         </div>
       </div>
+
+      ${!loading && serviceData.volume > 0 ? `
+        <div style="
+          background: var(--amberbg);
+          border: 1px solid var(--amber);
+          border-radius: 12px;
+          padding: 14px 20px;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+        ">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:18px;">💬</span>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--tx);">Mensagens de Serviço <span style="font-size:11px;font-weight:400;color:var(--tx2);">(respostas dentro da janela 24h)</span></div>
+              <div style="font-size:12px;color:var(--tx2);margin-top:2px;">${fmt(serviceData.volume)} mensagens no período</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+            <div style="text-align:center;">
+              <div style="font-size:11px;color:var(--tx2);margin-bottom:2px;">Custo atual</div>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#059669;background:rgba(5,150,105,.1);border:1px solid rgba(5,150,105,.25);border-radius:99px;padding:3px 10px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:#059669;display:inline-block;"></span>Gratuito
+              </span>
+            </div>
+            <div style="text-align:center;">
+              <div style="font-size:11px;color:var(--tx2);margin-bottom:2px;">A partir de out/2026</div>
+              <div style="font-size:13px;font-weight:700;color:var(--amber);">≈ ${fmtUSD(serviceFutureCost)}</div>
+              ${usdBrlRate ? `<div style="font-size:11px;color:var(--tx2);">≈ ${fmtBRL(serviceFutureCost * usdBrlRate)}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="neo-kpi-section">
         <div class="neo-kpi-section-title">Performance por template</div>
@@ -721,7 +783,7 @@
                 <th>Lidas</th>
                 <th>Cliques</th>
                 <th>Taxa leitura</th>
-                <th>Custo est.</th>
+                <th>Custo</th>
               </tr>
             </thead>
             <tbody>
@@ -732,7 +794,7 @@
                 const clicked   = sumClicked(dp);
                 const readPct   = pct(read, delivered);
                 const color     = tagColor(read, delivered);
-                const cost      = calcCost(delivered, t.category);
+                const cost      = costForTemplate(delivered, t.category);
                 return `
                   <tr class="clickable" data-tid="${t.id}" data-tname="${t.name}" data-tcat="${t.category || 'MARKETING'}">
                     <td class="bold">${t.name}</td>
@@ -783,6 +845,16 @@
       start: panelState.customStart, end: panelState.customEnd
     });
 
+    const { pricingData } = panelState;
+
+    // Custo proporcional via pricing_analytics
+    const costForTemplate = (delivered, category) => {
+      const cat = (category || 'MARKETING').toUpperCase();
+      const catData = pricingData?.[cat];
+      if (!catData || catData.volume === 0) return 0;
+      return (delivered / catData.volume) * catData.cost;
+    };
+
     // Filtra data_points apenas deste template
     const dps = getDpForTemplate(analytics, selectedTemplate?.id);
 
@@ -792,7 +864,7 @@
     const clicked   = sumClicked(dps);
     const daily     = buildDailyChart(dps, start, end);
     const buttons   = aggregateButtons(dps);
-    const cost      = calcCost(delivered, selectedTemplate?.category);
+    const cost      = costForTemplate(delivered, selectedTemplate?.category);
     const costPerMsg = delivered > 0 ? cost / delivered : 0;
 
     panel.innerHTML = `
@@ -807,10 +879,10 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-left:auto;">
           <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--ac);min-width:140px;">
-            <div class="neo-kpi-card-label">Valor estimado · ${displayStart} até ${displayEnd}</div>
+            <div class="neo-kpi-card-label">Custo · ${displayStart} até ${displayEnd}</div>
             <div style="font-size:18px;font-weight:700;color:var(--tx);">${fmtUSD(cost)}</div>
             ${usdBrlRate ? `<div style="font-size:12px;color:var(--tx2);margin-top:2px;">≈ ${fmtBRL(cost * usdBrlRate)}</div>` : ''}
-            <div style="font-size:11px;color:var(--tx3);margin-top:3px;">Tarifa: ${fmtUSD(META_PRICES[selectedTemplate?.category?.toUpperCase()] ?? META_PRICES.MARKETING)}/msg · BR 2026</div>
+            <div style="font-size:11px;color:var(--tx3);margin-top:3px;">proporcional ao volume da categoria</div>
           </div>
           <div class="neo-kpi-card" style="padding:10px 14px;border-left:3px solid var(--green);min-width:140px;">
             <div class="neo-kpi-card-label">Custo por entregue</div>
@@ -977,9 +1049,15 @@
       const templates = await fetchTemplates(cfg.wabaId, cfg.token);
       panelState.templates = templates;
       const templateIds = templates.map(t => t.id);
-      const { dataPoints, incomplete } = await fetchTemplateAnalytics(cfg.wabaId, cfg.token, start, end, templateIds);
+
+      // Busca template_analytics e pricing_analytics em paralelo
+      const [{ dataPoints, incomplete }, pricingData] = await Promise.all([
+        fetchTemplateAnalytics(cfg.wabaId, cfg.token, start, end, templateIds),
+        fetchPricingAnalytics(cfg.wabaId, cfg.token, start, end),
+      ]);
       panelState.analytics = dataPoints;
       panelState.analyticsIncomplete = incomplete;
+      panelState.pricingData = pricingData;
     } catch (e) {
       panelState.error = e.message || 'Erro ao buscar dados da Meta.';
     }
