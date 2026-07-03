@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v1.7';
+  const KPI_VERSION  = 'v1.8';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -116,7 +116,7 @@
       tomorrow.setDate(tomorrow.getDate() + 1);
       return { start: today, end: toYMD(tomorrow), displayStart: today, displayEnd: today };
     }
-    const days = preset === '30d' ? 30 : preset === '90d' ? 90 : 7;
+    const days = preset === '30d' ? 30 : preset === '60d' ? 60 : preset === '90d' ? 90 : 7;
     const end = new Date(now);
     end.setDate(end.getDate() + 1);
     const start = new Date(now);
@@ -1175,6 +1175,7 @@
             <button class="neo-kpi-period-btn ${panelState.preset==='today'?'active':''}" data-p="today">Hoje</button>
             <button class="neo-kpi-period-btn ${panelState.preset==='7d'?'active':''}"  data-p="7d">7d</button>
             <button class="neo-kpi-period-btn ${panelState.preset==='30d'?'active':''}" data-p="30d">30d</button>
+            <button class="neo-kpi-period-btn ${panelState.preset==='60d'?'active':''}" data-p="60d">60d</button>
             <button class="neo-kpi-period-btn ${panelState.preset==='90d'?'active':''}" data-p="90d">90d</button>
             <button class="neo-kpi-period-btn ${panelState.preset==='custom'?'active':''}" data-p="custom">Período</button>
           </div>
