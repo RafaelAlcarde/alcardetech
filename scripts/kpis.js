@@ -6,13 +6,20 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v1.3';
+  const KPI_VERSION  = 'v1.6';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
 
   const fmtUSD = (val) => {
     if (val === 0) return 'US$ 0,00';
+    return 'US$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Versão com precisão suficiente para valores pequenos (ex: 0,0068)
+  const fmtUSDExact = (val) => {
+    if (val === 0) return 'US$ 0,00';
+    if (val < 0.01) return 'US$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     return 'US$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
@@ -143,6 +150,11 @@
 
   const fetchTemplateAnalytics = async (wabaId, token, start, end, templateIds) => {
     if (!templateIds || templateIds.length === 0) return { dataPoints: [{ data_points: [] }], incomplete: false };
+
+    // Meta limita template_analytics a 90 dias — garante que o start não ultrapasse esse limite
+    const maxStart = toYMD(new Date(Date.now() - 89 * 24 * 60 * 60 * 1000));
+    const safeStart = start < maxStart ? maxStart : start;
+
     const chunks = [];
     for (let i = 0; i < templateIds.length; i += 10) {
       chunks.push(templateIds.slice(i, i + 10));
@@ -154,7 +166,7 @@
       const dps = [];
       try {
         const idsParam = encodeURIComponent(JSON.stringify(chunk));
-        let url = `${wabaId}/template_analytics?start=${start}&end=${end}&granularity=DAILY&metric_types=SENT,DELIVERED,READ,CLICKED&template_ids=${idsParam}&limit=100`;
+        let url = `${wabaId}/template_analytics?start=${safeStart}&end=${end}&granularity=DAILY&metric_types=SENT,DELIVERED,READ,CLICKED&template_ids=${idsParam}&limit=100`;
         while (url) {
           const data = await metaFetch(url, token);
           for (const item of (data.data || [])) {
@@ -162,7 +174,7 @@
           }
           const after = data.paging?.cursors?.after;
           url = data.paging?.next && after
-            ? `${wabaId}/template_analytics?start=${start}&end=${end}&granularity=DAILY&metric_types=SENT,DELIVERED,READ,CLICKED&template_ids=${idsParam}&limit=100&after=${after}`
+            ? `${wabaId}/template_analytics?start=${safeStart}&end=${end}&granularity=DAILY&metric_types=SENT,DELIVERED,READ,CLICKED&template_ids=${idsParam}&limit=100&after=${after}`
             : null;
         }
       } catch (e) {
@@ -758,6 +770,7 @@
               <div style="font-size:11px;color:var(--tx2);margin-bottom:2px;">A partir de out/2026</div>
               <div style="font-size:13px;font-weight:700;color:var(--amber);">≈ ${fmtUSD(serviceFutureCost)}</div>
               ${usdBrlRate ? `<div style="font-size:11px;color:var(--tx2);">≈ ${fmtBRL(serviceFutureCost * usdBrlRate)}</div>` : ''}
+              <div style="font-size:11px;color:var(--tx2);margin-top:2px;">${fmtUSDExact(SERVICE_FUTURE_PRICE)} / msg entregue</div>
             </div>
           </div>
         </div>
