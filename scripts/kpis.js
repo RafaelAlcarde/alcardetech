@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.4';
+  const KPI_VERSION  = 'v2.7';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
@@ -66,10 +66,15 @@
 
   // Cache em memória por sessão — evita reconsultar o Supabase a cada troca de período
   let _wabaListCache = null;
+  let _wabaListCacheAccountId = null;
 
   const fetchWabaList = async () => {
-    if (_wabaListCache) return _wabaListCache;
     const accountId = getAccountId();
+    if (_wabaListCacheAccountId !== accountId) {
+      _wabaListCache = null;
+      _wabaListCacheAccountId = accountId;
+    }
+    if (_wabaListCache) return _wabaListCache;
     if (!accountId) return null;
     const tenantKey = 'account-' + accountId;
     try {
@@ -1280,10 +1285,7 @@
     panelState.pricingData = null;
     // wabaList e selectedWabaIdx mantidos — evita reconsultar o Supabase
 
-    // Navega via SPA sem reload
-    const accountId = getAccountId();
-    history.pushState({}, '', `/app/accounts/${accountId}/conversations`);
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    // Não navega nem dispara popstate — deixa o Chatwoot na URL atual
   };
 
   const onEscClose = (e) => { if (e.key === 'Escape') closePanel(); };
@@ -1338,10 +1340,8 @@
 
   // Expõe abertura para o menu Neofluxx
   window.nfx_kpis_open = () => {
-    if (!location.pathname.includes(KPI_ROUTE)) {
-      history.pushState({}, '', kpiPath());
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      tick();
+    if (!document.getElementById(PANEL_ID)) {
+      mountPanel();
     }
   };
 
