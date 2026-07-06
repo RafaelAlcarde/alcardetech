@@ -6,7 +6,7 @@
   const BTN_ID       = 'neo-kpi-fab';
   const PANEL_ID     = 'neo-kpi-panel';
   const GRAPH_VER    = 'v25.0';
-  const KPI_VERSION  = 'v2.7';
+  const KPI_VERSION  = 'v2.8';
 
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
