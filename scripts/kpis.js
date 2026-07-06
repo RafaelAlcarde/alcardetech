@@ -213,7 +213,7 @@
       endTs = Math.floor(d.getTime() / 1000);
     }
     try {
-      const url = `${wabaId}?fields=pricing_analytics.start(${startTs}).end(${endTs}).granularity(DAILY).dimensions(["PRICING_CATEGORY"]).metric_types(["COST","VOLUME"])`;
+      const url = `${wabaId}?fields=pricing_analytics.start(${startTs}).end(${endTs}).granularity(DAILY).dimensions(["PRICING_CATEGORY"]).metric_types(["VOLUME"])`;
       const data = await metaFetch(url, token);
       const points = data.pricing_analytics?.data?.[0]?.data_points || [];
       const result = {};
