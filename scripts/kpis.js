@@ -8,6 +8,15 @@
   const GRAPH_VER    = 'v25.0';
   const KPI_VERSION  = 'v2.8';
 
+  // ─── RATE CARD META BRASIL 2026 (USD por mensagem entregue) ─────────────────
+  // Atualizar aqui quando a Meta alterar os preços
+  const META_PRICES = {
+    MARKETING:      0.0625,  // US$ 0,0625 / msg
+    UTILITY:        0.0068,  // US$ 0,0068 / msg
+    AUTHENTICATION: 0.0068,  // US$ 0,0068 / msg
+    SERVICE:        0.0000,  // gratuito até out/2026
+  };
+
   // Tarifa SERVICE futura (out/2026) — mesma que UTILITY
   const SERVICE_FUTURE_PRICE = 0.0068;
 
@@ -61,8 +70,8 @@
 
   const isKpiRoute = () => location.pathname.includes(`/campaigns/${KPI_ROUTE}`);
 
-  const SUPABASE_URL = 'https://stsstxdxmlwniezzmbxe.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
+  const SUPABASE_URL = 'https://tvutkyurgcyluvberynb.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dXRreXVyZ2N5bHV2YmVyeW5iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDk5NDEsImV4cCI6MjA3NzEyNTk0MX0.bDCmTgpG_ce4xb4X85nSI_P6iDNOzsbSYhKJYALUKOE';
 
   // Cache em memória por sessão — evita reconsultar o Supabase a cada troca de período
   let _wabaListCache = null;
@@ -70,6 +79,7 @@
 
   const fetchWabaList = async () => {
     const accountId = getAccountId();
+    // Invalida cache se trocou de conta
     if (_wabaListCacheAccountId !== accountId) {
       _wabaListCache = null;
       _wabaListCacheAccountId = accountId;
@@ -84,7 +94,7 @@
           headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Accept-Profile': 'public',
+            'Accept-Profile': 'chatfluxx',
           }
         }
       );
@@ -200,7 +210,7 @@
     return { dataPoints: [{ data_points: allResults }], incomplete };
   };
 
-  // ─── PRICING ANALYTICS (custo real por categoria) ────────────────────────
+  // ─── PRICING ANALYTICS (volumetria oficial por categoria) ──────────────────
   const fetchPricingAnalytics = async (wabaId, token, start, end) => {
     // Converte YMD para Unix timestamp em São Paulo (UTC-3 = +3h em relação a UTC meia-noite)
     const toUnix = (ymd) => Math.floor(new Date(ymd + 'T03:00:00Z').getTime() / 1000);
@@ -219,11 +229,10 @@
       const result = {};
       for (const p of points) {
         const cat = p.pricing_category;
-        if (!result[cat]) result[cat] = { volume: 0, cost: 0 };
+        if (!result[cat]) result[cat] = { volume: 0 };
         result[cat].volume += p.volume || 0;
-        result[cat].cost   += p.cost   || 0;
       }
-      return result; // ex: { MARKETING: { volume: 3203, cost: 200.19 }, SERVICE: { volume: 1287, cost: 0 } }
+      return result; // ex: { MARKETING: { volume: 3203 }, SERVICE: { volume: 1287 } }
     } catch (e) {
       console.warn('[NeoKPI] Erro ao buscar pricing_analytics:', e.message);
       return null;
@@ -663,35 +672,37 @@
     // Calculado após sentTemplates para garantir consistência com a tabela
 
     // Volume real via pricing_analytics
-    const marketingData = pricingData?.MARKETING     || { volume: 0, cost: 0 };
-    const serviceData   = pricingData?.SERVICE       || { volume: 0, cost: 0 };
-    const utilityData   = pricingData?.UTILITY       || { volume: 0, cost: 0 };
-    const authData      = pricingData?.AUTHENTICATION || { volume: 0, cost: 0 };
+    const marketingData = pricingData?.MARKETING      || { volume: 0 };
+    const serviceData   = pricingData?.SERVICE        || { volume: 0 };
+    const utilityData   = pricingData?.UTILITY        || { volume: 0 };
+    const authData      = pricingData?.AUTHENTICATION || { volume: 0 };
 
     // Enviadas e entregues = todos os volumes do pricing_analytics (templates pagos + service)
     const totalDelivered = marketingData.volume + utilityData.volume + authData.volume + serviceData.volume;
-    // Enviadas: pricing_analytics só conta entregues, então usamos o mesmo valor
-    // (a Meta não expõe "enviadas" no pricing_analytics, só entregues)
     const totalSent = totalDelivered;
 
-    const totalCost = marketingData.cost + utilityData.cost + authData.cost;
+    // Custo estimado via rate card fixo × volume oficial da Meta
+    const totalCost =
+      (marketingData.volume * META_PRICES.MARKETING) +
+      (utilityData.volume   * META_PRICES.UTILITY) +
+      (authData.volume      * META_PRICES.AUTHENTICATION);
+
     const costPerMsg = (marketingData.volume + utilityData.volume + authData.volume) > 0
       ? totalCost / (marketingData.volume + utilityData.volume + authData.volume)
       : 0;
 
-    // Breakdown de custo por categoria (só categorias com custo > 0)
+    // Breakdown de custo por categoria (só categorias com volume > 0)
     const categoryRows = [
-      ['MARKETING', marketingData.cost],
-      ['UTILITY', utilityData.cost],
-      ['AUTHENTICATION', authData.cost],
+      ['MARKETING',      marketingData.volume * META_PRICES.MARKETING],
+      ['UTILITY',        utilityData.volume   * META_PRICES.UTILITY],
+      ['AUTHENTICATION', authData.volume      * META_PRICES.AUTHENTICATION],
     ].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
 
-    // Custo por template — proporcional ao volume da categoria
+    // Custo por template — proporcional ao volume da categoria × rate card
     const costForTemplate = (delivered, category) => {
       const cat = (category || 'MARKETING').toUpperCase();
-      const catData = pricingData?.[cat];
-      if (!catData || catData.volume === 0) return 0;
-      return (delivered / catData.volume) * catData.cost;
+      const price = META_PRICES[cat] ?? META_PRICES.MARKETING;
+      return delivered * price;
     };
 
     // SERVICE — custo futuro estimado (out/2026)
@@ -735,7 +746,7 @@
           <div class="neo-kpi-card-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
             <span style="display:flex;align-items:center;gap:4px;">
               Custo de templates
-              <span title="Custo real calculado pela Meta via pricing_analytics. Não substitui a fatura oficial. Podem ocorrer variações." style="cursor:help;color:var(--tx3);font-size:11px;border:1px solid var(--bd2);border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">i</span>
+              <span title="Estimativa calculada com base na volumetria oficial da Meta e na tabela pública de preços vigente. O valor da fatura pode variar conforme alterações de preços, impostos ou regras de cobrança da Meta." style="cursor:help;color:var(--tx3);font-size:11px;border:1px solid var(--bd2);border-radius:50%;width:13px;height:13px;display:inline-flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;">i</span>
             </span>
             ${!loading && categoryRows.length > 0 ? `
               <button id="neo-cost-toggle" style="background:none;border:none;cursor:pointer;color:var(--ac);font-size:11px;font-weight:600;padding:0;white-space:nowrap;">
@@ -904,12 +915,11 @@
 
     const { pricingData } = panelState;
 
-    // Custo proporcional via pricing_analytics
+    // Custo via rate card fixo × volume entregue
     const costForTemplate = (delivered, category) => {
       const cat = (category || 'MARKETING').toUpperCase();
-      const catData = pricingData?.[cat];
-      if (!catData || catData.volume === 0) return 0;
-      return (delivered / catData.volume) * catData.cost;
+      const price = META_PRICES[cat] ?? META_PRICES.MARKETING;
+      return delivered * price;
     };
 
     // Filtra data_points apenas deste template
@@ -1286,6 +1296,7 @@
     // wabaList e selectedWabaIdx mantidos — evita reconsultar o Supabase
 
     // Não navega nem dispara popstate — deixa o Chatwoot na URL atual
+    // para evitar re-render do sidebar que destrói o menu Neofluxx Studio
   };
 
   const onEscClose = (e) => { if (e.key === 'Escape') closePanel(); };
