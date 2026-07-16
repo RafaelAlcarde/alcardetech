@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.1';
+  const VERSION = 'v3.2';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -217,8 +217,7 @@
         --nfx-err-border: rgba(220,50,50,0.3);
         --nfx-err-text: #c0392b;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
+      #nfx-conv-overlay.nfx-dark {
           --nfx-bg: #1a1a2e;
           --nfx-bg2: #222235;
           --nfx-border: #2e2e4a;
@@ -235,7 +234,6 @@
           --nfx-err-bg: rgba(220,50,50,0.1);
           --nfx-err-border: rgba(220,50,50,0.25);
           --nfx-err-text: #ff6b6b;
-        }
       }
       #nfx-conv-overlay {
         display:none; position:fixed; inset:0; z-index:99999;
@@ -862,6 +860,13 @@
   // ============================================================
   // OPEN MODAL
   // ============================================================
+  function isDark() {
+    return document.documentElement.classList.contains('dark') ||
+           document.body.classList.contains('dark') ||
+           document.querySelector('.app-wrapper')?.classList.contains('dark-theme') ||
+           window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
   function openModal() {
     injectCSS();
     loadSheetJS().catch(e => log('Erro ao carregar SheetJS:', e));
@@ -869,6 +874,7 @@
     const overlay = buildModal();
     document.body.appendChild(overlay);
     overlay.classList.add('open');
+    if (isDark()) overlay.classList.add('nfx-dark');
     const modal = overlay;
 
     loadNeoLabels(modal);
