@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.6';
+  const VERSION = 'v3.7';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -995,7 +995,12 @@
     labelNew.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (labelNew.value.trim()) closeLabelNew(true);
+        // Só confirma visualmente — campo continua aberto
+        if (labelNew.value.trim()) {
+          optP.classList.add('disabled');
+          optN.classList.add('selected');
+          renderPreview(modal);
+        }
       } else if (e.key === 'Escape') {
         closeLabelNew(false);
       }
