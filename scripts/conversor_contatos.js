@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.3';
+  const VERSION = 'v3.4';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -377,10 +377,10 @@
             <div id="nfx-file-badge" style="display:flex;align-items:center;gap:12px;background:var(--nfx-bg2);border:0.5px solid var(--nfx-border);border-radius:8px;padding:10px 14px;margin-bottom:16px;">
               <span style="font-size:20px;">📄</span>
               <div style="flex:1;min-width:0;">
-                <div id="nfx-badge-name" style="font-size:14px;font-weight:500;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-                <div id="nfx-badge-meta" style="font-size:12px;color:#9ca3af;margin-top:2px;"></div>
+                <div id="nfx-badge-name" style="font-size:14px;font-weight:500;color:var(--nfx-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                <div id="nfx-badge-meta" style="font-size:12px;color:var(--nfx-text3);margin-top:2px;"></div>
               </div>
-              <button id="btn-trocar-arquivo" style="background:none;border:0.5px solid #e2e5ea;border-radius:6px;color:#6b7280;font-size:12px;font-family:inherit;padding:5px 12px;cursor:pointer;white-space:nowrap;">↩ Trocar arquivo</button>
+              <button id="btn-trocar-arquivo" style="background:none;border:0.5px solid #e2e5ea;border-radius:6px;color:var(--nfx-text2);font-size:12px;font-family:inherit;padding:5px 12px;cursor:pointer;white-space:nowrap;">↩ Trocar arquivo</button>
             </div>
 
             <div id="nfx-limit-warn" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(220,50,50,0.07);border:0.5px solid rgba(220,50,50,0.3);border-radius:8px;font-size:13px;color:#c0392b;align-items:flex-start;gap:8px;">
