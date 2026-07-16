@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.7';
+  const VERSION = 'v3.8';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -942,48 +942,53 @@
       renderPreview(modal);
     });
 
-    function closeLabelNew(confirm = false) {
-      if (labelNew.style.display !== 'none') {
-        if (!confirm) labelNew.value = '';
-        labelNew.style.display = 'none';
-        labelHint.style.display = 'none';
-        neoLabels.disabled = false;
-        neoLabels.style.opacity = '1';
-        if (!confirm || !labelNew.value.trim()) {
-          optP.classList.remove('disabled');
-          optN.classList.remove('selected');
-        }
-        renderPreview(modal);
-      }
+    const labelHint = modal.querySelector('#label-new-hint');
+    let labelConfirmed = false;
+
+    function openLabelNew() {
+      labelNew.style.display = 'block';
+      labelHint.style.display = 'block';
+      labelHint.textContent = '↵ Enter para confirmar · Esc para cancelar';
+      neoLabels.value = ''; neoLabels.disabled = true; neoLabels.style.opacity = '.4';
+      labelConfirmed = false;
+      labelNew.focus();
+    }
+
+    function cancelLabelNew() {
+      labelNew.style.display = 'none';
+      labelHint.style.display = 'none';
+      labelNew.value = '';
+      labelConfirmed = false;
+      neoLabels.disabled = false; neoLabels.style.opacity = '1';
+      optP.classList.remove('disabled');
+      optN.classList.remove('selected');
+      renderPreview(modal);
+    }
+
+    function closeLabelNew() {
+      cancelLabelNew();
     }
 
     neoLabels.addEventListener('change', () => {
       if (neoLabels.value !== '') {
         optP.classList.add('disabled'); optN.classList.add('selected');
-        labelNew.style.display = 'none'; labelNew.value = '';
+        cancelLabelNew();
       } else {
         optP.classList.remove('disabled'); optN.classList.remove('selected');
       }
       renderPreview(modal);
     });
 
-    const labelHint = modal.querySelector('#label-new-hint');
-
     modal.querySelector('#btn-create-label').addEventListener('click', () => {
       if (labelNew.style.display === 'none') {
-        labelNew.style.display = 'block';
-        labelHint.style.display = 'block';
-        neoLabels.value = ''; neoLabels.disabled = true; neoLabels.style.opacity = '.4';
-        labelNew.focus();
+        openLabelNew();
       } else {
-        labelNew.style.display = 'none';
-        labelHint.style.display = 'none';
-        labelNew.value = '';
-        neoLabels.disabled = false; neoLabels.style.opacity = '1';
+        cancelLabelNew();
       }
     });
 
     labelNew.addEventListener('input', () => {
+      labelConfirmed = false;
       if (labelNew.value.trim()) {
         optP.classList.add('disabled'); optN.classList.add('selected');
       } else {
@@ -995,21 +1000,24 @@
     labelNew.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        // Só confirma visualmente — campo continua aberto
         if (labelNew.value.trim()) {
+          labelConfirmed = true;
+          labelHint.textContent = '✓ Etiqueta confirmada · Esc para cancelar';
           optP.classList.add('disabled');
           optN.classList.add('selected');
           renderPreview(modal);
         }
       } else if (e.key === 'Escape') {
-        closeLabelNew(false);
+        cancelLabelNew();
       }
     });
 
-    // Fechar campo ao clicar fora do card Da Neofluxx (sem confirmar)
+    // Clicar fora: só fecha se não tiver valor confirmado
     overlay.addEventListener('click', e => {
       if (!modal.querySelector('#opt-neofluxx').contains(e.target)) {
-        closeLabelNew(false);
+        if (!labelConfirmed) {
+          cancelLabelNew();
+        }
       }
     }, true);
 
