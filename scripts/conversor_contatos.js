@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.2';
+  const VERSION = 'v3.3';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -264,7 +264,7 @@
       .nfx-info-box { background:var(--nfx-bg2); border:0.5px solid var(--nfx-border); border-radius:8px; padding:12px 16px; margin-bottom:16px; }
       .nfx-info-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--nfx-text2); margin-bottom:6px; line-height:1.5; }
       .nfx-info-row:last-child { margin-bottom:0; }
-      .nfx-info-row code { background:#e5e7eb; border-radius:4px; padding:1px 5px; font-size:12px; color:var(--nfx-text); }
+      .nfx-info-row code { background:var(--nfx-border); border-radius:4px; padding:1px 5px; font-size:12px; color:var(--nfx-text); }
       .nfx-drop { border:1.5px dashed var(--nfx-border2); border-radius:10px; padding:40px; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--nfx-bg); }
       .nfx-drop:hover, .nfx-drop.drag { border-color:#00c48c; background:rgba(0,196,140,0.05); }
       .nfx-drop-icon { font-size:40px; display:block; margin-bottom:12px; }
@@ -374,7 +374,7 @@
 
           <!-- STEP 2: Map + Preview -->
           <div id="nfx-step-map" style="display:none;">
-            <div id="nfx-file-badge" style="display:flex;align-items:center;gap:12px;background:#f9fafb;border:0.5px solid #e2e5ea;border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+            <div id="nfx-file-badge" style="display:flex;align-items:center;gap:12px;background:var(--nfx-bg2);border:0.5px solid var(--nfx-border);border-radius:8px;padding:10px 14px;margin-bottom:16px;">
               <span style="font-size:20px;">📄</span>
               <div style="flex:1;min-width:0;">
                 <div id="nfx-badge-name" style="font-size:14px;font-weight:500;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
