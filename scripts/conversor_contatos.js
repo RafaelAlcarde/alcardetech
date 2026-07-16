@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.5';
+  const VERSION = 'v3.6';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -425,6 +425,7 @@
                 <select id="neo-labels"><option value="">Carregando...</option></select>
                 <button class="nfx-btn-create-label" id="btn-create-label" style="display:none;">+ Criar nova etiqueta</button>
                 <input type="text" id="label-new" placeholder="Nome da nova etiqueta..." maxlength="50" style="display:none;margin-top:8px;" />
+                <p id="label-new-hint" style="display:none;font-size:11px;color:var(--nfx-text3);margin-top:4px;">↵ Enter para confirmar · Esc para cancelar</p>
               </div>
             </div>
             <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
@@ -941,14 +942,17 @@
       renderPreview(modal);
     });
 
-    function closeLabelNew() {
+    function closeLabelNew(confirm = false) {
       if (labelNew.style.display !== 'none') {
+        if (!confirm) labelNew.value = '';
         labelNew.style.display = 'none';
-        labelNew.value = '';
+        labelHint.style.display = 'none';
         neoLabels.disabled = false;
         neoLabels.style.opacity = '1';
-        optP.classList.remove('disabled');
-        optN.classList.remove('selected');
+        if (!confirm || !labelNew.value.trim()) {
+          optP.classList.remove('disabled');
+          optN.classList.remove('selected');
+        }
         renderPreview(modal);
       }
     }
@@ -963,13 +967,18 @@
       renderPreview(modal);
     });
 
+    const labelHint = modal.querySelector('#label-new-hint');
+
     modal.querySelector('#btn-create-label').addEventListener('click', () => {
       if (labelNew.style.display === 'none') {
         labelNew.style.display = 'block';
+        labelHint.style.display = 'block';
         neoLabels.value = ''; neoLabels.disabled = true; neoLabels.style.opacity = '.4';
         labelNew.focus();
       } else {
-        labelNew.style.display = 'none'; labelNew.value = '';
+        labelNew.style.display = 'none';
+        labelHint.style.display = 'none';
+        labelNew.value = '';
         neoLabels.disabled = false; neoLabels.style.opacity = '1';
       }
     });
@@ -983,10 +992,19 @@
       renderPreview(modal);
     });
 
-    // Fechar campo ao clicar fora do card Da Neofluxx
+    labelNew.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (labelNew.value.trim()) closeLabelNew(true);
+      } else if (e.key === 'Escape') {
+        closeLabelNew(false);
+      }
+    });
+
+    // Fechar campo ao clicar fora do card Da Neofluxx (sem confirmar)
     overlay.addEventListener('click', e => {
       if (!modal.querySelector('#opt-neofluxx').contains(e.target)) {
-        closeLabelNew();
+        closeLabelNew(false);
       }
     }, true);
 
