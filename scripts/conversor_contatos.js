@@ -5,7 +5,7 @@
   if (window.__nfxConversor_v1) return;
   window.__nfxConversor_v1 = true;
 
-  const VERSION = 'v3.4';
+  const VERSION = 'v3.5';
   const log = (...a) => console.log('[CW-B2-TOOL]', ...a);
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const uniq = arr => [...new Set((arr || []).map(s => (s || '').trim()).filter(Boolean))];
@@ -934,11 +934,24 @@
     colLabels.addEventListener('change', () => {
       if (colLabels.value !== '') {
         optN.classList.add('disabled'); optP.classList.add('selected');
+        closeLabelNew();
       } else {
         optN.classList.remove('disabled'); optP.classList.remove('selected');
       }
       renderPreview(modal);
     });
+
+    function closeLabelNew() {
+      if (labelNew.style.display !== 'none') {
+        labelNew.style.display = 'none';
+        labelNew.value = '';
+        neoLabels.disabled = false;
+        neoLabels.style.opacity = '1';
+        optP.classList.remove('disabled');
+        optN.classList.remove('selected');
+        renderPreview(modal);
+      }
+    }
 
     neoLabels.addEventListener('change', () => {
       if (neoLabels.value !== '') {
@@ -969,6 +982,13 @@
       }
       renderPreview(modal);
     });
+
+    // Fechar campo ao clicar fora do card Da Neofluxx
+    overlay.addEventListener('click', e => {
+      if (!modal.querySelector('#opt-neofluxx').contains(e.target)) {
+        closeLabelNew();
+      }
+    }, true);
 
     // Botões step map
     modal.querySelector('#btn-import-direto').addEventListener('click', () => goImport(modal));
