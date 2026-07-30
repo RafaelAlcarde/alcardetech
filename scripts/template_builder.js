@@ -430,10 +430,16 @@
         <div class="nfx-lv" id="nfx-lv">
           <div class="nfx-ltb">
             <div><div class="nfx-title">Meus templates</div><div class="nfx-sub">Templates da sua conta WhatsApp Business</div></div>
-            <button class="nfx-bs" id="nfx-refresh-btn" onclick="nfxLoad()">
-              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Atualizar
-            </button>
+            <div style="display:flex;gap:8px">
+              <button class="nfx-bs" id="nfx-sync-btn" onclick="nfxSyncTemplates()">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Sincronizar modelos
+              </button>
+              <button class="nfx-bs" id="nfx-refresh-btn" onclick="nfxLoad()">
+                <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Atualizar
+              </button>
+            </div>
           </div>
           <div class="nfx-del-bar" id="nfx-del-bar">
             <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
@@ -932,6 +938,65 @@
     } finally {
       btn.disabled = false;
       btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Enviar para Meta`;
+    }
+  };
+
+  window.nfxSyncTemplates = async function() {
+    const btn = document.getElementById('nfx-sync-btn');
+    if (btn) { btn.disabled=true; btn.innerHTML='<span class="nfx-spin" style="border-top-color:var(--tx2)"></span> Sincronizando...'; }
+
+    try {
+      // Pega credenciais da sessão do Chatwoot
+      const raw = document.cookie.match(/(^|;\s*)cw_d_session_info=([^;]+)/);
+      if (!raw) throw new Error('Sessão do Chatwoot não encontrada.');
+      const session = JSON.parse(decodeURIComponent(raw[2]));
+      const headers = {
+        'access-token': session['access-token'],
+        'client':       session['client'],
+        'uid':          session['uid'],
+        'token-type':   session['token-type']
+      };
+
+      const accountId = location.pathname.match(/accounts\/(\d+)/)?.[1];
+      if (!accountId) throw new Error('ID da conta não encontrado.');
+
+      // Busca todos os inboxes da conta
+      const inboxResp = await fetch(`/api/v1/accounts/${accountId}/inboxes`, { headers });
+      if (!inboxResp.ok) throw new Error(`Erro ao buscar inboxes: ${inboxResp.status}`);
+      const inboxData = await inboxResp.json();
+      const whatsappInboxes = (inboxData.payload || []).filter(i =>
+        i.channel_type === 'Channel::Whatsapp' || i.channel_type === 'Channel::Api'
+      );
+
+      if (!whatsappInboxes.length) throw new Error('Nenhum inbox WhatsApp encontrado.');
+
+      // Sincroniza cada inbox
+      let synced = 0;
+      for (const inbox of whatsappInboxes) {
+        const syncResp = await fetch(
+          `/api/v1/accounts/${accountId}/inboxes/${inbox.id}/sync_templates`,
+          { method: 'POST', headers }
+        );
+        if (syncResp.ok) synced++;
+      }
+
+      // Mostra resultado
+      const msg = synced === 1
+        ? '✓ Templates sincronizados com sucesso!'
+        : `✓ ${synced} inboxes sincronizados com sucesso!`;
+
+      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg> Sincronizar modelos'; }
+
+      // Mostra feedback temporário
+      const info = document.createElement('div');
+      info.style.cssText = 'font-size:11px;color:var(--ac);margin-top:4px;text-align:right';
+      info.textContent = msg;
+      btn.parentNode.appendChild(info);
+      setTimeout(() => info.remove(), 4000);
+
+    } catch(e) {
+      alert(`✗ Erro ao sincronizar: ${e.message}`);
+      if (btn) { btn.disabled=false; btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg> Sincronizar modelos'; }
     }
   };
 
