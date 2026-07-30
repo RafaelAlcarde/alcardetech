@@ -965,7 +965,7 @@
       if (!inboxResp.ok) throw new Error(`Erro ao buscar inboxes: ${inboxResp.status}`);
       const inboxData = await inboxResp.json();
       const whatsappInboxes = (inboxData.payload || []).filter(i =>
-        i.channel_type === 'Channel::Whatsapp' || i.channel_type === 'Channel::Api'
+        i.channel_type === 'Channel::Whatsapp'
       );
 
       if (!whatsappInboxes.length) throw new Error('Nenhum inbox WhatsApp encontrado.');
