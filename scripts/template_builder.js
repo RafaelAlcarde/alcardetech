@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.1';
+  const VERSION = 'v1.2';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -305,7 +305,7 @@
           </div>
 
           <div id="nfx-edit-banner" style="display:none;align-items:center;gap:8px;padding:6px 10px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;font-size:11px;color:var(--bl)">
-            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✎ Editando <b id="nfx-edit-name"></b> <span style="opacity:.7">— nome/categoria travados</span></span>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✎ Editando <b id="nfx-edit-name"></b> <span style="opacity:.7">— nome/categoria não permitidos</span></span>
             <button class="nfx-bs" style="flex-shrink:0;padding:4px 10px;font-size:10px" onclick="nfxCancelEdit()">Cancelar</button>
           </div>
 
