@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.2';
+  const VERSION = 'v1.3';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -97,7 +97,7 @@
     .nfx-bp{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;background:var(--ac);border:none;color:#000;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
     .nfx-bp:hover:not(:disabled){background:#1db954;box-shadow:0 0 14px var(--agl)}
     .nfx-bp:disabled{opacity:.6;cursor:not-allowed}
-    .nfx-bs{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit}
+    .nfx-bs{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap;flex-shrink:0}
     .nfx-bs:hover{background:var(--sf2);color:var(--tx)}
     #nfx-preview{background:var(--sf);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
     .nfx-ph{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
@@ -138,7 +138,7 @@
     .nfx-tc.selected{border-color:var(--ac);background:var(--adim)}
     .nfx-tc-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--ac);flex-shrink:0;margin-top:2px}
     .nfx-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px}
-    .nfx-del-bar.visible{display:flex}
+    .nfx-del-bar.visible{display:flex;position:sticky;top:0;z-index:5}
     .nfx-del-info{font-size:12px;color:var(--tx2);font-weight:500;flex:1}
     .nfx-del-cancel{padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer}
     .nfx-del-cancel:hover{background:var(--sf3);color:var(--tx)}
@@ -160,7 +160,7 @@
     .nfx-PE{background:rgba(245,166,35,.12);color:var(--amb);border:1px solid rgba(245,166,35,.3)}
     .nfx-RE{background:rgba(255,94,94,.1);color:var(--red);border:1px solid rgba(255,94,94,.3)}
     .nfx-PA{background:var(--sf3);color:var(--tx3);border:1px solid var(--bd2)}
-    .nfx-ltb{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+    .nfx-ltb{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;position:relative}
     .nfx-ld{text-align:center;color:var(--tx3);font-size:12px;padding:24px}
     .nfx-rr{margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(255,94,94,.08);border:1px solid rgba(255,94,94,.2);font-size:10px;color:var(--red);line-height:1.5}
 
@@ -441,8 +441,8 @@
         <div class="nfx-lv" id="nfx-lv">
           <div class="nfx-ltb">
             <div><div class="nfx-title">Meus templates</div><div class="nfx-sub">Templates da sua conta WhatsApp Business</div></div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="nfx-version-tag" style="font-size:10px;font-family:monospace;color:var(--tx3);background:var(--sf3);border:1px solid var(--bd2);border-radius:10px;padding:2px 8px"></span>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span id="nfx-version-tag" style="font-size:10px;font-family:monospace;color:var(--tx3);background:var(--sf3);border:1px solid var(--bd2);border-radius:10px;padding:2px 8px;flex-shrink:0"></span>
               <button class="nfx-bs" id="nfx-sync-btn" onclick="nfxSyncTemplates()">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Sincronizar modelos
@@ -452,6 +452,7 @@
                 Atualizar
               </button>
             </div>
+            <div id="nfx-sync-feedback" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;font-size:11px;white-space:nowrap"></div>
           </div>
           <div class="nfx-del-bar" id="nfx-del-bar">
             <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
@@ -1217,11 +1218,14 @@
       if (btn) { btn.disabled=false; btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg> Sincronizar modelos'; }
 
       // Mostra feedback temporário
-      const info = document.createElement('div');
-      info.style.cssText = 'font-size:11px;color:var(--ac);margin-top:4px;text-align:right';
-      info.textContent = msg;
-      btn.parentNode.appendChild(info);
-      setTimeout(() => info.remove(), 4000);
+      const info = document.getElementById('nfx-sync-feedback');
+      if (info) {
+        info.style.color = 'var(--ac)';
+        info.textContent = msg;
+        info.style.display = 'block';
+        clearTimeout(window._nfxSyncFeedbackTimer);
+        window._nfxSyncFeedbackTimer = setTimeout(() => { info.style.display = 'none'; }, 4000);
+      }
 
     } catch(e) {
       alert(`✗ Erro ao sincronizar: ${e.message}`);
