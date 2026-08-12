@@ -2,6 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
+  const VERSION = 'v1.0';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -360,6 +361,7 @@
                 <input class="nfx-inp" id="nfx-hval" placeholder="Texto do cabeçalho (máx. 60 caracteres)" maxlength="60" oninput="nfxHvalChg(this)"/>
               </div>
               <div id="nfx-hmedia" style="display:none;margin-top:10px;flex-direction:column;gap:8px">
+                <div id="nfx-edit-media-note" style="display:none;padding:8px 10px;border-radius:7px;background:var(--adim);border:1px solid var(--agl);font-size:11px;color:var(--ac)"></div>
                 <div class="nfx-uz" onclick="document.getElementById('nfx-file-input').click()" style="cursor:pointer">
                   <div style="font-size:16px;margin-bottom:2px">↑</div>
                   <div style="font-size:11px;color:var(--tx2)">Clique para selecionar arquivo</div>
@@ -437,7 +439,8 @@
         <div class="nfx-lv" id="nfx-lv">
           <div class="nfx-ltb">
             <div><div class="nfx-title">Meus templates</div><div class="nfx-sub">Templates da sua conta WhatsApp Business</div></div>
-            <div style="display:flex;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="nfx-version-tag" style="font-size:10px;font-family:monospace;color:var(--tx3);background:var(--sf3);border:1px solid var(--bd2);border-radius:10px;padding:2px 8px"></span>
               <button class="nfx-bs" id="nfx-sync-btn" onclick="nfxSyncTemplates()">
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Sincronizar modelos
@@ -705,6 +708,8 @@
     if (nameEl) nameEl.textContent = file.name;
     if (statusEl) { statusEl.textContent = 'Arquivo selecionado'; statusEl.style.color = 'var(--tx3)'; }
     if (info) info.style.display = 'flex';
+    const editNote = document.getElementById('nfx-edit-media-note');
+    if (editNote) editNote.style.display = 'none';
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = e => {
@@ -728,8 +733,22 @@
     window._nfxSelectedFile = null;
     const ph2 = document.getElementById('nfx-ph2');
     if (ph2) { ph2.style.display='none'; ph2.innerHTML=''; }
+    nfxUpdateEditMediaNote();
     updatePreview();
   };
+
+  function nfxUpdateEditMediaNote() {
+    const noteEl = document.getElementById('nfx-edit-media-note');
+    if (!noteEl) return;
+    const orig = window._nfxEditMode?.originalHeader;
+    const keepingOriginal = window._nfxEditMode?.active && orig && (orig.format||'').toLowerCase() === headerType && !window._nfxSelectedFile;
+    if (keepingOriginal) {
+      noteEl.style.display = 'block';
+      noteEl.textContent = `🖼 Cabeçalho de mídia atual (${orig.format}) será mantido. Selecione um arquivo apenas se quiser substituí-lo.`;
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
 
   window.nfxHdr = function(type, el) {
     headerType = type;
@@ -739,6 +758,7 @@
     const hm = document.getElementById('nfx-hmedia');
     hm.style.display = ['image','video','document'].includes(type)?'flex':'none';
     if (!['image','video','document'].includes(type)) window.nfxClearFile();
+    nfxUpdateEditMediaNote();
     updatePreview();
   };
 
@@ -832,9 +852,10 @@
     if (nameEl) { nameEl.readOnly = false; nameEl.style.background = ''; nameEl.style.cursor = ''; }
     const catEl = document.getElementById('nfx-cat');
     if (catEl) catEl.disabled = false;
-    document.querySelectorAll('.nfx-tt').forEach(el => el.style.pointerEvents = '');
     const hval = document.getElementById('nfx-hval');
     if (hval) hval.readOnly = false;
+    const editNote = document.getElementById('nfx-edit-media-note');
+    if (editNote) editNote.style.display = 'none';
     const banner = document.getElementById('nfx-edit-banner');
     if (banner) banner.style.display = 'none';
     const submitBtn = document.getElementById('nfx-submit-btn');
@@ -885,8 +906,10 @@
     const langEl = document.getElementById('nfx-lang');
     if (langEl) langEl.value = t.language || 'pt_BR';
 
-    // Cabeçalho — tipo travado (sem troca de mídia)
-    document.querySelectorAll('.nfx-tt').forEach(el => { el.classList.remove('active'); el.style.pointerEvents = 'none'; });
+    // Cabeçalho — tipo livre para edição (Meta aceita trocar o tipo de cabeçalho)
+    document.querySelectorAll('.nfx-tt').forEach(el => el.classList.remove('active'));
+    window._nfxSelectedFile = null;
+    window._nfxMediaHandle = null;
     if (headerComp) {
       const fmt = (headerComp.format || 'TEXT').toLowerCase();
       headerType = fmt;
@@ -900,7 +923,7 @@
         hval.readOnly = false;
       } else {
         document.getElementById('nfx-htxt').style.display = 'none';
-        document.getElementById('nfx-hmedia').style.display = 'none';
+        document.getElementById('nfx-hmedia').style.display = 'flex';
       }
     } else {
       headerType = 'none';
@@ -911,6 +934,7 @@
     }
 
     window._nfxEditMode = { active:true, templateId: t.id, name: t.name, originalHeader: headerComp };
+    nfxUpdateEditMediaNote();
 
     // Corpo
     const bodyEl = document.getElementById('nfx-body');
@@ -947,13 +971,24 @@
     const body = document.getElementById('nfx-body').value;
     const foot = document.getElementById('nfx-foot')?.value||'';
     const comps=[];
-    const origHeader = window._nfxEditMode?.originalHeader;
-    if (origHeader && (origHeader.format||'').toUpperCase() === 'TEXT') {
+
+    if (headerType === 'text') {
       const hdr = document.getElementById('nfx-hval')?.value||'';
       if (hdr) comps.push({type:'HEADER', format:'TEXT', text:hdr});
-    } else if (origHeader) {
-      comps.push(origHeader); // mídia — mantida como está, sem alteração
+    } else if (['image','video','document'].includes(headerType)) {
+      // Se não há arquivo novo selecionado, mantemos o cabeçalho de mídia original
+      // (só entra aqui quando o tipo bate com o original — validado antes do envio).
+      // Quando há arquivo novo, o header é resolvido no N8N via upload + handle,
+      // então não adicionamos nada aqui.
+      if (!window._nfxSelectedFile) {
+        const orig = window._nfxEditMode?.originalHeader;
+        if (orig && (orig.format||'').toLowerCase() === headerType) {
+          comps.push(orig);
+        }
+      }
     }
+    // headerType 'none' -> sem header
+
     if (body) {
       const vars=[...new Set((body.match(/\{\{\d+\}\}/g)||[]))];
       const bc={type:'BODY',text:body};
@@ -1048,6 +1083,15 @@
     const dupBtns = btnLabels.filter((l,i) => btnLabels.indexOf(l) !== i);
     if (dupBtns.length > 0) { alert('Botões não podem ter o mesmo texto. Altere o nome de cada botão.'); return; }
 
+    if (editMode && ['image','video','document'].includes(headerType)) {
+      const orig = window._nfxEditMode.originalHeader;
+      const keepingOriginal = orig && (orig.format||'').toLowerCase() === headerType && !window._nfxSelectedFile;
+      if (!keepingOriginal && !window._nfxSelectedFile) {
+        alert('Selecione um arquivo para o novo cabeçalho de mídia (ou volte ao cabeçalho original).');
+        return;
+      }
+    }
+
     const btn = document.getElementById('nfx-submit-btn');
     btn.disabled = true;
     btn.innerHTML = editMode ? `<span class="nfx-spin"></span> Salvando...` : `<span class="nfx-spin"></span> Enviando...`;
@@ -1058,9 +1102,16 @@
       if (editMode) {
         const payload = {
           template_id: window._nfxEditMode.templateId,
+          headerType,
           components: buildEditComps()
         };
-        result = await n8nRequest('edit_template', payload);
+
+        if (['image','video','document'].includes(headerType) && window._nfxSelectedFile) {
+          btn.innerHTML = `<span class="nfx-spin"></span> Enviando mídia...`;
+          result = await n8nRequest('edit_template', payload, window._nfxSelectedFile);
+        } else {
+          result = await n8nRequest('edit_template', payload);
+        }
 
         nfxShowModal({
           title: 'Alterações salvas!',
@@ -1426,6 +1477,8 @@
   // Init
   const s=document.getElementById('nfx-stxt');
   if (s) s.textContent='Sincronizado';
+  const vt=document.getElementById('nfx-version-tag');
+  if (vt) vt.textContent=VERSION;
   const obs=new MutationObserver(applyTheme);
   obs.observe(document.documentElement,{attributes:true,attributeFilter:['class']});
   obs.observe(document.body,{attributes:true,attributeFilter:['class']});
