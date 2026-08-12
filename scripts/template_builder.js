@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.0';
+  const VERSION = 'v1.1';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -137,14 +137,16 @@
     .nfx-tc{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:12px;transition:border .15s}
     .nfx-tc.selected{border-color:var(--ac);background:var(--adim)}
     .nfx-tc-cb{width:16px;height:16px;cursor:pointer;accent-color:var(--ac);flex-shrink:0;margin-top:2px}
-    .nfx-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(229,57,53,.07);border:1px solid rgba(229,57,53,.25);border-radius:8px}
+    .nfx-del-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px}
     .nfx-del-bar.visible{display:flex}
-    .nfx-del-info{font-size:12px;color:var(--red);font-weight:500;flex:1}
+    .nfx-del-info{font-size:12px;color:var(--tx2);font-weight:500;flex:1}
     .nfx-del-cancel{padding:5px 12px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer}
-    .nfx-del-cancel:hover{background:var(--sf2);color:var(--tx)}
+    .nfx-del-cancel:hover{background:var(--sf3);color:var(--tx)}
     .nfx-del-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:none;background:var(--red);color:#fff;font-size:11px;font-weight:600;cursor:pointer}
     .nfx-del-btn:hover:not(:disabled){opacity:.85}
     .nfx-del-btn:disabled{opacity:.6;cursor:not-allowed}
+    .nfx-edit-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;border:none;background:var(--ac);color:#000;font-size:11px;font-weight:600;cursor:pointer}
+    .nfx-edit-btn:hover{opacity:.85}
     #nfx-del-ov{display:none;position:fixed;inset:0;z-index:100002;background:rgba(0,0,0,.65);align-items:center;justify-content:center}
     #nfx-del-ov.open{display:flex}
     #nfx-del-m{width:380px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
@@ -302,9 +304,9 @@
             <span style="margin-left:auto;cursor:pointer;color:var(--tx3);font-size:10px" onclick="nfxMostrarWabas()">trocar</span>
           </div>
 
-          <div id="nfx-edit-banner" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;font-size:11px;color:var(--bl)">
-            <span>✎ Editando <b id="nfx-edit-name"></b> — nome e categoria não podem ser alterados</span>
-            <button class="nfx-bs" style="margin-left:auto;padding:4px 10px" onclick="nfxCancelEdit()">Cancelar edição</button>
+          <div id="nfx-edit-banner" style="display:none;align-items:center;gap:8px;padding:6px 10px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;font-size:11px;color:var(--bl)">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✎ Editando <b id="nfx-edit-name"></b> <span style="opacity:.7">— nome/categoria travados</span></span>
+            <button class="nfx-bs" style="flex-shrink:0;padding:4px 10px;font-size:10px" onclick="nfxCancelEdit()">Cancelar</button>
           </div>
 
           <div class="nfx-sec">
@@ -454,7 +456,7 @@
           <div class="nfx-del-bar" id="nfx-del-bar">
             <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
             <button class="nfx-del-cancel" onclick="nfxCancelSel()">Cancelar</button>
-            <button class="nfx-bs" id="nfx-edit-sel-btn" style="display:none" onclick="nfxStartEdit()">
+            <button class="nfx-edit-btn" id="nfx-edit-sel-btn" style="display:none" onclick="nfxStartEdit()">
               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Editar
             </button>
