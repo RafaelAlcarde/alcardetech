@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.5';
+  const VERSION = 'v1.7';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -456,8 +456,8 @@
                 Atualizar
               </button>
             </div>
-            <div id="nfx-sync-feedback" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;font-size:11px;white-space:nowrap"></div>
           </div>
+          <div id="nfx-sync-feedback" style="display:none;text-align:right;font-size:11px;padding:2px 0 6px"></div>
           <div style="position:relative">
             <input class="nfx-inp" id="nfx-search" placeholder="Buscar template por nome..." oninput="nfxFilterTemplates(this.value)" style="padding-left:30px"/>
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
