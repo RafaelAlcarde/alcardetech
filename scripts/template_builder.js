@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.3';
+  const VERSION = 'v1.5';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -258,6 +258,10 @@
     const bar = document.getElementById('nfx-waba-sel-bar');
     if (bar) bar.style.display = 'none';
     nfxLockForm(false);
+    if (typeof nfxDoClear === 'function') nfxDoClear();
+    if (window.nfxCancelSel) window.nfxCancelSel();
+    const searchEl = document.getElementById('nfx-search');
+    if (searchEl) searchEl.value = '';
     setTimeout(() => { if (window.nfxView) nfxView('create'); }, 50);
   }
 
@@ -453,6 +457,10 @@
               </button>
             </div>
             <div id="nfx-sync-feedback" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;font-size:11px;white-space:nowrap"></div>
+          </div>
+          <div style="position:relative">
+            <input class="nfx-inp" id="nfx-search" placeholder="Buscar template por nome..." oninput="nfxFilterTemplates(this.value)" style="padding-left:30px"/>
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35" stroke-linecap="round"/></svg>
           </div>
           <div class="nfx-del-bar" id="nfx-del-bar">
             <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
@@ -1245,14 +1253,35 @@
       const d = await n8nRequest('list_templates', {});
       const tpls = d.data || d.templates || [];
       _loadedTemplates = tpls;
+      const searchEl = document.getElementById('nfx-search');
+      if (searchEl) searchEl.value = '';
       const lb = document.getElementById('nfx-lb');
       if (lb) lb.textContent = tpls.length;
-      container.innerHTML = tpls.length ? tpls.map(tplCard).join('') : '<div class="nfx-ld">Nenhum template encontrado.</div>';
+      nfxRenderTemplateList(tpls);
     } catch(e) {
       container.innerHTML=`<div class="nfx-ld" style="color:var(--red)">Erro: ${esc(e.message)}</div>`;
     } finally {
       if (btn) { btn.disabled=false; btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke-linecap="round" stroke-linejoin="round"/></svg> Atualizar'; }
     }
+  };
+
+  function nfxRenderTemplateList(tpls) {
+    const container = document.getElementById('nfx-tlist');
+    if (!container) return;
+    container.innerHTML = tpls.length ? tpls.map(tplCard).join('') : '<div class="nfx-ld">Nenhum template encontrado.</div>';
+  }
+
+  window.nfxFilterTemplates = function(query) {
+    const q = (query||'').trim().toLowerCase();
+    const filtered = q ? _loadedTemplates.filter(t => (t.name||'').toLowerCase().includes(q)) : _loadedTemplates;
+    nfxCancelSel();
+    if (!filtered.length) {
+      document.getElementById('nfx-tlist').innerHTML = q
+        ? `<div class="nfx-ld">Nenhum template encontrado com "${esc(query)}".</div>`
+        : '<div class="nfx-ld">Nenhum template encontrado.</div>';
+      return;
+    }
+    nfxRenderTemplateList(filtered);
   };
 
   function renderBtns() {
