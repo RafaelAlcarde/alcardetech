@@ -185,6 +185,8 @@
   let tenantId    = null;
   let wabaNome    = null;
   let wabas       = [];
+  let _loadedTemplates = [];
+  window._nfxEditMode  = { active:false, templateId:null, name:null, originalHeader:null };
 
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function tc()   { return isDark() ? 'dark' : 'light'; }
@@ -297,6 +299,11 @@
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" fill="#25d366"/></svg>
             <span id="nfx-waba-sel-txt">—</span>
             <span style="margin-left:auto;cursor:pointer;color:var(--tx3);font-size:10px" onclick="nfxMostrarWabas()">trocar</span>
+          </div>
+
+          <div id="nfx-edit-banner" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.3);border-radius:8px;font-size:11px;color:var(--bl)">
+            <span>✎ Editando <b id="nfx-edit-name"></b> — nome e categoria não podem ser alterados</span>
+            <button class="nfx-bs" style="margin-left:auto;padding:4px 10px" onclick="nfxCancelEdit()">Cancelar edição</button>
           </div>
 
           <div class="nfx-sec">
@@ -444,6 +451,10 @@
           <div class="nfx-del-bar" id="nfx-del-bar">
             <span class="nfx-del-info" id="nfx-del-info">0 selecionados</span>
             <button class="nfx-del-cancel" onclick="nfxCancelSel()">Cancelar</button>
+            <button class="nfx-bs" id="nfx-edit-sel-btn" style="display:none" onclick="nfxStartEdit()">
+              <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Editar
+            </button>
             <button class="nfx-del-btn" onclick="nfxConfirmDelete()">
               <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               Excluir selecionados
@@ -811,7 +822,151 @@
     window.nfxSetVarType('none');
     window.nfxHdr('none', document.querySelector('.nfx-tt'));
     ['nfx-var-warn','nfx-var-pos-err','nfx-name-err'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+    nfxExitEditMode();
     updatePreview();
+  }
+
+  function nfxExitEditMode() {
+    window._nfxEditMode = { active:false, templateId:null, name:null, originalHeader:null };
+    const nameEl = document.getElementById('nfx-name');
+    if (nameEl) { nameEl.readOnly = false; nameEl.style.background = ''; nameEl.style.cursor = ''; }
+    const catEl = document.getElementById('nfx-cat');
+    if (catEl) catEl.disabled = false;
+    document.querySelectorAll('.nfx-tt').forEach(el => el.style.pointerEvents = '');
+    const hval = document.getElementById('nfx-hval');
+    if (hval) hval.readOnly = false;
+    const banner = document.getElementById('nfx-edit-banner');
+    if (banner) banner.style.display = 'none';
+    const submitBtn = document.getElementById('nfx-submit-btn');
+    if (submitBtn) submitBtn.innerHTML = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Enviar para Meta';
+  }
+
+  window.nfxCancelEdit = function() {
+    nfxShowModal({
+      title: 'Cancelar edição',
+      message: 'Deseja descartar as alterações e sair do modo de edição?',
+      confirmLabel: 'Sim, cancelar',
+      cancelLabel: 'Não',
+      type: 'confirm',
+      onConfirm: nfxDoClear
+    });
+  };
+
+  window.nfxStartEdit = function() {
+    if (_selectedTemplates.length !== 1) return;
+    const name = _selectedTemplates[0];
+    const t = _loadedTemplates.find(x => x.name === name);
+    if (!t) { alert('Template não encontrado. Clique em "Atualizar" e tente novamente.'); return; }
+
+    nfxCancelSel();
+    nfxView('create');
+
+    const comps     = t.components || [];
+    const headerComp = comps.find(c => c.type === 'HEADER') || null;
+    const bodyComp   = comps.find(c => c.type === 'BODY');
+    const footComp   = comps.find(c => c.type === 'FOOTER');
+    const btnsComp   = comps.find(c => c.type === 'BUTTONS');
+
+    // Nome — travado
+    const nameEl = document.getElementById('nfx-name');
+    nameEl.value = t.name;
+    nameEl.readOnly = true;
+    nameEl.style.background = 'var(--sf3)';
+    nameEl.style.cursor = 'not-allowed';
+    const nameErr = document.getElementById('nfx-name-err');
+    if (nameErr) nameErr.style.display = 'none';
+
+    // Categoria — travada
+    const catEl = document.getElementById('nfx-cat');
+    catEl.value = t.category;
+    catEl.disabled = true;
+
+    // Idioma
+    const langEl = document.getElementById('nfx-lang');
+    if (langEl) langEl.value = t.language || 'pt_BR';
+
+    // Cabeçalho — tipo travado (sem troca de mídia)
+    document.querySelectorAll('.nfx-tt').forEach(el => { el.classList.remove('active'); el.style.pointerEvents = 'none'; });
+    if (headerComp) {
+      const fmt = (headerComp.format || 'TEXT').toLowerCase();
+      headerType = fmt;
+      const tabEl = [...document.querySelectorAll('.nfx-tt')].find(el => el.getAttribute('onclick')?.includes(`nfxHdr('${fmt}'`));
+      if (tabEl) tabEl.classList.add('active');
+      if (fmt === 'text') {
+        document.getElementById('nfx-htxt').style.display = 'block';
+        document.getElementById('nfx-hmedia').style.display = 'none';
+        const hval = document.getElementById('nfx-hval');
+        hval.value = headerComp.text || '';
+        hval.readOnly = false;
+      } else {
+        document.getElementById('nfx-htxt').style.display = 'none';
+        document.getElementById('nfx-hmedia').style.display = 'none';
+      }
+    } else {
+      headerType = 'none';
+      const noneTab = document.querySelector('.nfx-tt');
+      if (noneTab) noneTab.classList.add('active');
+      document.getElementById('nfx-htxt').style.display = 'none';
+      document.getElementById('nfx-hmedia').style.display = 'none';
+    }
+
+    window._nfxEditMode = { active:true, templateId: t.id, name: t.name, originalHeader: headerComp };
+
+    // Corpo
+    const bodyEl = document.getElementById('nfx-body');
+    bodyEl.value = bodyComp?.text || '';
+    varExamples = {};
+    const vars = [...new Set((bodyEl.value.match(/\{\{\d+\}\}/g)||[]))];
+    if (bodyComp?.example?.body_text?.[0]) {
+      vars.forEach((v,i) => { varExamples[v] = bodyComp.example.body_text[0][i] || ''; });
+    }
+    varType = vars.length ? 'number' : 'none';
+    window.nfxSetVarType(varType);
+    nfxBodyChg(bodyEl);
+
+    // Rodapé
+    const footEl = document.getElementById('nfx-foot');
+    footEl.value = footComp?.text || '';
+
+    // Botões
+    buttons = (btnsComp?.buttons || []).map(b => ({ type: b.type, label: b.text, url: b.url || '' }));
+    renderBtns();
+
+    // Banner + botão de envio
+    const banner = document.getElementById('nfx-edit-banner');
+    if (banner) banner.style.display = 'flex';
+    const editNameEl = document.getElementById('nfx-edit-name');
+    if (editNameEl) editNameEl.textContent = t.name;
+    const submitBtn = document.getElementById('nfx-submit-btn');
+    if (submitBtn) submitBtn.innerHTML = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Salvar alterações';
+
+    updatePreview();
+  };
+
+  function buildEditComps() {
+    const body = document.getElementById('nfx-body').value;
+    const foot = document.getElementById('nfx-foot')?.value||'';
+    const comps=[];
+    const origHeader = window._nfxEditMode?.originalHeader;
+    if (origHeader && (origHeader.format||'').toUpperCase() === 'TEXT') {
+      const hdr = document.getElementById('nfx-hval')?.value||'';
+      if (hdr) comps.push({type:'HEADER', format:'TEXT', text:hdr});
+    } else if (origHeader) {
+      comps.push(origHeader); // mídia — mantida como está, sem alteração
+    }
+    if (body) {
+      const vars=[...new Set((body.match(/\{\{\d+\}\}/g)||[]))];
+      const bc={type:'BODY',text:body};
+      if (vars.length) bc.example={body_text:[vars.map(v=>varExamples[v]||'exemplo')]};
+      comps.push(bc);
+    }
+    if (foot) comps.push({type:'FOOTER',text:foot});
+    if (buttons.length) comps.push({type:'BUTTONS',buttons:buttons.map(b=>{
+      const o={type:b.type,text:b.label};
+      if(b.url)o.url=b.url;
+      return o;
+    })});
+    return comps;
   }
 
   function nfxShowModal({ title, message, confirmLabel, cancelLabel, onConfirm, onCancel, type }) {
@@ -875,6 +1030,7 @@
       }
       return;
     }
+    const editMode = !!window._nfxEditMode?.active;
     const name = (document.getElementById('nfx-name').value||'').trim().replace(/\s/g,'_').toLowerCase();
     const body = (document.getElementById('nfx-body').value||'').trim();
     if (!name) { alert('Informe o nome do template.'); return; }
@@ -894,50 +1050,70 @@
 
     const btn = document.getElementById('nfx-submit-btn');
     btn.disabled = true;
-    btn.innerHTML = `<span class="nfx-spin"></span> Enviando...`;
+    btn.innerHTML = editMode ? `<span class="nfx-spin"></span> Salvando...` : `<span class="nfx-spin"></span> Enviando...`;
 
     try {
-      const payload = {
-        name,
-        language: document.getElementById('nfx-lang')?.value || 'pt_BR',
-        category: document.getElementById('nfx-cat').value,
-        headerType,
-        components: buildComps(),
-        buttons,
-        varExamples
-      };
-
       let result;
-      if (['image','video','document'].includes(headerType) && window._nfxSelectedFile) {
-        btn.innerHTML = `<span class="nfx-spin"></span> Enviando mídia...`;
-        result = await n8nRequest('create_template', payload, window._nfxSelectedFile);
-      } else {
-        result = await n8nRequest('create_template', payload);
-      }
 
-      const tplId = result.template_id || result.id || '-';
-      const tplStatus = result.status || 'PENDING';
-      nfxShowModal({
-        title: 'Template enviado!',
-        message: `<strong>${name}</strong> foi enviado para aprovação da Meta.<br><br><span style="font-size:11px;color:var(--tx3,#9aa0ad)">ID: ${tplId} &nbsp;•&nbsp; Status: ${tplStatus}</span>`,
-        confirmLabel: 'OK',
-        type: 'success',
-        onConfirm: () => {
-          nfxShowModal({
-            title: 'Limpar formulário?',
-            message: 'Deseja limpar os campos para criar um novo template?',
-            confirmLabel: 'Sim, limpar',
-            cancelLabel: 'Não',
-            type: 'confirm',
-            onConfirm: nfxDoClear
-          });
+      if (editMode) {
+        const payload = {
+          template_id: window._nfxEditMode.templateId,
+          components: buildEditComps()
+        };
+        result = await n8nRequest('edit_template', payload);
+
+        nfxShowModal({
+          title: 'Alterações salvas!',
+          message: `<strong>${name}</strong> foi atualizado. A Meta pode levar alguns minutos para reprocessar a aprovação do template.`,
+          confirmLabel: 'OK',
+          type: 'success',
+          onConfirm: () => { nfxDoClear(); nfxView('list'); }
+        });
+      } else {
+        const payload = {
+          name,
+          language: document.getElementById('nfx-lang')?.value || 'pt_BR',
+          category: document.getElementById('nfx-cat').value,
+          headerType,
+          components: buildComps(),
+          buttons,
+          varExamples
+        };
+
+        if (['image','video','document'].includes(headerType) && window._nfxSelectedFile) {
+          btn.innerHTML = `<span class="nfx-spin"></span> Enviando mídia...`;
+          result = await n8nRequest('create_template', payload, window._nfxSelectedFile);
+        } else {
+          result = await n8nRequest('create_template', payload);
         }
-      });
+
+        const tplId = result.template_id || result.id || '-';
+        const tplStatus = result.status || 'PENDING';
+        nfxShowModal({
+          title: 'Template enviado!',
+          message: `<strong>${name}</strong> foi enviado para aprovação da Meta.<br><br><span style="font-size:11px;color:var(--tx3,#9aa0ad)">ID: ${tplId} &nbsp;•&nbsp; Status: ${tplStatus}</span>`,
+          confirmLabel: 'OK',
+          type: 'success',
+          onConfirm: () => {
+            nfxShowModal({
+              title: 'Limpar formulário?',
+              message: 'Deseja limpar os campos para criar um novo template?',
+              confirmLabel: 'Sim, limpar',
+              cancelLabel: 'Não',
+              type: 'confirm',
+              onConfirm: nfxDoClear
+            });
+          }
+        });
+      }
     } catch(e) {
-      alert(`✗ Erro ao enviar: ${e.message}`);
+      alert(`✗ Erro ao ${editMode ? 'salvar' : 'enviar'}: ${e.message}`);
     } finally {
       btn.disabled = false;
-      btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Enviar para Meta`;
+      const stillEditing = !!window._nfxEditMode?.active;
+      btn.innerHTML = stillEditing
+        ? `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Salvar alterações`
+        : `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" stroke-linecap="round" stroke-linejoin="round"/></svg> Enviar para Meta`;
     }
   };
 
@@ -1011,6 +1187,7 @@
     try {
       const d = await n8nRequest('list_templates', {});
       const tpls = d.data || d.templates || [];
+      _loadedTemplates = tpls;
       const lb = document.getElementById('nfx-lb');
       if (lb) lb.textContent = tpls.length;
       container.innerHTML = tpls.length ? tpls.map(tplCard).join('') : '<div class="nfx-ld">Nenhum template encontrado.</div>';
@@ -1169,8 +1346,10 @@
     }
     const bar = document.getElementById('nfx-del-bar');
     const info = document.getElementById('nfx-del-info');
+    const editBtn = document.getElementById('nfx-edit-sel-btn');
     if (bar) bar.classList.toggle('visible', _selectedTemplates.length > 0);
     if (info) info.textContent = `${_selectedTemplates.length} selecionado(s)`;
+    if (editBtn) editBtn.style.display = _selectedTemplates.length === 1 ? 'inline-flex' : 'none';
   };
 
   window.nfxCancelSel = function() {
@@ -1179,6 +1358,8 @@
     document.querySelectorAll('.nfx-tc').forEach(c => c.classList.remove('selected'));
     const bar = document.getElementById('nfx-del-bar');
     if (bar) bar.classList.remove('visible');
+    const editBtn = document.getElementById('nfx-edit-sel-btn');
+    if (editBtn) editBtn.style.display = 'none';
   };
 
   window.nfxConfirmDelete = function() {
