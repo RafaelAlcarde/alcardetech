@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v2.0';
+  const VERSION = 'v2.2';
   const SVG_IMG   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   const SVG_VIDEO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>';
   const SVG_DOC   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>';
@@ -91,6 +91,9 @@
     .nfx-btc{background:rgba(79,142,247,.15);color:var(--bl);border:1px solid rgba(79,142,247,.3)}
     .nfx-bdel{width:20px;height:20px;border-radius:4px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0;line-height:1}
     .nfx-bdel:hover{background:rgba(255,94,94,.1);border-color:var(--red);color:var(--red)}
+    .nfx-bact{width:20px;height:20px;border-radius:4px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0}
+    .nfx-bact:hover:not(:disabled){background:var(--sf3);color:var(--tx)}
+    .nfx-bact:disabled{opacity:.3;cursor:not-allowed}
     .nfx-abr{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
     .nfx-ab{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s}
     .nfx-ab:hover{background:var(--sf2);color:var(--tx)}
@@ -208,12 +211,6 @@
 
   function getConfig() {
     return Object.assign({}, N8N_CONFIG, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
-  }
-
-  function saveConfig(next) {
-    config = Object.assign({}, N8N_CONFIG, next || {});
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    return config;
   }
 
   function buildN8NHeaders(extra) {
@@ -432,6 +429,7 @@
             <div class="nfx-sh"><div class="nfx-sn">6</div><div class="nfx-st">Botões <span style="font-size:10px;color:var(--tx3);font-weight:400">(opcional — máx. 10)</span></div></div>
             <div class="nfx-sb">
               <div class="nfx-bl" id="nfx-bl"></div>
+              <div id="nfx-btn-form" style="display:none"></div>
               <div class="nfx-abr">
                 <button class="nfx-ab" onclick="nfxAddBtn('QUICK_REPLY')">+ Personalizado</button>
                 <button class="nfx-ab" onclick="nfxAddBtn('URL')">+ Acessar site</button>
@@ -735,7 +733,6 @@
     const nameEl   = document.getElementById('nfx-file-name');
     const statusEl = document.getElementById('nfx-file-status');
     window._nfxSelectedFile = file;
-    window._nfxMediaHandle = null;
     if (nameEl) nameEl.textContent = file.name;
     if (statusEl) { statusEl.textContent = 'Arquivo selecionado'; statusEl.style.color = 'var(--tx3)'; }
     if (info) info.style.display = 'flex';
@@ -760,7 +757,6 @@
     if (input) input.value = '';
     const info = document.getElementById('nfx-file-info');
     if (info) info.style.display = 'none';
-    window._nfxMediaHandle = null;
     window._nfxSelectedFile = null;
     const phmedia = document.getElementById('nfx-phmedia');
     if (phmedia) { phmedia.style.display='none'; phmedia.innerHTML=''; }
@@ -856,19 +852,73 @@
 
   window.nfxAddBtn = function(type) {
     if (buttons.length>=10) { alert('Máximo de 10 botões.'); return; }
-    const def = { QUICK_REPLY:'Resposta rápida', URL:'Acessar site' };
-    const label = prompt('Texto do botão:', def[type]||'Botão');
-    if (!label) return;
-    const b = { type, label };
-    if (type==='URL') b.url = prompt('URL:', 'https://')||'';
-    buttons.push(b); renderBtns(); updatePreview();
+    nfxOpenBtnForm({ mode:'add', type, label:'', url:'' });
   };
 
   window.nfxRmBtn = function(i) { buttons.splice(i,1); renderBtns(); updatePreview(); };
 
+  function nfxOpenBtnForm(state) {
+    window._nfxBtnFormState = state;
+    const box = document.getElementById('nfx-btn-form');
+    if (!box) return;
+    const isUrl = state.type === 'URL';
+    box.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;margin-bottom:8px">
+        <input class="nfx-inp" id="nfx-btnf-label" placeholder="Texto do botão" maxlength="25" value="${esc(state.label)}"/>
+        ${isUrl ? `<input class="nfx-inp" id="nfx-btnf-url" placeholder="https://..." value="${esc(state.url||'')}"/>` : ''}
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="nfx-bs" style="padding:6px 12px;font-size:11px" onclick="nfxCancelBtnForm()">Cancelar</button>
+          <button class="nfx-bp" style="padding:6px 14px;font-size:11px" onclick="nfxConfirmBtnForm()">${state.mode==='edit'?'Salvar':'Adicionar'}</button>
+        </div>
+      </div>`;
+    box.style.display = 'block';
+    document.getElementById('nfx-btnf-label')?.focus();
+  }
+
+  window.nfxCancelBtnForm = function() {
+    window._nfxBtnFormState = null;
+    const box = document.getElementById('nfx-btn-form');
+    if (box) { box.style.display='none'; box.innerHTML=''; }
+  };
+
+  window.nfxConfirmBtnForm = function() {
+    const state = window._nfxBtnFormState;
+    if (!state) return;
+    const label = (document.getElementById('nfx-btnf-label')?.value||'').trim();
+    if (!label) { alert('Informe o texto do botão.'); return; }
+    let url = '';
+    if (state.type === 'URL') {
+      url = (document.getElementById('nfx-btnf-url')?.value||'').trim();
+      if (!url) { alert('Informe a URL do botão.'); return; }
+    }
+    if (state.mode === 'add') {
+      buttons.push(state.type==='URL' ? {type:'URL', label, url} : {type:'QUICK_REPLY', label});
+    } else {
+      const b = buttons[state.index];
+      if (b) { b.label = label; if (state.type==='URL') b.url = url; }
+    }
+    window.nfxCancelBtnForm();
+    renderBtns();
+    updatePreview();
+  };
+
+  window.nfxMoveBtn = function(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= buttons.length) return;
+    [buttons[i], buttons[j]] = [buttons[j], buttons[i]];
+    renderBtns();
+    updatePreview();
+  };
+
+  window.nfxEditBtn = function(i) {
+    const b = buttons[i]; if (!b) return;
+    nfxOpenBtnForm({ mode:'edit', index:i, type:b.type, label:b.label, url:b.url||'' });
+  };
+
   function nfxDoClear() {
     ['nfx-name','nfx-body','nfx-foot','nfx-hval'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.value=''; el.style.borderColor=''; } });
     buttons=[]; varExamples={}; varType='none';
+    if (window.nfxCancelBtnForm) window.nfxCancelBtnForm();
     renderBtns();
     window.nfxSetVarType('none');
     window.nfxHdr('none', document.querySelector('.nfx-tt'));
@@ -940,7 +990,6 @@
     // Cabeçalho — tipo livre para edição (Meta aceita trocar o tipo de cabeçalho)
     document.querySelectorAll('.nfx-tt').forEach(el => el.classList.remove('active'));
     window._nfxSelectedFile = null;
-    window._nfxMediaHandle = null;
     if (headerComp) {
       const fmt = (headerComp.format || 'TEXT').toLowerCase();
       headerType = fmt;
@@ -1309,9 +1358,20 @@
     const tl = { QUICK_REPLY:'personalizado', URL:'link' };
     list.innerHTML = buttons.map((b,i)=>`
       <div class="nfx-br">
+        <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+          <button class="nfx-bact" title="Mover para cima" onclick="nfxMoveBtn(${i},-1)" ${i===0?'disabled':''}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button class="nfx-bact" title="Mover para baixo" onclick="nfxMoveBtn(${i},1)" ${i===buttons.length-1?'disabled':''}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
         <span class="nfx-brl">${esc(b.label)}${b.url?' → '+esc(b.url):''}</span>
         <span class="nfx-brt ${b.type==='QUICK_REPLY'?'nfx-btq':'nfx-btc'}">${tl[b.type]||b.type}</span>
-        <button class="nfx-bdel" onclick="nfxRmBtn(${i})">×</button>
+        <button class="nfx-bact" title="Editar" onclick="nfxEditBtn(${i})">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="nfx-bdel" title="Remover" onclick="nfxRmBtn(${i})">×</button>
       </div>`).join('');
   }
 
