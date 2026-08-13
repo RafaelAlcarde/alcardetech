@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.9';
+  const VERSION = 'v2.0';
   const SVG_IMG   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
   const SVG_VIDEO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>';
   const SVG_DOC   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>';
@@ -157,7 +157,7 @@
     #nfx-tplprev-ov{display:none;position:fixed;inset:0;z-index:100003;background:rgba(0,0,0,.65);align-items:center;justify-content:center}
     #nfx-tplprev-ov.open{display:flex}
     #nfx-tplprev-m{width:300px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;padding:14px}
-    .nfx-tc-eye{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer;flex-shrink:0}
+    .nfx-tc-eye{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:7px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer;flex-shrink:0}
     .nfx-tc-eye:hover{background:var(--sf3);color:var(--tx)}
     .nfx-ti{flex:1}
     .nfx-tn{font-size:13px;font-weight:600;color:var(--tx)}
@@ -1546,7 +1546,7 @@
         ${reason}
       </div>
       <button class="nfx-tc-eye" title="Preview" onclick="event.stopPropagation();nfxShowTplPreview('${safeName}')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       </button>
       <span class="nfx-sb2 nfx-${sc[t.status]||'PA'}">${sm[t.status]||t.status}</span>
     </div>`;
