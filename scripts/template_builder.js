@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.7';
+  const VERSION = 'v1.8';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -1492,9 +1492,23 @@
   function tplCard(t) {
     const sm={APPROVED:'Aprovado',PENDING:'Pendente',REJECTED:'Rejeitado',PAUSED:'Pausado'};
     const sc={APPROVED:'AP',PENDING:'PE',REJECTED:'RE',PAUSED:'PA'};
-    const bc=(t.components||[]).find(c=>c.type==='BODY');
-    const fullText = bc ? bc.text : '';
+    const comps = t.components||[];
+    const hc=comps.find(c=>c.type==='HEADER');
+    const bc=comps.find(c=>c.type==='BODY');
+    const fc=comps.find(c=>c.type==='FOOTER');
+    const btc=comps.find(c=>c.type==='BUTTONS');
     const prev=bc?esc(bc.text).substring(0,80)+(bc.text.length>80?'...':''):'—';
+
+    const tipParts = [];
+    if (hc) tipParts.push(hc.format === 'TEXT' ? `[Cabeçalho] ${hc.text}` : `[Cabeçalho: ${hc.format}]`);
+    if (bc) tipParts.push(bc.text);
+    if (fc) tipParts.push(`[Rodapé] ${fc.text}`);
+    if (btc && btc.buttons?.length) {
+      const btnLines = btc.buttons.map(b => `• ${b.text}${b.type==='URL' && b.url ? ` (${b.url})` : ''}`);
+      tipParts.push(`[Botões]\n${btnLines.join('\n')}`);
+    }
+    const fullTip = tipParts.join('\n\n');
+
     const reason=t.rejected_reason&&t.rejected_reason!=='NONE'?`<div class="nfx-rr">✗ Motivo: ${esc(t.rejected_reason)}</div>`:'';
     const safeName = esc(t.name).replace(/'/g,"\\'");
     return `<div class="nfx-tc" id="nfx-card-${esc(t.name)}">
@@ -1502,7 +1516,7 @@
       <div class="nfx-ti">
         <div class="nfx-tn">${esc(t.name)}</div>
         <div class="nfx-tm">${esc(t.category)} • ${esc(t.language)}</div>
-        <div class="nfx-tm" style="margin-top:3px;font-size:10px" title="${esc(fullText)}">${prev}</div>
+        <div class="nfx-tm" style="margin-top:3px;font-size:10px" title="${esc(fullTip)}">${prev}</div>
         ${reason}
       </div>
       <span class="nfx-sb2 nfx-${sc[t.status]||'PA'}">${sm[t.status]||t.status}</span>
