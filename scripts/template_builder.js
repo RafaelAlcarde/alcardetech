@@ -2,7 +2,12 @@
   'use strict';
 
   const STORAGE_KEY = 'neofluxx_waba_config';
-  const VERSION = 'v1.8';
+  const VERSION = 'v1.9';
+  const SVG_IMG   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+  const SVG_VIDEO = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>';
+  const SVG_DOC   = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>';
+  const SVG_REPLY = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a4 4 0 010 8h-1"/></svg>';
+  const SVG_LINK  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>';
 
   const N8N_CONFIG = {
     webhookUrl: 'https://webhooks.xbluedigital.app.br/webhook/template-builder-v3',
@@ -102,25 +107,22 @@
     #nfx-preview{background:var(--sf);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
     .nfx-ph{padding:12px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
     #nfx-pbody{flex:1;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
-    .nfx-phone{width:100%;max-width:228px;margin:0 auto;background:#efeae2;border-radius:18px;overflow:hidden;border:1px solid #d4c9b8}
+    .nfx-phone{width:100%;max-width:228px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;border:1px solid #e4e4e4}
     .nfx-pbar{background:#075e54;padding:10px 12px;display:flex;align-items:center;justify-content:center}
     .nfx-pbar-title{font-size:12px;font-weight:600;color:#fff;text-align:center}
     .nfx-pbar-sub{font-size:9px;color:rgba(255,255,255,.7);text-align:center;margin-top:1px}
-    .nfx-pchat{padding:10px;min-height:150px;background:#efeae2;background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000' fill-opacity='0.03'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")}
-    .nfx-bub{background:#fff;border-radius:0 8px 8px 8px;padding:8px 10px;max-width:95%;box-shadow:0 1px 2px rgba(0,0,0,.1)}
-    .nfx-bub.nfx-has-btns{border-radius:0 8px 0 0;box-shadow:none}
+    .nfx-pchat{padding:14px 10px;min-height:150px;background:#fff}
+    .nfx-bub{background:#f7f7f7;border:1px solid #ececec;border-radius:12px;overflow:hidden}
+    .nfx-btxt{padding:8px 10px}
     .nfx-wt{font-size:11px;color:#111;line-height:1.5}
     .nfx-vh{background:rgba(37,211,102,.15);color:#128c7e;border-radius:3px;padding:0 3px;font-family:monospace;font-size:10px}
     .nfx-wfr{margin-top:4px;display:flex;justify-content:flex-end;font-size:9px;color:#8696a0;gap:3px;align-items:center}
-    .nfx-wht{margin-bottom:6px}
-    .nfx-whtxt{font-size:13px;font-weight:600;color:#111;margin-bottom:4px}
-    .nfx-whm{width:100%;border-radius:6px;overflow:hidden;margin-bottom:6px}
-    .nfx-whm img{width:100%;height:auto;display:block;max-height:160px;object-fit:cover}
-    .nfx-whm-ph{width:100%;height:80px;background:#d0c9be;display:flex;align-items:center;justify-content:center;font-size:24px}
+    .nfx-wht{font-size:13px;font-weight:600;color:#111;margin-bottom:4px}
+    .nfx-whm{width:100%;height:120px;background:#eee}
+    .nfx-whm img{width:100%;height:100%;display:block;object-fit:cover}
+    .nfx-whm-ph{width:100%;height:100%;background:#eee;display:flex;align-items:center;justify-content:center}
     .nfx-wft{border-top:1px solid rgba(0,0,0,.08);margin-top:6px;padding-top:5px;font-size:10px;color:#667781}
-    .nfx-wb{width:100%;background:#fff;border:none;border-top:1px solid #e9e9e9;padding:8px;text-align:center;font-size:11px;color:#00a5f4;cursor:default;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;box-sizing:border-box;border-radius:0}
-    .nfx-wb:last-child{border-radius:0 0 8px 8px}
-    .nfx-pbtns-wrap{max-width:95%;background:#fff;border-radius:0 0 8px 8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+    .nfx-wb{width:100%;background:transparent;border:none;border-top:1px solid #e4e4e4;padding:9px 8px;text-align:center;font-size:12px;font-weight:500;color:#00a884;cursor:default;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box}
     .nfx-ve{display:flex;align-items:center;gap:6px;padding:0;background:transparent;border:none;border-radius:0}
     .nfx-vk{font-family:monospace;font-size:10px;color:var(--ac);white-space:nowrap;min-width:32px}
     .nfx-ve input{flex:1;font-size:11px;padding:2px 6px;border:1px solid var(--bd);border-radius:5px;background:var(--sf);color:var(--tx);font-family:inherit;outline:none;transition:border .15s;width:100%;box-sizing:border-box}
@@ -152,6 +154,11 @@
     #nfx-del-m{width:380px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
     #nfx-del-m.light{background:#fff;color:#1a1a2e;--bd:#e2e5ea;--sf2:#f0f2f5;--tx:#1a1a2e;--tx2:#5a6170;--red:#e53935}
     #nfx-del-m.dark{background:#17171b;color:#f0f0f5;--bd:#2a2a35;--sf2:#1e1e24;--tx:#f0f0f5;--tx2:#9090a8;--red:#ff5e5e}
+    #nfx-tplprev-ov{display:none;position:fixed;inset:0;z-index:100003;background:rgba(0,0,0,.65);align-items:center;justify-content:center}
+    #nfx-tplprev-ov.open{display:flex}
+    #nfx-tplprev-m{width:300px;max-width:94vw;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;padding:14px}
+    .nfx-tc-eye{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);cursor:pointer;flex-shrink:0}
+    .nfx-tc-eye:hover{background:var(--sf3);color:var(--tx)}
     .nfx-ti{flex:1}
     .nfx-tn{font-size:13px;font-weight:600;color:var(--tx)}
     .nfx-tm{font-size:11px;color:var(--tx2);margin-top:2px}
@@ -260,6 +267,7 @@
     nfxLockForm(false);
     if (typeof nfxDoClear === 'function') nfxDoClear();
     if (window.nfxCancelSel) window.nfxCancelSel();
+    if (window.nfxCloseTplPreview) window.nfxCloseTplPreview();
     const searchEl = document.getElementById('nfx-search');
     if (searchEl) searchEl.value = '';
     setTimeout(() => { if (window.nfxView) nfxView('create'); }, 50);
@@ -490,15 +498,18 @@
             </div>
             <div class="nfx-pchat">
               <div class="nfx-bub">
-                <div id="nfx-ph2" class="nfx-wht" style="display:none"></div>
-                <div class="nfx-wt" id="nfx-pb">Digite o corpo da mensagem...</div>
-                <div id="nfx-pf" class="nfx-wft" style="display:none"></div>
-                <div class="nfx-wfr">
-                  <span>agora</span>
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="#53bdeb"><path d="M1 5l3 3 5-7M6 8l2-2 3-3"/></svg>
+                <div id="nfx-phmedia" class="nfx-whm" style="display:none"></div>
+                <div class="nfx-btxt">
+                  <div id="nfx-ph2" class="nfx-wht" style="display:none"></div>
+                  <div class="nfx-wt" id="nfx-pb">Digite o corpo da mensagem...</div>
+                  <div id="nfx-pf" class="nfx-wft" style="display:none"></div>
+                  <div class="nfx-wfr">
+                    <span>agora</span>
+                    <svg width="14" height="10" viewBox="0 0 14 10" fill="#53bdeb"><path d="M1 5l3 3 5-7M6 8l2-2 3-3"/></svg>
+                  </div>
                 </div>
+                <div id="nfx-pbtns"></div>
               </div>
-              <div class="nfx-pbtns-wrap"><div id="nfx-pbtns"></div></div>
             </div>
           </div>
           <div id="nfx-vbox" style="display:none">
@@ -530,6 +541,15 @@
             Confirmar exclusão
           </button>
         </div>
+      </div>
+    </div>
+    <!-- Modal preview do template -->
+    <div id="nfx-tplprev-ov" onclick="if(event.target===this) nfxCloseTplPreview()">
+      <div id="nfx-tplprev-m">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <button onclick="nfxCloseTplPreview()" style="background:none;border:none;cursor:pointer;color:#999;font-size:16px;line-height:1;padding:2px">✕</button>
+        </div>
+        <div id="nfx-tplprev-body"></div>
       </div>
     </div>
     `;
@@ -724,13 +744,13 @@
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = e => {
-        const ph2 = document.getElementById('nfx-ph2');
-        if (ph2) { ph2.style.display='block'; ph2.innerHTML=`<div class="nfx-whm"><img src="${e.target.result}" alt="preview"/></div>`; }
+        const phmedia = document.getElementById('nfx-phmedia');
+        if (phmedia) { phmedia.style.display='block'; phmedia.innerHTML=`<img src="${e.target.result}" alt="preview"/>`; }
       };
       reader.readAsDataURL(file);
     } else {
-      const ph2 = document.getElementById('nfx-ph2');
-      if (ph2) { ph2.style.display='block'; ph2.innerHTML=`<div class="nfx-whm"><div class="nfx-whm-ph">📎 ${esc(file.name)}</div></div>`; }
+      const phmedia = document.getElementById('nfx-phmedia');
+      if (phmedia) { phmedia.style.display='block'; phmedia.innerHTML=`<div class="nfx-whm-ph">${SVG_DOC}</div>`; }
     }
     updatePreview();
   };
@@ -742,8 +762,8 @@
     if (info) info.style.display = 'none';
     window._nfxMediaHandle = null;
     window._nfxSelectedFile = null;
-    const ph2 = document.getElementById('nfx-ph2');
-    if (ph2) { ph2.style.display='none'; ph2.innerHTML=''; }
+    const phmedia = document.getElementById('nfx-phmedia');
+    if (phmedia) { phmedia.style.display='none'; phmedia.innerHTML=''; }
     nfxUpdateEditMediaNote();
     updatePreview();
   };
@@ -1326,37 +1346,43 @@
   }
 
   function updatePreview() {
-    const hdr   = document.getElementById('nfx-hval')?.value||'';
-    const body  = document.getElementById('nfx-body')?.value||'';
-    const foot  = document.getElementById('nfx-foot')?.value||'';
-    const ph2   = document.getElementById('nfx-ph2');
-    const pf    = document.getElementById('nfx-pf');
-    const pbtns = document.getElementById('nfx-pbtns');
-    const vbox  = document.getElementById('nfx-vbox');
-    const vlist = document.getElementById('nfx-vlist');
+    const hdr     = document.getElementById('nfx-hval')?.value||'';
+    const body    = document.getElementById('nfx-body')?.value||'';
+    const foot    = document.getElementById('nfx-foot')?.value||'';
+    const ph2     = document.getElementById('nfx-ph2');
+    const phmedia = document.getElementById('nfx-phmedia');
+    const pf      = document.getElementById('nfx-pf');
+    const pbtns   = document.getElementById('nfx-pbtns');
+    const vbox    = document.getElementById('nfx-vbox');
+    const vlist   = document.getElementById('nfx-vlist');
 
     if (ph2) {
       if (headerType==='text' && hdr) {
         ph2.style.display='block';
-        ph2.innerHTML=`<div class="nfx-whtxt">${esc(hdr)}</div>`;
-      } else if (['image','video','document'].includes(headerType)) {
-        ph2.style.display='block';
-        if (!ph2.querySelector('img,.nfx-whm')) {
-          const ico={image:'🖼',video:'▶',document:'📄'};
-          ph2.innerHTML=`<div class="nfx-whm"><div class="nfx-whm-ph">${ico[headerType]}</div></div>`;
-        }
+        ph2.textContent = hdr;
       } else {
         ph2.style.display='none';
+      }
+    }
+
+    if (phmedia) {
+      if (['image','video','document'].includes(headerType)) {
+        phmedia.style.display='block';
+        if (!phmedia.querySelector('img')) {
+          const icoMap = {image:SVG_IMG, video:SVG_VIDEO, document:SVG_DOC};
+          phmedia.innerHTML = `<div class="nfx-whm-ph">${icoMap[headerType]||SVG_IMG}</div>`;
+        }
+      } else {
+        phmedia.style.display='none';
+        phmedia.innerHTML='';
       }
     }
 
     renderPreviewBody();
     if (pf) { pf.style.display=foot?'block':'none'; pf.textContent=foot; }
     if (pbtns) {
-      const ico={URL:'🔗 ',QUICK_REPLY:''};
-      pbtns.innerHTML=buttons.map(b=>`<button class="nfx-wb">${ico[b.type]||''}${esc(b.label)}</button>`).join('');
-      const bub = document.querySelector('.nfx-bub');
-      if (bub) bub.classList.toggle('nfx-has-btns', buttons.length > 0);
+      const icoMap = {URL:SVG_LINK, QUICK_REPLY:SVG_REPLY};
+      pbtns.innerHTML=buttons.map(b=>`<button class="nfx-wb">${icoMap[b.type]||SVG_REPLY}${esc(b.label)}</button>`).join('');
     }
 
     const vars=[...new Set((body.match(/\{\{\d+\}\}/g)||[]))].sort();
@@ -1519,9 +1545,71 @@
         <div class="nfx-tm" style="margin-top:3px;font-size:10px" title="${esc(fullTip)}">${prev}</div>
         ${reason}
       </div>
+      <button class="nfx-tc-eye" title="Preview" onclick="event.stopPropagation();nfxShowTplPreview('${safeName}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
       <span class="nfx-sb2 nfx-${sc[t.status]||'PA'}">${sm[t.status]||t.status}</span>
     </div>`;
   }
+
+  function renderPhonePreviewHTML(comps) {
+    const hc  = (comps||[]).find(c=>c.type==='HEADER');
+    const bc  = (comps||[]).find(c=>c.type==='BODY');
+    const fc  = (comps||[]).find(c=>c.type==='FOOTER');
+    const btc = (comps||[]).find(c=>c.type==='BUTTONS');
+
+    let mediaHtml = '';
+    if (hc && hc.format && hc.format !== 'TEXT') {
+      const icoMap = {IMAGE:SVG_IMG, VIDEO:SVG_VIDEO, DOCUMENT:SVG_DOC};
+      mediaHtml = `<div class="nfx-whm"><div class="nfx-whm-ph">${icoMap[hc.format]||SVG_IMG}</div></div>`;
+    }
+    const headerTextHtml = (hc && hc.format === 'TEXT') ? `<div class="nfx-wht">${esc(hc.text||'')}</div>` : '';
+
+    let bodyHtml = '—';
+    if (bc && bc.text) {
+      bodyHtml = esc(bc.text)
+        .replace(/\*(.+?)\*/g,'<b>$1</b>')
+        .replace(/\_(.+?)\_/g,'<em>$1</em>')
+        .replace(/\n/g,'<br>');
+    }
+    const footHtml = fc && fc.text ? `<div class="nfx-wft">${esc(fc.text)}</div>` : '';
+
+    let btnsHtml = '';
+    if (btc && btc.buttons?.length) {
+      const icoMap = {URL:SVG_LINK, QUICK_REPLY:SVG_REPLY};
+      btnsHtml = btc.buttons.map(b=>`<button class="nfx-wb">${icoMap[b.type]||SVG_REPLY}${esc(b.text)}</button>`).join('');
+    }
+
+    return `<div class="nfx-phone">
+      <div class="nfx-pbar"><div><div class="nfx-pbar-title">Prévia do modelo</div><div class="nfx-pbar-sub">WhatsApp Business</div></div></div>
+      <div class="nfx-pchat">
+        <div class="nfx-bub">
+          ${mediaHtml}
+          <div class="nfx-btxt">
+            ${headerTextHtml}
+            <div class="nfx-wt">${bodyHtml}</div>
+            ${footHtml}
+            <div class="nfx-wfr"><span>agora</span><svg width="14" height="10" viewBox="0 0 14 10" fill="#53bdeb"><path d="M1 5l3 3 5-7M6 8l2-2 3-3"/></svg></div>
+          </div>
+          <div>${btnsHtml}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  window.nfxShowTplPreview = function(name) {
+    const t = _loadedTemplates.find(x => x.name === name);
+    if (!t) return;
+    const body = document.getElementById('nfx-tplprev-body');
+    if (body) body.innerHTML = renderPhonePreviewHTML(t.components || []);
+    const ov = document.getElementById('nfx-tplprev-ov');
+    if (ov) ov.classList.add('open');
+  };
+
+  window.nfxCloseTplPreview = function() {
+    const ov = document.getElementById('nfx-tplprev-ov');
+    if (ov) ov.classList.remove('open');
+  };
 
   // Init
   const s=document.getElementById('nfx-stxt');
