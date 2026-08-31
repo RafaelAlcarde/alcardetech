@@ -17,21 +17,20 @@
     { id: 'etiquetar_contatos',     label: 'Etiquetar Contatos',     type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/etiquetar_contatos.js' },
     { id: 'anexar_imagens',         label: 'Anexar Imagens',         type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/template_anexar_imagens.js' },
     { id: 'campanha_personalizada', label: 'Campanha Personalizada', type: 'auto',   adminOnly: false, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/campanha_personalizada_etiquetas.js' },
-    { id: 'conversor_contatos',     label: 'Conversor de Contatos',  type: 'script', adminOnly: true, url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/conversor_contatos.js' },
+    { id: 'conversor_contatos',     label: 'Conversor de Contatos',  type: 'script', adminOnly: true,  url: 'https://raw.githubusercontent.com/RafaelAlcarde/alcardetech/refs/heads/main/scripts/conversor_contatos.js' },
   ];
+
   // ============================================================
   // SUPABASE ALCARDETECH
   // ============================================================
-  const SUPABASE_URL  = 'https://stsstxdxmlwniezzmbxe.supabase.co';
-  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
+  const SUPABASE_URL = 'https://stsstxdxmlwniezzmbxe.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0c3N0eGR4bWx3bmllenptYnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMjIwNzcsImV4cCI6MjA4OTc5ODA3N30.1XwU-rpiGmlyEGBzT97w9FqfMkRtO2_K0WPhEpLwsV4';
 
-  // Pega o account_id da URL
   function getAccountId() {
     const m = location.pathname.match(/accounts\/(\d+)/);
     return m ? m[1] : null;
   }
 
-  // Pega o role do usuário logado via Vue store
   function getUserRole() {
     try {
       const app   = document.querySelector('#app')?.__vue_app__;
@@ -42,27 +41,18 @@
       const account = user.accounts.find(function(a) { return a.id === parseInt(accountId); });
       return account?.role || 'agent';
     } catch (e) {
-      return 'agent'; // fallback seguro
+      return 'agent';
     }
   }
 
-  // Busca permissões do tenant no Supabase
   async function fetchPermissions() {
     const accountId = getAccountId();
     if (!accountId) return null;
-
     const tenantKey = 'account-' + accountId;
-
     try {
       const res = await fetch(
         SUPABASE_URL + '/rest/v1/tenants_permissoes?tenant_key=eq.' + tenantKey + '&select=*&limit=1',
-        {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Accept-Profile': 'public',
-          }
-        }
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Accept-Profile': 'public' } }
       );
       const data = await res.json();
       return data && data.length > 0 ? data[0] : null;
@@ -72,38 +62,25 @@
     }
   }
 
-  // Permissões em memória
   let permissions = {};
   let permissionsLoaded = false;
 
   function isAllowed(feature) {
-    // Se não carregou o Supabase, bloqueia tudo
     if (!permissionsLoaded) return false;
-
-    // Verifica adminOnly — se for adminOnly e o usuário não for admin, bloqueia
     if (feature.adminOnly && getUserRole() !== 'administrator') return false;
-
-    // Verifica permissão no Supabase
     if (!(feature.id in permissions)) return true;
     return permissions[feature.id] === true;
   }
 
   async function init() {
     injectModalStyles();
-
-    // Aguarda o sidebar estar disponível antes de buscar permissões
     await waitForSidebar();
-
-    // Busca permissões
     const perms = await fetchPermissions();
     if (perms) { permissions = perms; permissionsLoaded = true; }
-
-    // Só injeta o sidebar depois das permissões estarem prontas
     injectSidebar();
     runAutoFeatures();
   }
 
-  // Aguarda o sidebar estar disponível no DOM
   function waitForSidebar() {
     return new Promise(function(resolve) {
       function check() {
@@ -118,7 +95,6 @@
     });
   }
 
-  // Executa automaticamente todas as features do tipo 'auto'
   async function runAutoFeatures() {
     const autoFeatures = FEATURES.filter(function(f) { return f.type === 'auto' && isAllowed(f); });
     for (var i = 0; i < autoFeatures.length; i++) {
@@ -139,8 +115,7 @@
       #nfx-iframe-box {
         background: #fff; border-radius: 12px; overflow: hidden;
         width: 90vw; max-width: 860px; height: 88vh;
-        display: flex; flex-direction: column;
-        animation: nfxFadeIn 0.2s ease;
+        display: flex; flex-direction: column; animation: nfxFadeIn 0.2s ease;
       }
       @keyframes nfxFadeIn { from { opacity:0; transform:scale(.97) } to { opacity:1; transform:scale(1) } }
       #nfx-iframe-header {
@@ -155,6 +130,26 @@
       }
       #nfx-iframe-close:hover { background: rgba(229,57,53,.1); color: #e53935; border-color: #e53935; }
       #nfx-iframe-box iframe { flex: 1; border: none; width: 100%; height: 100%; }
+
+      #nfx-popover {
+        display: none; position: fixed; z-index: 99998;
+        background: #fff; border: 0.5px solid #e2e5ea; border-radius: 10px;
+        padding: 6px; min-width: 180px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      }
+      #nfx-popover.open { display: block; }
+      #nfx-popover-title {
+        font-size: 10px; color: #9aa0ad; text-transform: uppercase;
+        letter-spacing: .06em; padding: 4px 8px 6px; font-family: -apple-system, sans-serif;
+      }
+      .nfx-pop-item {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 10px; border-radius: 7px;
+        cursor: pointer; font-size: 13px; color: #5a6170;
+        transition: background 0.12s, color 0.12s;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .nfx-pop-item:hover { background: rgba(0,221,125,0.08); color: #008F52; }
     `;
     document.head.appendChild(style);
 
@@ -173,6 +168,21 @@
       if (e.target === overlay) overlay.classList.remove('open');
     });
     document.body.appendChild(overlay);
+
+    // Popover flutuante para modo comprimido
+    const popover = document.createElement('div');
+    popover.id = 'nfx-popover';
+    popover.innerHTML = '<div id="nfx-popover-title">Neofluxx Studio</div><div id="nfx-popover-list"></div>';
+    document.body.appendChild(popover);
+
+    // Fecha popover ao clicar fora
+    document.addEventListener('click', function(e) {
+      const pop = document.getElementById('nfx-popover');
+      const btn = document.getElementById('nfx-icon-btn');
+      if (pop && !pop.contains(e.target) && e.target !== btn) {
+        pop.classList.remove('open');
+      }
+    });
   }
 
   function openModal(feature) {
@@ -183,6 +193,13 @@
     title.textContent = feature.label;
     iframe.src = feature.url;
     overlay.classList.add('open');
+    document.getElementById('nfx-popover')?.classList.remove('open');
+  }
+
+  // Detecta se o sidebar está comprimido
+  function isCompressed() {
+    const aside = document.querySelector('aside');
+    return aside ? aside.offsetWidth <= 100 : false;
   }
 
   function injectSidebar() {
@@ -197,10 +214,15 @@
 
     if (document.getElementById('nfx-root')) return;
 
+    const visibleFeatures = FEATURES.filter(function(f) { return f.type !== 'auto' && isAllowed(f); });
+    if (visibleFeatures.length === 0) return;
+
     const style = document.createElement('style');
     style.textContent = `
       #nfx-root { user-select: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
       #nfx-divider { height: 1px; background: #e2e5ea; margin: 4px 8px; }
+
+      /* Modo expandido */
       #nfx-btn {
         display: flex; align-items: center; gap: 6px;
         padding: 7px 8px; border-radius: 8px; cursor: pointer;
@@ -210,7 +232,7 @@
       }
       #nfx-btn:hover { background: #ccf9e8; }
       #nfx-btn .nfx-label { font-size: 13px; color: #008F52; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #nfx-chevron { transition: transform 0.2s; margin-left: auto; }
+      #nfx-chevron { transition: transform 0.2s; margin-left: auto; flex-shrink: 0; }
       #nfx-chevron.open { transform: rotate(180deg); }
       #nfx-submenu { overflow: hidden; max-height: 0; transition: max-height 0.25s ease; }
       #nfx-submenu.open { max-height: 400px; }
@@ -221,6 +243,22 @@
         transition: background 0.12s, color 0.12s; margin: 0 4px;
       }
       .nfx-item:hover { background: rgba(0,221,125,0.08); color: #008F52; }
+
+      /* Modo comprimido */
+      #nfx-icon-btn {
+        display: none; width: 36px; height: 36px; border-radius: 8px;
+        align-items: center; justify-content: center;
+        background: #E6FDF4; border: 0.5px solid #00DD7D;
+        cursor: pointer; margin: 0 auto; transition: background 0.15s;
+      }
+      #nfx-icon-btn:hover { background: #ccf9e8; }
+
+      /* Comprimido ativo */
+      #nfx-root.compressed #nfx-btn { display: none; }
+      #nfx-root.compressed #nfx-submenu { display: none; }
+      #nfx-root.compressed #nfx-icon-btn { display: flex; }
+      #nfx-root.compressed #nfx-divider { margin: 4px 6px; }
+
       #nfx-toast {
         position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
         background: #008F52; color: #fff; padding: 8px 18px; border-radius: 20px;
@@ -238,6 +276,8 @@
     root.id = 'nfx-root';
     root.innerHTML = `
       <div id="nfx-divider"></div>
+
+      <!-- Modo expandido -->
       <div id="nfx-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00DD7D" stroke-width="1.5">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -248,13 +288,16 @@
         </svg>
       </div>
       <div id="nfx-submenu"></div>
+
+      <!-- Modo comprimido -->
+      <div id="nfx-icon-btn" title="Neofluxx Studio">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00DD7D" stroke-width="1.5">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
     `;
 
-    // Verifica se há pelo menos uma feature permitida para esse cliente
-    const visibleFeatures = FEATURES.filter(function(f) { return f.type !== 'auto' && isAllowed(f); });
-    if (visibleFeatures.length === 0) return;
-
-    // Monta o submenu
+    // Monta submenu expandido
     const submenu = root.querySelector('#nfx-submenu');
     visibleFeatures.forEach(function(feature) {
       const item = document.createElement('div');
@@ -269,13 +312,63 @@
       submenu.appendChild(item);
     });
 
+    // Monta popover (modo comprimido)
+    const popoverList = document.getElementById('nfx-popover-list');
+    if (popoverList) {
+      popoverList.innerHTML = '';
+      visibleFeatures.forEach(function(feature) {
+        const item = document.createElement('div');
+        item.className = 'nfx-pop-item';
+        item.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          ${feature.label}
+        `;
+        item.onclick = function() {
+          document.getElementById('nfx-popover').classList.remove('open');
+          handleFeature(feature);
+        };
+        popoverList.appendChild(item);
+      });
+    }
+
+    // Toggle expandido
     root.querySelector('#nfx-btn').onclick = function() {
       document.getElementById('nfx-submenu').classList.toggle('open');
       document.getElementById('nfx-chevron').classList.toggle('open');
     };
 
+    // Toggle comprimido — abre popover posicionado ao lado do botão
+    root.querySelector('#nfx-icon-btn').onclick = function(e) {
+      e.stopPropagation();
+      const pop = document.getElementById('nfx-popover');
+      if (!pop) return;
+      if (pop.classList.contains('open')) { pop.classList.remove('open'); return; }
+      const rect = e.currentTarget.getBoundingClientRect();
+      pop.style.top  = rect.top + 'px';
+      pop.style.left = (rect.right + 8) + 'px';
+      pop.classList.add('open');
+    };
+
     navList.appendChild(root);
 
+    // ResizeObserver — alterna entre modo expandido e comprimido
+    const resizeObserver = new ResizeObserver(function() {
+      const compressed = isCompressed();
+      root.classList.toggle('compressed', compressed);
+      // Fecha submenu ao comprimir
+      if (compressed) {
+        document.getElementById('nfx-submenu')?.classList.remove('open');
+        document.getElementById('nfx-chevron')?.classList.remove('open');
+      }
+    });
+    resizeObserver.observe(mainAside);
+
+    // Estado inicial
+    if (isCompressed()) root.classList.add('compressed');
+
+    // MutationObserver para reinjetar se o Vue re-renderizar
     const observer = new MutationObserver(function() {
       if (!document.getElementById('nfx-root')) injectSidebar();
     });
